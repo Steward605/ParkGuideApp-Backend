@@ -71,6 +71,10 @@ For Mac:
 ```bash
 psql postgres
 ```
+For Windows:
+```bash
+psql -U postgres
+```
 
 Run:
 
@@ -90,9 +94,15 @@ Exit:
 ## Setup
 1. Create and activate a virtual environment:
 
+For Mac and Linux (Depnding on your terminal shell):
 ```bash
 python -m venv venv
 source venv/bin/activate
+```
+
+For Windows:
+```bash
+venv\Scripts\activate
 ```
 
 2. Install core backend dependencies:
