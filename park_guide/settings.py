@@ -169,6 +169,10 @@ FIREBASE_STORAGE_BUCKET = os.getenv(
     'parkguideapp-c8517.firebasestorage.app'
 )
 
+# Firebase credentials can come either from a JSON env var (ideal for Render)
+# or from a local service account file during development.
+FIREBASE_SERVICE_ACCOUNT_JSON = os.getenv('FIREBASE_SERVICE_ACCOUNT_JSON', '').strip()
+
 # 2. Path to your JSON (Matches your directory structure)
 FIREBASE_SERVICE_ACCOUNT_PATH = os.path.join(
     BASE_DIR,

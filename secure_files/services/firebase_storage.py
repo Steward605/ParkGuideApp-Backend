@@ -1,13 +1,35 @@
 import datetime
+import json
+
 import firebase_admin
 from firebase_admin import credentials, storage
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
+
 from ..models import SecureFile
 
-# Initialize Firebase App (Ensure this is called once, e.g., in apps.py ready())
+
+def _build_firebase_credentials():
+    if settings.FIREBASE_SERVICE_ACCOUNT_JSON:
+        try:
+            service_account_info = json.loads(settings.FIREBASE_SERVICE_ACCOUNT_JSON)
+        except json.JSONDecodeError as exc:
+            raise ImproperlyConfigured(
+                "FIREBASE_SERVICE_ACCOUNT_JSON is not valid JSON."
+            ) from exc
+        return credentials.Certificate(service_account_info)
+
+    if settings.FIREBASE_SERVICE_ACCOUNT_PATH:
+        return credentials.Certificate(settings.FIREBASE_SERVICE_ACCOUNT_PATH)
+
+    raise ImproperlyConfigured(
+        "Set FIREBASE_SERVICE_ACCOUNT_JSON or FIREBASE_SERVICE_ACCOUNT_PATH."
+    )
+
+
+# Initialize Firebase App once using either env JSON or a local credentials file.
 if not firebase_admin._apps:
-    cred = credentials.Certificate(settings.FIREBASE_SERVICE_ACCOUNT_PATH)
+    cred = _build_firebase_credentials()
     firebase_admin.initialize_app(cred, {
         'storageBucket': settings.FIREBASE_STORAGE_BUCKET
     })
