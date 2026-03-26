@@ -100,15 +100,17 @@ WSGI_APPLICATION = 'park_guide.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
+import dj_database_url
+import os
+
+# ... existing code ...
+
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'pga_db',
-        'USER': 'admin',
-        'PASSWORD': 'ADMIN',
-        'HOST': 'localhost',
-        'PORT': '5432',
-    }
+    'default': dj_database_url.config(
+        # Replace the URL below with the one you copied from Neon
+        default=os.getenv('DATABASE_URL', 'postgresql://neondb_owner:npg_gw4GMQWlhoa1@ep-small-wildflower-amd0hnxp.c-5.us-east-1.aws.neon.tech/pga_db?sslmode=require'),
+        ssl_require=True
+    )
 }
 
 
