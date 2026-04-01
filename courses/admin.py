@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.db.models import Count, Q, Sum
 from django.utils.html import format_html
 
 from courses.models import CourseProgress, ModuleProgress
@@ -23,29 +24,40 @@ class CourseAdmin(DashboardStatsChangeListMixin, admin.ModelAdmin):
     dashboard_title = 'Training Catalogue'
     dashboard_description = 'See which courses are richest in content and how far learners are getting through them.'
 
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        return queryset.annotate(
+            module_count_annotated=Count('modules', distinct=True),
+            learner_total=Count('courseprogress', distinct=True),
+            completed_total=Count('courseprogress', filter=Q(courseprogress__completed=True), distinct=True),
+        )
+
     def title_en(self, obj):
         return obj.title.get('en', 'Untitled')
     title_en.short_description = "Title"
 
     def module_count(self, obj):
-        return obj.modules.count()
+        return getattr(obj, 'module_count_annotated', 0)
     module_count.short_description = 'Modules'
 
     def learner_coverage(self, obj):
-        learners = CourseProgress.objects.filter(course=obj).count()
+        learners = getattr(obj, 'learner_total', 0)
         return format_html('<strong>{}</strong><br><span class="admin-subtle">learners enrolled</span>', learners)
     learner_coverage.short_description = 'Learners'
 
     def completion_snapshot(self, obj):
-        records = CourseProgress.objects.filter(course=obj)
-        total = records.count()
-        completed = records.filter(completed=True).count()
+        total = getattr(obj, 'learner_total', None)
+        completed = getattr(obj, 'completed_total', None)
+        if total is None or completed is None:
+            records = CourseProgress.objects.filter(course=obj)
+            total = records.count()
+            completed = records.filter(completed=True).count()
         percent = 0 if total == 0 else (completed / total) * 100
         return self.render_progress_bar(percent, f'{completed}/{total} completed', tone='green')
     completion_snapshot.short_description = 'Completion'
 
     def get_dashboard_stats(self, request, queryset):
-        module_total = sum(course.modules.count() for course in queryset)
+        module_total = queryset.aggregate(total=Sum('module_count_annotated'))['total'] or 0
         learners = CourseProgress.objects.filter(course__in=queryset).count()
         completions = CourseProgress.objects.filter(course__in=queryset, completed=True).count()
         percent = 0 if learners == 0 else round((completions / learners) * 100)
@@ -66,6 +78,13 @@ class ModuleAdmin(DashboardStatsChangeListMixin, admin.ModelAdmin):
     dashboard_title = 'Modules'
     dashboard_description = 'Review learning units, quiz coverage, and completion health at module level.'
 
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        return queryset.annotate(
+            learner_total=Count('moduleprogress', distinct=True),
+            completed_total=Count('moduleprogress', filter=Q(moduleprogress__completed=True), distinct=True),
+        )
+
     def title_en(self, obj):
         return obj.title.get('en', 'Untitled')
     title_en.short_description = "Title"
@@ -76,9 +95,12 @@ class ModuleAdmin(DashboardStatsChangeListMixin, admin.ModelAdmin):
     has_quiz.short_description = 'Quiz'
 
     def completion_snapshot(self, obj):
-        records = ModuleProgress.objects.filter(module=obj)
-        total = records.count()
-        completed = records.filter(completed=True).count()
+        total = getattr(obj, 'learner_total', None)
+        completed = getattr(obj, 'completed_total', None)
+        if total is None or completed is None:
+            records = ModuleProgress.objects.filter(module=obj)
+            total = records.count()
+            completed = records.filter(completed=True).count()
         percent = 0 if total == 0 else (completed / total) * 100
         return self.render_progress_bar(percent, f'{completed}/{total} complete', tone='blue')
     completion_snapshot.short_description = 'Completion'
