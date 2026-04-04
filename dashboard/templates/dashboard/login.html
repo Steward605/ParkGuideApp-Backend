@@ -1,9 +1,22 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Sarawak Forestry Dashboard</title>
+    <script>
+        (function() {
+            const html = document.documentElement;
+            let savedTheme = 'light';
+            try {
+                savedTheme = localStorage.getItem('theme') || 'light';
+            } catch (error) {
+                savedTheme = 'light';
+            }
+            html.setAttribute('data-theme', savedTheme);
+        })();
+    </script>
     <style>
         * {
             margin: 0;
@@ -20,15 +33,23 @@
             --text: #1a1a1a;
             --text-secondary: #666666;
             --border: #e0e0e0;
+            --bg-card: rgba(255, 255, 255, 0.95);
+            --bg-input: rgba(255, 255, 255, 0.9);
+            --bg-input-focus: #ffffff;
+            --body-overlay: rgba(255, 255, 255, 0.08);
             --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.15);
         }
 
         html[data-theme="dark"] {
             --primary: #40916c;
-            --text: #ffffff;
-            --text-secondary: #e0e0e0;
-            --border: #404040;
-            --bg: #1a1a1a;
+            --text: #edf4f0;
+            --text-secondary: #b6c8bf;
+            --border: #3d4b44;
+            --bg-card: rgba(15, 24, 20, 0.9);
+            --bg-input: rgba(15, 24, 20, 0.85);
+            --bg-input-focus: rgba(20, 31, 27, 0.96);
+            --body-overlay: rgba(0, 0, 0, 0.22);
+            --shadow-lg: 0 18px 48px rgba(0, 0, 0, 0.45);
         }
 
         body {
@@ -39,6 +60,15 @@
             align-items: center;
             justify-content: center;
             color: var(--text);
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background: var(--body-overlay);
         }
 
         .login-container {
@@ -48,12 +78,14 @@
         }
 
         .login-card {
-            background: rgba(255, 255, 255, 0.95);
+            background: var(--bg-card);
             backdrop-filter: blur(10px);
             border-radius: 20px;
             box-shadow: var(--shadow-lg);
             padding: 3rem 2.5rem;
             border: 1px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+            z-index: 1;
         }
 
         .login-header {
@@ -123,7 +155,7 @@
             border-radius: 12px;
             font-size: 1rem;
             transition: all 0.3s;
-            background: rgba(255, 255, 255, 0.8);
+            background: var(--bg-input);
             color: var(--text);
         }
 
@@ -131,7 +163,7 @@
             outline: none;
             border-color: var(--primary);
             box-shadow: 0 0 0 4px rgba(45, 106, 79, 0.1);
-            background: white;
+            background: var(--bg-input-focus);
         }
 
         .form-group input::placeholder {
@@ -202,13 +234,15 @@
             right: 2rem;
             width: 50px;
             height: 50px;
-            background: white;
+            background: var(--bg-card);
+            color: var(--text);
             border-radius: 50%;
-            border: none;
+            border: 1px solid var(--border);
             cursor: pointer;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
             font-size: 1.5rem;
             transition: all 0.3s;
+            z-index: 2;
         }
 
         .theme-toggle-small:hover {
@@ -240,7 +274,7 @@
         <div class="login-card">
             <div class="login-header">
                 <div class="login-logo">
-                    <img src="/images/icon.png" alt="Sarawak Forestry">
+                    <img src="{% static 'images/icon.png' %}" alt="Sarawak Forestry" onerror="this.style.display='none'">
                 </div>
                 <h1 class="login-title">Sarawak<br>Forestry</h1>
                 <p class="login-subtitle">Admin Dashboard</p>
