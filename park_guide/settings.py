@@ -21,6 +21,23 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
 
 
+def _env_bool(name, default=False):
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.strip().lower() in ('1', 'true', 'yes', 'on')
+
+
+def _env_int(name, default=0):
+    value = os.getenv(name)
+    if value is None:
+        return default
+    try:
+        return int(value)
+    except ValueError:
+        return default
+
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
@@ -28,7 +45,7 @@ load_dotenv(BASE_DIR / ".env")
 SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-dev-only-key")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv("DEBUG", "True").strip().lower() in ("1", "true", "yes", "on")
+DEBUG = os.getenv("DEBUG", "False").strip().lower() in ("1", "true", "yes", "on")
 
 ALLOWED_HOSTS = [
     host.strip()
@@ -52,6 +69,7 @@ INSTALLED_APPS = [
     'secure_files.apps.SecureFilesConfig',
     'notifications.apps.NotificationsConfig',
     'accounts',
+    'dashboard.apps.DashboardConfig',
     'rest_framework.authtoken',
 ]
 
@@ -63,6 +81,16 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
     ),
+    'DEFAULT_THROTTLE_CLASSES': (
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+        'rest_framework.throttling.ScopedRateThrottle',
+    ),
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': os.getenv('THROTTLE_ANON_RATE', '60/min'),
+        'user': os.getenv('THROTTLE_USER_RATE', '120/min'),
+        'login': os.getenv('THROTTLE_LOGIN_RATE', '5/min'),
+    },
 }
 
 
@@ -110,10 +138,17 @@ WSGI_APPLICATION = 'park_guide.wsgi.application'
 
 import dj_database_url
 
+DATABASE_URL = os.getenv('DATABASE_URL', f"sqlite:///{BASE_DIR / 'db.sqlite3'}")
+DB_SSL_REQUIRE = _env_bool('DB_SSL_REQUIRE', default=not DATABASE_URL.startswith('sqlite'))
+DB_CONN_MAX_AGE = _env_int('DB_CONN_MAX_AGE', default=60)
+DB_CONN_HEALTH_CHECKS = _env_bool('DB_CONN_HEALTH_CHECKS', default=True)
+
 DATABASES = {
     'default': dj_database_url.config(
-        default=os.getenv('DATABASE_URL', f"sqlite:///{BASE_DIR / 'db.sqlite3'}"),
-        ssl_require=True
+        default=DATABASE_URL,
+        ssl_require=DB_SSL_REQUIRE,
+        conn_max_age=DB_CONN_MAX_AGE,
+        conn_health_checks=DB_CONN_HEALTH_CHECKS,
     )
 }
 
@@ -155,16 +190,33 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     BASE_DIR / 'static',
+    BASE_DIR / 'images',
 ]
 
 AUTH_USER_MODEL = 'accounts.CustomUser'
 
+# Auth redirect behavior for custom dashboard flow
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/dashboard/'
+LOGOUT_REDIRECT_URL = '/login/'
 
-def _env_bool(name, default=False):
-    value = os.getenv(name)
-    if value is None:
-        return default
-    return value.strip().lower() in ('1', 'true', 'yes', 'on')
+
+if _env_bool('LOG_SQL_TIMING', default=False):
+    LOGGING = {
+        'version': 1,
+        'disable_existing_loggers': False,
+        'handlers': {
+            'console': {
+                'class': 'logging.StreamHandler',
+            },
+        },
+        'loggers': {
+            'django.db.backends': {
+                'handlers': ['console'],
+                'level': 'DEBUG',
+            },
+        },
+    }
 
 # Firebase Storage settings
 # 1. Use the clean bucket name (No gs://)

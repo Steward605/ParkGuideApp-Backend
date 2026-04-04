@@ -1,5 +1,5 @@
 from django.contrib.admin import AdminSite
-from django.db.models import Avg, Count, Sum
+from django.db.models import Avg, Count, Q, Sum
 from django.urls import reverse
 from django.utils import timezone
 
@@ -29,6 +29,18 @@ class ParkGuideAdminSite(AdminSite):
 
     def each_context(self, request):
         context = super().each_context(request)
+        resolver_match = getattr(request, "resolver_match", None)
+        is_dashboard_index = bool(
+            resolver_match
+            and resolver_match.app_name == "admin"
+            and resolver_match.url_name == "index"
+        )
+
+        # Avoid running dashboard-wide aggregate queries on every admin page.
+        if not is_dashboard_index:
+            return context
+
+        current_user = request.user if request.user.is_authenticated else None
 
         total_users = CustomUser.objects.count()
         active_learners = CustomUser.objects.filter(
@@ -38,17 +50,23 @@ class ParkGuideAdminSite(AdminSite):
         ).count()
         app_users_qs = CustomUser.objects.filter(is_staff=False, is_superuser=False)
 
-        course_progress_qs = CourseProgressRecord.objects.select_related("course", "user")
-        module_progress_qs = ModuleProgressRecord.objects.select_related("module", "user")
-        user_badges_qs = UserBadge.objects.select_related("user", "badge")
-        user_notifications_qs = UserNotification.objects.select_related("notification", "user")
+        course_progress_qs = CourseProgressRecord.objects.all()
+        module_progress_qs = ModuleProgressRecord.objects.all()
+        user_badges_qs = UserBadge.objects.all()
+        user_notifications_qs = UserNotification.objects.all()
 
         total_courses = Course.objects.count()
         total_modules = Module.objects.count()
 
         completed_courses = course_progress_qs.filter(completed=True).values("course_id").distinct().count()
         completed_modules = module_progress_qs.filter(completed=True).values("module_id").distinct().count()
-        pending_badges = user_badges_qs.filter(status=UserBadge.STATUS_PENDING).count()
+        badge_counts = user_badges_qs.aggregate(
+            pending=Count("id", filter=Q(status=UserBadge.STATUS_PENDING)),
+            granted=Count("id", filter=Q(status=UserBadge.STATUS_GRANTED)),
+            rejected=Count("id", filter=Q(status=UserBadge.STATUS_REJECTED)),
+            total=Count("id"),
+        )
+        pending_badges = badge_counts["pending"]
         unread_notifications = user_notifications_qs.filter(is_read=False).count()
         total_files = SecureFile.objects.count()
         total_storage_bytes = SecureFile.objects.aggregate(total=Sum("size"))["total"] or 0
@@ -58,7 +76,11 @@ class ParkGuideAdminSite(AdminSite):
         in_progress_courses = course_progress_qs.filter(progress__gt=0, completed=False).count()
         not_started_courses = course_progress_qs.filter(progress=0, completed=False).count()
         stalled_courses = course_progress_qs.filter(progress__gt=0, completed=False, updated_at__lt=fourteen_days_ago).count()
-        unread_admin_notifications = user_notifications_qs.filter(user=request.user, is_read=False).count()
+        unread_admin_notifications = (
+            user_notifications_qs.filter(user_id=current_user.id, is_read=False).count()
+            if current_user
+            else 0
+        )
         new_users_this_week = app_users_qs.filter(date_joined__gte=seven_days_ago).count()
 
         recent_notifications = Notification.objects.select_related("created_by")[:5]
@@ -78,12 +100,17 @@ class ParkGuideAdminSite(AdminSite):
         module_progress_total = module_progress_qs.count()
         module_completion_rate = 0 if total_modules == 0 else round((completed_modules / total_modules) * 100)
 
-        badge_granted_total = user_badges_qs.filter(status=UserBadge.STATUS_GRANTED).count()
-        badge_rejected_total = user_badges_qs.filter(status=UserBadge.STATUS_REJECTED).count()
-        badge_total = user_badges_qs.count()
+        badge_granted_total = badge_counts["granted"]
+        badge_rejected_total = badge_counts["rejected"]
+        badge_total = badge_counts["total"]
 
-        notifications_total = user_notifications_qs.count()
-        notifications_read = user_notifications_qs.filter(is_read=True).count()
+        notification_counts = user_notifications_qs.aggregate(
+            total=Count("id"),
+            read=Count("id", filter=Q(is_read=True)),
+            unread=Count("id", filter=Q(is_read=False)),
+        )
+        notifications_total = notification_counts["total"]
+        notifications_read = notification_counts["read"]
         notifications_read_rate = 0 if notifications_total == 0 else round((notifications_read / notifications_total) * 100)
 
         app_cards = [
@@ -219,7 +246,12 @@ class ParkGuideAdminSite(AdminSite):
                 "label": "Unread admin alerts",
                 "value": unread_admin_notifications,
                 "detail": "Notifications sent to your staff account",
-                "url": reverse("admin:notifications_usernotification_changelist") + f"?user__id__exact={request.user.id}&is_read__exact=0",
+                "url": reverse("admin:notifications_usernotification_changelist")
+                + (
+                    f"?user__id__exact={current_user.id}&is_read__exact=0"
+                    if current_user
+                    else "?is_read__exact=0"
+                ),
                 "tone": "blue",
             },
             {
@@ -364,13 +396,24 @@ class ParkGuideAdminSite(AdminSite):
             },
         ]
 
+        top_course_progress_map = {
+            row["course_id"]: row
+            for row in course_progress_qs.filter(course_id__in=[course.id for course in top_courses])
+            .values("course_id")
+            .annotate(
+                learners=Count("id"),
+                completions=Count("id", filter=Q(completed=True)),
+                avg_progress=Avg("progress"),
+            )
+        }
+
         top_course_insights = []
         for course in top_courses:
-            records = course_progress_qs.filter(course=course)
-            learners = records.count()
-            completions = records.filter(completed=True).count()
+            progress = top_course_progress_map.get(course.id, {})
+            learners = progress.get("learners", 0)
+            completions = progress.get("completions", 0)
             completion_rate = 0 if learners == 0 else round((completions / learners) * 100)
-            avg_progress = round((records.aggregate(avg=Avg("progress"))["avg"] or 0) * 100)
+            avg_progress = round((progress.get("avg_progress") or 0) * 100)
             top_course_insights.append(
                 {
                     "course": course,
@@ -407,7 +450,7 @@ class ParkGuideAdminSite(AdminSite):
                     "courses": total_courses,
                     "modules": total_modules,
                     "badges": Badge.objects.filter(is_active=True).count(),
-                    "notifications": Notification.objects.count(),
+                        "notifications": notifications_total,
                 },
             }
         )

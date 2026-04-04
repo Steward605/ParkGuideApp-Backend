@@ -3,12 +3,11 @@
 Django REST backend for the Park Guide App training platform. This service handles authentication, training content, learner progress, badges, notifications, and secure file delivery.
 
 ## Stack
-- Django 6
-- Django REST Framework
-- JWT auth with `djangorestframework-simplejwt`
-- Neon Postgres via `DATABASE_URL`
-- Firebase Storage for secure file uploads and signed downloads
-- Custom user model: `accounts.CustomUser`
+- Django + Django REST Framework
+- JWT authentication (SimpleJWT)
+- Neon PostgreSQL
+- Custom user model (`accounts.CustomUser`)
+- Firebase secure file storage
 
 ## Features
 - Email-based registration and login
@@ -19,55 +18,54 @@ Django REST backend for the Park Guide App training platform. This service handl
 - Secure file upload, download, and temporary signed URLs using Firebase Storage
 - Django admin for courses, badges, notifications, users, and files
 
-## Environment Variables
-Create a `.env` file in the project root.
+## Prerequisites
+- Python 3.10+
+- Project `.env` file from @MiyukiVigil
+- Secrets files/credentials from @MiyukiVigil
 
-Required:
+Current configuration is environment-driven (see `park_guide/settings.py`):
+- `DATABASE_URL` (Neon database URL)
+- `DB_SSL_REQUIRE` (optional)
+- `DB_CONN_MAX_AGE` (optional)
+- `DB_CONN_HEALTH_CHECKS` (optional)
 
-```env
-SECRET_KEY=replace-me
-DEBUG=True
-ALLOWED_HOSTS=127.0.0.1,localhost
-DATABASE_URL=postgresql://<user>:<password>@<host>/<db>?sslmode=require
-FIREBASE_STORAGE_BUCKET=your-project.firebasestorage.app
-FIREBASE_SERVICE_ACCOUNT_PATH=path/to/firebase-service-account.json
+## Setup
+1. Create and activate a virtual environment:
+
+For Mac and Linux (Depnding on your terminal shell):
+```bash
+python -m venv venv
+source venv/bin/activate
 ```
 
-Optional:
-
-```env
-JWT_SIGNING_KEY=replace-me-if-you-want-a-separate-jwt-key
+For Windows:
+```bash
+venv\Scripts\activate
 ```
 
-Notes:
-- `DATABASE_URL` is the main database connection string. This is where your Neon connection string goes.
-- `ssl_require=True` is enabled in Django settings, so your Postgres connection must support SSL.
-- `FIREBASE_SERVICE_ACCOUNT_PATH` is resolved relative to the project root in `park_guide/settings.py`. A value like `secrets/firebase-admin.json` works well.
-- Keep the Firebase bucket name clean, without `gs://`.
-
-## Local Setup
-1. Create a virtual environment and activate it.
+2. Install backend dependencies:
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
+pip install -r requirements.txt
 ```
 
-2. Install dependencies.
+3. Add required environment/secrets files provided by @MiyukiVigil:
 
+- `.env`
+- Firebase service account JSON (under `secrets/`)
+- Any additional project secrets used by your environment
+
+4. Run migrations:
+For first time setup
 ```bash
-pip install Django djangorestframework djangorestframework-simplejwt psycopg2-binary dj-database-url python-dotenv firebase-admin
+python manage.py load_training_courses 
+python manage.py makemigrations accounts courses
+python manage.py migrate
+
 ```
-
-3. Create `.env` from the example file and fill in your Neon and Firebase values.
-
+After that when there's changes
 ```bash
-cp .env.example .env
-```
-
-4. Run migrations.
-
-```bash
+python manage.py makemigrations
 python manage.py migrate
 ```
 
@@ -121,23 +119,19 @@ DATABASE_URL=postgresql://username:password@ep-example.ap-southeast-1.aws.neon.t
 
 If the database is brand new, run:
 
-```bash
-python manage.py migrate
-python manage.py load_training_courses
-python manage.py seed_demo_badges
-```
+## Secure File Endpoints (Firebase Storage)
+- `GET /api/secure-files/files/` – list your uploaded files (admin sees all)
+- `POST /api/secure-files/files/` – upload file with multipart field `file`
+- `GET /api/secure-files/files/{id}/` – file metadata + temporary download URL
+- `GET /api/secure-files/files/{id}/download-url/` – new temporary download URL
+- `DELETE /api/secure-files/files/{id}/` – delete a file
 
 ## Firebase Storage
 Secure file uploads are stored in Firebase Storage.
 
-What you need:
-- A Firebase project
-- A Storage bucket
-- A service account JSON file with Storage access
-- Matching values for `FIREBASE_STORAGE_BUCKET` and `FIREBASE_SERVICE_ACCOUNT_PATH`
+## Firebase Setup
 
-Quick check:
-
+- Requires Firebase service account JSON file, request from @MiyukiVigil
 ```bash
 python manage.py bootstrap_private_bucket
 ```
@@ -213,8 +207,28 @@ python manage.py createsuperuser
 python manage.py runserver
 ```
 
-## Project Notes
-- Default REST permissions require authentication globally.
-- JWT uses `SECRET_KEY` unless `JWT_SIGNING_KEY` is provided.
-- The database falls back to local SQLite only if `DATABASE_URL` is missing, but for this project you should treat Neon/Postgres as the real target setup.
-- Firebase file paths are stored in the `SecureFile.s3_key` field for legacy compatibility.
+Available sections under Notifications:
+- Notification
+- User notification
+
+Admin send flow:
+1. Create a Notification in Django admin.
+2. Select it from list view.
+3. Run action: **Send selected notifications to all users**.
+
+Demo badge setup command:
+- `python manage.py seed_demo_badges` (creates selectable badges from current training courses/module data)
+
+## Notes
+- `ModuleProgress` and `CourseProgress` are the source of truth for learner progress.
+- Admins can create badges and manage them with a pending workflow (`pending`, `granted`, `rejected`) based on each user's completed module count.
+- Admin actions support syncing pending badges for eligible users, auto-approving pending badges, and auto-rejecting pending badges.
+- Admins can also use a one-click action: **Sync pending then auto approve eligible users**.
+- Notifications can be broadcast from admin to all regular app users in one action (excludes staff/admin accounts).
+- New notifications created from admin are auto-broadcast immediately to all regular app users (no second step needed).
+- Quiz data exists inside module content (`Module.quiz`) and now supports multiple quizzes per module.
+- Training JSON can use either `quiz` (single object, backward compatible) or `quizzes` (array of quiz objects).
+- Each quiz supports single-answer (`correctIndex`) and multi-answer (`correctIndexes`) with up to 3 correct choices.
+- Posting to progress endpoints reuses and amends existing progress records for the same user/course or user/module instead of creating new IDs.
+- Dependencies are maintained in `requirements.txt` and should stay project-focused only.
+- Secure files are stored in Firebase private storage and accessed only with valid app auth + short-lived signed URLs.
