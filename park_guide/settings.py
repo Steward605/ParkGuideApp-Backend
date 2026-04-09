@@ -137,6 +137,8 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'park_guide.wsgi.application'
 
+ADMIN_ENABLED = _env_bool('ADMIN_ENABLED', default=False)
+
 
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
