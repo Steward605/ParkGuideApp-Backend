@@ -4,20 +4,263 @@
 
 {% block extra_css %}
 <style>
-    .badge-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; }
+    .badge-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+        gap: 1.5rem;
+        width: 100%;
+        min-width: 0;
+    }
+
+    .badge-grid > * {
+        min-width: 0;
+    }
+
+    html,
+    body {
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+
+    .badges-page-content {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        overflow-x: hidden;
+    }
+
+    .badges-page-content .glass-card,
+    .badges-page-content .badge-grid,
+    .badges-page-content .badge-grid > *,
+    .badges-page-content .table-responsive {
+        max-width: 100%;
+        min-width: 0;
+    }
+
+    .badges-page-content .table-responsive {
+        width: 100%;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .badges-page-content .table-responsive .table {
+        width: max-content;
+        min-width: 100%;
+        margin-bottom: 0;
+    }
+
+    .glass-card,
+    .badge-grid,
+    .badge-grid > *,
+    .table-responsive {
+        max-width: 100%;
+        min-width: 0;
+    }
+
+    .table-responsive {
+        width: 100%;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .table-responsive .table {
+        width: max-content;
+        min-width: 100%;
+        margin-bottom: 0;
+    }
+
+    @media (max-width: 575.98px) {
+        .badge-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        .badge-card {
+            width: 100%;
+            max-width: 100%;
+        }
+
+        .badge-title,
+        .badge-description {
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+
+        .glass-card {
+            overflow-x: hidden;
+        }
+
+        .table-responsive {
+            padding-bottom: 0.25rem;
+        }
+
+        .table-responsive .table th,
+        .table-responsive .table td {
+            white-space: nowrap;
+        }
+    }
+
     .badge-card {
         text-align: center;
-        transition: transform 0.3s;
+        transition: transform 0.3s, box-shadow 0.3s ease;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        height: 100%;
+        min-height: 360px;
     }
     .badge-card:hover { transform: translateY(-10px); }
     .badge-art {
-        width: 100px; height: 100px;
+        width: 100px;
+        height: 100px;
         background: var(--bg-body);
         border-radius: 50%;
         margin: 0 auto 1.5rem;
-        display: flex; align-items: center; justify-content: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         font-size: 2.5rem;
         border: 4px solid var(--border);
+    }
+
+    .badge-title {
+        width: 100%;
+        line-height: 1.25;
+        min-height: calc(1.25em * 2);
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .badge-description {
+        width: 100%;
+        line-height: 1.45;
+        min-height: calc(1.45em * 2);
+        margin-bottom: 1rem;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+
+    .badge-stats {
+        margin-top: auto;
+        width: 100%;
+    }
+
+    .create-badge-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .create-badge-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        border-radius: 999px;
+        padding: 0.65rem 1.1rem;
+        font-weight: 600;
+    }
+
+    .create-badge-toggle .toggle-icon {
+        transition: transform 0.25s ease;
+    }
+
+    .create-badge-toggle[aria-expanded="true"] .toggle-icon {
+        transform: rotate(180deg);
+    }
+
+    .create-badge-body {
+        padding-top: 1.25rem;
+    }
+
+    @media (max-width: 767.98px) {
+        .create-badge-header {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .create-badge-toggle {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+
+    .badge-detail-modal .modal-dialog {
+        max-width: 760px;
+    }
+
+    .badge-detail-modal .modal-content {
+        border-radius: 22px;
+        overflow: hidden;
+        max-height: min(82vh, 760px);
+    }
+
+    .badge-detail-modal .modal-header {
+        padding: 1rem 1.1rem 0.9rem;
+    }
+
+    .badge-detail-modal .modal-body {
+        padding: 1rem;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+    }
+
+    .badge-detail-modal .glass-card {
+        padding: 1rem;
+        border-radius: 18px;
+    }
+
+    .badge-detail-modal .badge-user-item {
+        padding: 0.9rem !important;
+    }
+
+    @media (max-width: 767.98px) {
+        .badge-detail-modal .modal-dialog {
+            margin: 0.75rem auto;
+            max-width: min(320px, calc(100vw - 1.5rem));
+        }
+
+        .badge-detail-modal .modal-content {
+            max-height: calc(100dvh - 1.5rem);
+        }
+
+        .badge-detail-modal .modal-header {
+            padding: 0.9rem 0.95rem 0.75rem;
+            align-items: flex-start;
+        }
+
+        .badge-detail-modal .modal-title {
+            font-size: 1.1rem;
+            line-height: 1.35;
+        }
+
+        .badge-detail-modal .modal-body {
+            padding: 0.85rem;
+        }
+
+        .badge-detail-modal .row.g-3 {
+            --bs-gutter-x: 0.75rem;
+            --bs-gutter-y: 0.75rem;
+        }
+
+        .badge-detail-modal .glass-card {
+            padding: 0.85rem;
+            border-radius: 16px;
+        }
+
+        .badge-detail-modal .h4 {
+            font-size: 1.35rem;
+            margin-bottom: 0.75rem !important;
+        }
+
+        .badge-detail-modal .badge-user-item {
+            padding: 0.8rem !important;
+        }
     }
 </style>
 {% endblock %}
@@ -25,10 +268,23 @@
 {% block content %}
 <div class="badges-page-content">
     <div class="glass-card mb-4">
-        <h3 class="h5 fw-bold mb-4">
-            Pending Requests
-            <span class="text-muted" id="pendingRequestsCount">({{ total_pending }})</span>
-        </h3>
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+            <h3 class="h5 fw-bold mb-0">
+                Pending Requests
+                <span class="text-muted" id="pendingRequestsCount">({{ total_pending }})</span>
+            </h3>
+            <form method="post" onsubmit="return confirm('Approve all pending badge requests?');">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="approve_all_badges">
+                <button
+                    type="submit"
+                    class="btn btn-success rounded-pill px-4"
+                    {% if not total_pending %}disabled{% endif %}>
+                    Approve All Requests
+                </button>
+            </form>
+        </div>
+
         <div class="table-responsive">
             <table class="table table-hover align-middle">
                 <thead>
@@ -118,9 +374,9 @@
         {% for badge in badges %}
         <div class="glass-card badge-card" data-badge-card="{{ badge.id }}" data-badge-id="{{ badge.id }}" role="button" tabindex="0" aria-label="View {{ badge.name }} details">
             <div class="badge-art"><i class="bi bi-patch-check-fill"></i></div>
-            <h4 class="fw-bold">{{ badge.name }}</h4>
-            <p class="text-muted small">{{ badge.description }}</p>
-            <div class="row border-top pt-3 mt-3">
+            <h4 class="fw-bold badge-title">{{ badge.name }}</h4>
+            <p class="text-muted small badge-description">{{ badge.description }}</p>
+            <div class="row border-top pt-3 badge-stats">
                 <div class="col-6 border-end">
                     <div class="small text-muted">GRANTED</div>
                     <div class="fw-bold" data-granted-count>{{ badge.granted_badges }}</div>
@@ -192,11 +448,133 @@
     {% endfor %}
 </div>
 
-<div class="glass-card mt-5">
-    <h3 class="h5 fw-bold mb-4">Pending Requests</h3>
-    <div class="table-responsive">
-        <table class="table table-hover align-middle">
-            <thead>
+        if (createBadgeCollapseEl && createBadgeToggleText) {
+            createBadgeCollapseEl.addEventListener('show.bs.collapse', function () {
+                createBadgeToggleText.textContent = 'Hide Create Badge';
+            });
+            createBadgeCollapseEl.addEventListener('hide.bs.collapse', function () {
+                createBadgeToggleText.textContent = 'Open Create Badge';
+            });
+        }
+
+        const badgeCards = document.querySelectorAll('.badge-card');
+        const badgeDetailModalEl = document.getElementById('badgeDetailModal');
+        const badgeDetailModal = badgeDetailModalEl ? new bootstrap.Modal(badgeDetailModalEl) : null;
+        const badgeDetailTitle = document.getElementById('badgeDetailModalLabel');
+        const badgeDetailDescription = document.getElementById('badgeDetailModalDescription');
+        const badgeDetailGrantedCount = document.getElementById('badgeDetailGrantedCount');
+        const badgeDetailPendingCount = document.getElementById('badgeDetailPendingCount');
+        const badgeDetailGrantedList = document.getElementById('badgeDetailGrantedList');
+        const badgeDetailPendingList = document.getElementById('badgeDetailPendingList');
+        let activeBadgeRequest = false;
+
+        function showInlineMessage(message, type = 'success') {
+            const wrapper = document.createElement('div');
+            wrapper.className = `alert alert-${type} alert-dismissible fade show mt-3`;
+            wrapper.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+
+            const card = tableBody ? tableBody.closest('.glass-card') : document.querySelector('.glass-card.mt-5');
+            if (card) {
+                card.insertBefore(wrapper, card.children[1]);
+            }
+
+            setTimeout(() => {
+                wrapper.classList.remove('show');
+                wrapper.remove();
+            }, 2500);
+        }
+
+        function renderBadgeUserList(container, users, emptyText) {
+            if (!container) return;
+            if (!users.length) {
+                container.innerHTML = `<div class="text-muted small">${emptyText}</div>`;
+                return;
+            }
+            container.innerHTML = users.map((user) => `
+                <div class="badge-user-item border rounded-3 p-3">
+                    <div class="fw-semibold">${user.username}</div>
+                    <div class="small text-muted">${user.email}</div>
+                    ${user.awarded_at ? `<div class="small text-muted mt-1">Date: ${user.awarded_at}</div>` : ''}
+                    ${user.awarded_by ? `<div class="small text-muted">By: ${user.awarded_by}</div>` : ''}
+                </div>
+            `).join('');
+        }
+
+        async function openBadgeDetailModal(badgeId) {
+            if (!badgeDetailModal || !badgeId || activeBadgeRequest) return;
+            activeBadgeRequest = true;
+            if (typeof showPageLoader === 'function') {
+                showPageLoader();
+            }
+            try {
+                const response = await fetch(`?action=badge_details&badge_id=${badgeId}`, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                    }
+                });
+                const data = await response.json();
+                if (!response.ok || !data.ok) {
+                    throw new Error(data.error || 'Failed to load badge details.');
+                }
+                const badge = data.badge;
+                badgeDetailTitle.textContent = badge.name;
+                badgeDetailDescription.textContent = badge.description || 'No description provided.';
+                badgeDetailGrantedCount.textContent = badge.granted_count;
+                badgeDetailPendingCount.textContent = badge.pending_count;
+                renderBadgeUserList(badgeDetailGrantedList, badge.granted_users, 'No granted users yet.');
+                renderBadgeUserList(badgeDetailPendingList, badge.pending_users, 'No pending users.');
+                badgeDetailModal.show();
+            } catch (error) {
+                showInlineMessage(error.message || 'Could not load badge details.', 'danger');
+            } finally {
+                activeBadgeRequest = false;
+                if (typeof hidePageLoader === 'function') {
+                    hidePageLoader();
+                }
+            }
+        }
+
+        badgeCards.forEach((card) => {
+            card.addEventListener('click', function () {
+                const badgeId = card.getAttribute('data-badge-id');
+                if (badgeId) {
+                    openBadgeDetailModal(badgeId);
+                }
+            });
+
+            card.addEventListener('keydown', function (event) {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    const badgeId = card.getAttribute('data-badge-id');
+                    if (badgeId) {
+                        openBadgeDetailModal(badgeId);
+                    }
+                }
+            });
+        });
+
+        function updatePendingCount(newCount) {
+            if (pendingCountEl) {
+                pendingCountEl.textContent = `(${newCount})`;
+            }
+        }
+
+        function updateBadgeCardCounts(badgeId, grantedCount, pendingCount) {
+            const card = document.querySelector(`[data-badge-card="${badgeId}"]`);
+            if (!card) return;
+            const grantedEl = card.querySelector('[data-granted-count]');
+            const pendingEl = card.querySelector('[data-pending-count]');
+            if (grantedEl) grantedEl.textContent = grantedCount;
+            if (pendingEl) pendingEl.textContent = pendingCount;
+        }
+
+        function showEmptyStateIfNeeded() {
+            if (!tableBody) return;
+            if (tableBody.querySelector('tr')) return;
+            tableBody.innerHTML = `
                 <tr>
                     <th>Learner</th>
                     <th>Requested Badge</th>
