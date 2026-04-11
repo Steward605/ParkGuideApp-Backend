@@ -10,3 +10,10 @@ env/
 !.env.example
 secrets
 .agents
+.DS_Store
+
+# Firebase & Google credentials
+*firebase-adminsdk*.json
+google-services.json
+*.secrets.json
+**/*-key.json
