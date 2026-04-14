@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect
+from django.urls import reverse
 from django.contrib import messages
 from django.contrib.auth import login as auth_login
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -8,6 +9,7 @@ from django.http import JsonResponse, HttpResponse
 from django.db.models import Count, Q, Avg, Sum
 from django.utils import timezone
 from django.core.exceptions import ImproperlyConfigured
+from .forms import CourseForm, CourseImportForm, ChapterForm, LessonForm, QuizForm, PracticeExerciseForm
 from django.core.management import call_command
 from datetime import timedelta
 from django.core.paginator import Paginator
@@ -30,13 +32,25 @@ from reportlab.lib import colors
 from datetime import datetime
 
 from accounts.models import CustomUser
-from courses.models import Course, Module, ModuleProgress, CourseProgress
+from courses.models import (
+    Course, Module, ModuleProgress, CourseProgress, Chapter, Lesson, Quiz, 
+    ChapterProgress, CourseEnrollment, QuizAttempt, PracticeAttempt, LessonProgress
+)
 from user_progress.models import Badge, UserBadge
 from notifications.models import Notification, UserNotification
 from notifications.services import send_push_to_users
 from secure_files.models import SecureFile
 from secure_files.services.firebase_storage import delete_file as delete_secure_blob, upload_file
 from .models import BackupSetting, BackupHistory, BackupAuditLog
+
+
+def get_title_text(title_obj, lang='en', default='Untitled'):
+    """Safely extract title text from either dict or string format"""
+    if isinstance(title_obj, dict):
+        return title_obj.get(lang, title_obj.get('en', default))
+    elif isinstance(title_obj, str):
+        return title_obj or default
+    return default
 
 
 @require_http_methods(["GET"])
@@ -450,6 +464,195 @@ def is_staff_or_admin(user):
     """Check if user is staff or admin"""
     return user.is_staff or user.is_superuser
 
+def get_guide_queryset():
+    """Get queryset of guide users (not staff or superuser)"""
+    return CustomUser.objects.filter(is_staff=False, is_superuser=False, is_active=True)
+
+def build_learning_insight_data(selected_course_id=None):
+    """Build learning insights data  for new course/chapter/quiz structure"""
+    selected_course_id = str(selected_course_id or 'all')
+    
+    all_courses = Course.objects.all().order_by('code')
+    total_enrollments = CourseEnrollment.objects.count()
+    
+    datasets = {
+        'all': {
+            'label': 'All Courses',
+            'enrollment_status': {
+                'labels': ['Completed', 'In Progress', 'Enrolled'],
+                'values': [
+                    CourseEnrollment.objects.filter(status='completed').count(),
+                    CourseEnrollment.objects.filter(status='in_progress').count(),
+                    CourseEnrollment.objects.filter(status='enrolled').count(),
+                ],
+            },
+            'summary': {
+                'courses': all_courses.count(),
+                'chapters': Chapter.objects.count(),
+                'lessons': Lesson.objects.count(),
+                'quizzes': Quiz.objects.count(),
+                'avg_progress': round(
+                    CourseEnrollment.objects.aggregate(avg=Avg('progress_percentage'))['avg'] or 0, 1
+                ),
+            },
+        }
+    }
+    
+    # Per-course breakdown
+    for course in all_courses:
+        course_enrollments = CourseEnrollment.objects.filter(course=course)
+        
+        datasets[str(course.id)] = {
+            'label': course.code + ": " + get_title_text(course.title, 'en', 'Untitled'),
+            'enrollment_status': {
+                'labels': ['Completed', 'In Progress', 'Enrolled'],
+                'values': [
+                    course_enrollments.filter(status='completed').count(),
+                    course_enrollments.filter(status='in_progress').count(),
+                    course_enrollments.filter(status='enrolled').count(),
+                ],
+            },
+            'summary': {
+                'courses': 1,
+                'chapters': course.chapters.count(),
+                'lessons': Lesson.objects.filter(chapter__course=course).count(),
+                'quizzes': Quiz.objects.filter(chapter__course=course).count(),
+                'avg_progress': round(
+                    course_enrollments.aggregate(avg=Avg('progress_percentage'))['avg'] or 0, 1
+                ),
+            },
+        }
+    
+    if selected_course_id not in datasets:
+        selected_course_id = 'all'
+    
+    return {
+        'selected_course_id': selected_course_id,
+        'course_options': [
+            {'id': 'all', 'label': 'All 5 Courses'},
+            *[
+                {
+                    'id': str(course.id),
+                    'label': f"{course.code}: {get_title_text(course.title, 'en', 'Untitled')[:30]}"
+                }
+                for course in all_courses
+            ],
+        ],
+        'datasets': datasets,
+    }
+
+def get_guide_queryset():
+    """Get queryset of guide users (not staff or superuser) - redundant but kept for compatibility"""
+    return CustomUser.objects.filter(is_staff=False, is_superuser=False, is_active=True)
+
+def get_dashboard_stats(request):
+    """Get comprehensive dashboard statistics for the home page"""
+    
+    # User statistics
+    total_users = CustomUser.objects.count()
+    active_users = CustomUser.objects.filter(is_active=True).count()
+    guides = get_guide_queryset()
+    active_guides = guides.count()
+    new_this_week = CustomUser.objects.filter(
+        date_joined__gte=timezone.now() - timedelta(days=7)
+    ).count()
+    
+    # Course statistics (updated for new 5-course structure)
+    total_courses = Course.objects.count()
+    total_chapters = Chapter.objects.count()
+    total_lessons = Lesson.objects.count()
+    total_quizzes = Quiz.objects.count()
+    
+    # Calculate average progress across all users
+    enrollments = CourseEnrollment.objects.all()
+    avg_course_progress = enrollments.aggregate(avg=Avg('progress_percentage'))['avg'] or 0
+    
+    # Course completion stats
+    completed_enrollments = enrollments.filter(status='completed').count()
+    in_progress_enrollments = enrollments.filter(status='in_progress').count()
+    enrolled_only = enrollments.filter(status='enrolled').count()
+    
+    # Badge statistics
+    pending_badges = UserBadge.objects. filter(status='pending').count()
+    granted_badges = UserBadge.objects.filter(status='granted').count()
+    total_badges = Badge.objects.count()
+    
+    # Notification statistics
+    total_notifications = Notification.objects.count()
+    unread_notifications = Notification.objects.filter(admin_seen_at__isnull=True).count()
+    
+    # Learning insights - use the previous function
+    learning_insights = build_learning_insight_data()
+    
+    # Backup summary
+    backup_summary = get_backup_summary()
+    
+    # Prerequisite tracking (new 5-course system)
+    courses_with_prereqs = Course.objects.filter(prerequisites__isnull=False).distinct().count()
+    courses_entry_point = Course.objects.filter(prerequisites__isnull=True).count()
+    
+    # Recent activity (user enrollments and progress)
+    recent_enrollments = CourseEnrollment.objects.select_related('user', 'course').order_by('-enrollment_date')[:10]
+    recent_activity = []
+    for enrollment in recent_enrollments:
+        recent_activity.append({
+            'type': 'enrollment',
+            'user': enrollment.user,
+            'course': enrollment.course,
+            'timestamp': enrollment.enrollment_date,
+            'status': enrollment.status,
+        })
+    
+    # Recent completed chapters
+    recent_progress = ChapterProgress.objects.filter(is_complete=True).select_related('user', 'chapter').order_by('-updated_at')[:5]
+    for progress in recent_progress:
+        recent_activity.append({
+            'type': 'chapter_complete',
+            'user': progress.user,
+            'chapter': progress.chapter,
+            'timestamp': progress.updated_at,
+        })
+    
+    # Sort by timestamp
+    recent_activity.sort(key=lambda x: x['timestamp'], reverse=True)
+    recent_activity = recent_activity[:15]  # Keep top 15
+    
+    context = {
+        'stats': {
+            'total_users': total_users,
+            'active_users': active_users,
+            'new_this_week': new_this_week,
+            'active_guides': active_guides,
+        },
+        'course_stats': {
+            'total_courses': total_courses,
+            'total_chapters': total_chapters,
+            'total_lessons': total_lessons,
+            'total_quizzes': total_quizzes,
+            'avg_progress': round(avg_course_progress, 1),
+            'completed': completed_enrollments,
+            'in_progress': in_progress_enrollments,
+            'enrolled': enrolled_only,
+            'total_modules': total_chapters,  # For backward compatibility with template
+            'prerequisite_enabled_courses': courses_with_prereqs,
+            'entry_point_courses': courses_entry_point,
+        },
+        'badge_stats': {
+            'pending_approvals': pending_badges,
+            'granted': granted_badges,
+            'total_badges': total_badges,
+        },
+        'notification_stats': {
+            'total': total_notifications,
+            'unread': unread_notifications,
+        },
+        'learning_insights': learning_insights,
+        'backup_summary': backup_summary,
+        'recent_activity': recent_activity,
+    }
+    
+    return context
+
 @login_required(login_url='dashboard:login')
 def index_redirect(request):
     """Redirect to dashboard or login"""
@@ -625,117 +828,940 @@ def dashboard_users(request):
     }
     return render(request, 'dashboard/users.html', context)
 
+
+def _reset_enrollment_progress(enrollment):
+    """Reset all tracked progress for a single enrollment."""
+    target_course_id = enrollment.course_id
+    user = enrollment.user
+
+    LessonProgress.objects.filter(
+        user=user,
+        lesson__chapter__course_id=target_course_id,
+    ).delete()
+    ChapterProgress.objects.filter(
+        user=user,
+        chapter__course_id=target_course_id,
+    ).delete()
+    PracticeAttempt.objects.filter(
+        user=user,
+        exercise__chapter__course_id=target_course_id,
+    ).delete()
+    QuizAttempt.objects.filter(
+        user=user,
+        quiz__chapter__course_id=target_course_id,
+    ).delete()
+
+    enrollment.status = 'enrolled'
+    enrollment.started_date = None
+    enrollment.completed_date = None
+    enrollment.completed_chapters = 0
+    enrollment.total_chapters = enrollment.course.chapters.count()
+    enrollment.progress_percentage = 0
+    enrollment.final_score = None
+    enrollment.total_time_spent = 0
+    enrollment.save(update_fields=[
+        'status', 'started_date', 'completed_date', 'completed_chapters',
+        'total_chapters', 'progress_percentage', 'final_score',
+        'total_time_spent', 'updated_at'
+    ])
+
+
+@login_required
+@user_passes_test(is_staff_or_admin)
+def dashboard_enrollments(request):
+    """Manage course enrollments, status, and progress resets."""
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        enrollment_id = request.POST.get('enrollment_id')
+        next_url = request.POST.get('next') or reverse('dashboard:enrollments')
+        enrollment = CourseEnrollment.objects.filter(id=enrollment_id).select_related('user', 'course').first()
+
+        if not enrollment:
+            messages.error(request, 'Enrollment not found.')
+            return redirect(next_url)
+
+        with transaction.atomic():
+            if action == 'update_status':
+                new_status = request.POST.get('status')
+                valid_statuses = {choice[0] for choice in CourseEnrollment.STATUS_CHOICES}
+                if new_status not in valid_statuses:
+                    messages.error(request, 'Invalid enrollment status.')
+                else:
+                    enrollment.status = new_status
+                    if new_status == 'completed':
+                        enrollment.completed_date = enrollment.completed_date or timezone.now()
+                        enrollment.progress_percentage = 100
+                        enrollment.completed_chapters = enrollment.course.chapters.count()
+                    elif new_status == 'in_progress':
+                        enrollment.started_date = enrollment.started_date or timezone.now()
+                        enrollment.completed_date = None
+                    elif new_status == 'enrolled':
+                        enrollment.started_date = None
+                        enrollment.completed_date = None
+                    enrollment.save()
+                    messages.success(
+                        request,
+                        f'Updated {enrollment.user.username} in {enrollment.course.code} to {enrollment.get_status_display()}.'
+                    )
+            elif action == 'reset_progress':
+                _reset_enrollment_progress(enrollment)
+                messages.success(
+                    request,
+                    f'Reset progress for {enrollment.user.username} in {enrollment.course.code}.'
+                )
+            elif action == 'delete_enrollment':
+                course_code = enrollment.course.code
+                username = enrollment.user.username
+                enrollment.delete()
+                messages.success(request, f'Removed enrollment for {username} from {course_code}.')
+            else:
+                messages.error(request, 'Unknown enrollment action.')
+
+        return redirect(next_url)
+
+    enrollments = CourseEnrollment.objects.select_related('user', 'course').order_by('-updated_at')
+    search_query = request.GET.get('search', '').strip()
+    status_filter = request.GET.get('status', '').strip()
+    course_filter = request.GET.get('course', '').strip()
+
+    if search_query:
+        enrollments = enrollments.filter(
+            Q(user__username__icontains=search_query) |
+            Q(user__email__icontains=search_query) |
+            Q(course__code__icontains=search_query) |
+            Q(course__title__en__icontains=search_query)
+        )
+
+    if status_filter:
+        enrollments = enrollments.filter(status=status_filter)
+
+    if course_filter:
+        enrollments = enrollments.filter(course_id=course_filter)
+
+    paginator = Paginator(enrollments, 20)
+    page_obj = paginator.get_page(request.GET.get('page', 1))
+
+    stats_qs = CourseEnrollment.objects.all()
+    stats = {
+        'total': stats_qs.count(),
+        'completed': stats_qs.filter(status='completed').count(),
+        'in_progress': stats_qs.filter(status='in_progress').count(),
+        'enrolled': stats_qs.filter(status='enrolled').count(),
+        'avg_progress': round(stats_qs.aggregate(avg=Avg('progress_percentage'))['avg'] or 0, 1),
+    }
+
+    context = {
+        'page_obj': page_obj,
+        'enrollments': page_obj.object_list,
+        'search_query': search_query,
+        'status_filter': status_filter,
+        'course_filter': course_filter,
+        'status_choices': CourseEnrollment.STATUS_CHOICES,
+        'course_options': Course.objects.order_by('code'),
+        'stats': stats,
+    }
+    return render(request, 'dashboard/enrollments.html', context)
+
 @login_required
 @user_passes_test(is_staff_or_admin)
 def dashboard_courses(request):
-    """Course management page"""
-    if request.method == 'POST':
-        action = request.POST.get('action')
-
-        if action == 'create_course':
-            title_en = request.POST.get('title_en', '').strip()
-            if not title_en:
-                messages.error(request, 'Course title is required.')
-            else:
-                Course.objects.create(title={'en': title_en})
-                messages.success(request, f'Course "{title_en}" created successfully.')
-            return redirect('dashboard:courses')
-
-        if action == 'create_module':
-            course_id = request.POST.get('course_id')
-            module_title_en = request.POST.get('module_title_en', '').strip()
-            module_content_en = request.POST.get('module_content_en', '').strip()
-
-            course = Course.objects.filter(id=course_id).first()
-            if not course:
-                messages.error(request, 'Please select a valid course.')
-            elif not module_title_en:
-                messages.error(request, 'Module title is required.')
-            else:
-                Module.objects.create(
-                    course=course,
-                    title={'en': module_title_en},
-                    content={'en': module_content_en} if module_content_en else None,
-                )
-                messages.success(request, f'Module "{module_title_en}" added to course.')
-            return redirect('dashboard:courses')
-
-    courses = Course.objects.annotate(
-        total_modules=Count('modules'),
-        total_enrollments=Count('courseprogress')
-    ).all()
+    """Course management page - NEW: integrated with 5-course hierarchy system"""
+    
+    # Get all courses with their relationships
+    courses = Course.objects.prefetch_related('chapters', 'prerequisites').all().order_by('code')
+    
+    # Calculate statistics for each course
+    course_data = []
+    for course in courses:
+        chapters = course.chapters.count()
+        lessons = Lesson.objects.filter(chapter__course=course).count()
+        quizzes = Quiz.objects.filter(chapter__course=course).count()
+        total_practice = 0  # Can be extended for practice exercises
+        enrollments = CourseEnrollment.objects.filter(course=course).count()
+        completed_enrollments = CourseEnrollment.objects.filter(course=course, status='completed').count()
+        
+        # Prerequisite info
+        has_prerequisites = course.prerequisites.exists()
+        prerequisite_list = list(course.prerequisites.values_list('code', flat=True))
+        
+        course_data.append({
+            'course': course,
+            'chapters': chapters,
+            'lessons': lessons,
+            'quizzes': quizzes,
+            'practice_exercises': total_practice,
+            'enrollments': enrollments,
+            'completed': completed_enrollments,
+            'has_prerequisites': has_prerequisites,
+            'prerequisites': prerequisite_list,
+            'completion_rate': (completed_enrollments / enrollments * 100) if enrollments > 0 else 0,
+        })
+    
+    # Aggregate stats
+    total_enrollments = CourseEnrollment.objects.count()
+    total_completed = CourseEnrollment.objects.filter(status='completed').count()
     
     context = {
-        'courses': courses,
+        'course_data': course_data,
         'stats': {
             'total_courses': courses.count(),
-            'total_modules': Module.objects.count(),
-            'avg_modules_per_course': courses.aggregate(avg=Avg('modules'))['avg'] or 0,
+            'total_chapters': Chapter.objects.all().count(),
+            'total_lessons': Lesson.objects.all().count(),
+            'total_quizzes': Quiz.objects.all().count(),
+            'total_enrollments': total_enrollments,
+            'total_completed': total_completed,
+            'overall_completion_rate': (total_completed / total_enrollments * 100) if total_enrollments > 0 else 0,
+            'prerequisite_enabled_courses': courses.filter(prerequisites__isnull=False).distinct().count(),
         },
-        'all_courses': Course.objects.all().order_by('id'),
+        'all_courses': courses,
     }
     return render(request, 'dashboard/courses.html', context)
+
+
+@login_required
+@user_passes_test(is_staff_or_admin)
+def dashboard_course_details(request, course_id):
+    """Course details page with inline editing for chapters, lessons, quizzes, exercises"""
+    course = get_object_or_404(Course, pk=course_id)
+    
+    # Get all chapters with their content
+    chapters = course.chapters.all().order_by('order').prefetch_related(
+        'lessons',
+        'quizzes', 
+        'practice_exercises'
+    )
+    
+    # Build detailed structure and calculate totals
+    course_content = []
+    total_lessons = 0
+    total_quizzes = 0
+    total_exercises = 0
+    
+    for chapter in chapters:
+        lessons = list(chapter.lessons.all().order_by('order'))
+        quizzes = list(chapter.quizzes.all().order_by('order'))
+        exercises = list(chapter.practice_exercises.all().order_by('order'))
+        
+        total_lessons += len(lessons)
+        total_quizzes += len(quizzes)
+        total_exercises += len(exercises)
+        
+        course_content.append({
+            'chapter': chapter,
+            'lesson_count': len(lessons),
+            'quiz_count': len(quizzes),
+            'exercise_count': len(exercises),
+            'lessons': lessons,
+            'quizzes': quizzes,
+            'exercises': exercises,
+            'total_content': len(lessons) + len(quizzes) + len(exercises),
+        })
+    
+    # Extract multilingual title for display
+    course_title = course.title
+    if isinstance(course_title, dict):
+        course_title_display = get_title_text(course_title, 'en', 'Untitled')
+    else:
+        course_title_display = str(course_title)
+    
+    context = {
+        'course': course,
+        'course_title_display': course_title_display,
+        'course_content': course_content,
+        'total_lessons': total_lessons,
+        'total_quizzes': total_quizzes,
+        'total_exercises': total_exercises,
+        'chapter_form': ChapterForm(),
+        'lesson_form': LessonForm(),
+        'quiz_form': QuizForm(),
+        'exercise_form': PracticeExerciseForm(),
+        'prerequisites': course.prerequisites.all(),
+    }
+    return render(request, 'dashboard/course_details.html', context)
+
+
+@login_required
+@user_passes_test(is_staff_or_admin)
+def dashboard_course_create(request):
+    """Create a new course"""
+    if request.method == 'POST':
+        form = CourseForm(request.POST)
+        if form.is_valid():
+            course = form.save()
+            messages.success(request, f'Course "{course.title.get("en")}" created successfully!')
+            return redirect('dashboard:courses')
+    else:
+        form = CourseForm()
+    
+    context = {
+        'form': form,
+        'title': 'Create Course',
+    }
+    return render(request, 'dashboard/course_form.html', context)
+
+
+@login_required
+@user_passes_test(is_staff_or_admin)
+def dashboard_course_edit(request, course_id):
+    """Edit an existing course"""
+    course = get_object_or_404(Course, pk=course_id)
+    
+    if request.method == 'POST':
+        form = CourseForm(request.POST, instance=course)
+        if form.is_valid():
+            course = form.save()
+            messages.success(request, f'Course "{course.title.get("en")}" updated successfully!')
+            return redirect('dashboard:courses')
+    else:
+        form = CourseForm(instance=course)
+    
+    context = {
+        'form': form,
+        'title': 'Edit Course',
+        'course': course,
+    }
+    return render(request, 'dashboard/course_form.html', context)
+
+
+@login_required
+@user_passes_test(is_staff_or_admin)
+def dashboard_course_import(request):
+    """Import courses from JSON"""
+    if request.method == 'POST':
+        form = CourseImportForm(request.POST, request.FILES)
+        if form.is_valid():
+            try:
+                # Get JSON content
+                if request.FILES.get('json_file'):
+                    json_content = request.FILES['json_file'].read().decode('utf-8')
+                else:
+                    json_content = form.cleaned_data['json_text']
+                
+                courses_data = json.loads(json_content)
+                
+                # Handle both list and single object
+                if not isinstance(courses_data, list):
+                    courses_data = [courses_data]
+                
+                imported_count = 0
+                errors = []
+                
+                with transaction.atomic():
+                    for course_data in courses_data:
+                        try:
+                            # Extract prerequisites if provided
+                            prerequisites = course_data.pop('prerequisites', [])
+                            
+                            # Prepare course data
+                            course_defaults = {
+                                'title': {
+                                    'en': course_data.get('name') or course_data.get('title', {}).get('en', 'Untitled'),
+                                    'ms': course_data.get('title', {}).get('ms', ''),
+                                    'zh': course_data.get('title', {}).get('zh', ''),
+                                },
+                                'description': {
+                                    'en': course_data.get('description', ''),
+                                    'ms': '',
+                                    'zh': '',
+                                },
+                                'thumbnail': course_data.get('thumbnail') or course_data.get('thumbnail_image', ''),
+                                'is_published': course_data.get('is_published', True),
+                            }
+                            
+                            # Create or update course
+                            course, created = Course.objects.update_or_create(
+                                code=course_data.get('code'),
+                                defaults=course_defaults
+                            )
+                            
+                            # Set prerequisites
+                            if prerequisites:
+                                prerequisite_courses = Course.objects.filter(code__in=prerequisites)
+                                course.prerequisites.set(prerequisite_courses)
+                            
+                            # Import chapters if provided
+                            chapters_data = course_data.get('chapters', [])
+                            for chapter_data in chapters_data:
+                                chapter_title = chapter_data.get('title')
+                                if isinstance(chapter_title, str):
+                                    chapter_title = {'en': chapter_title, 'ms': '', 'zh': ''}
+                                
+                                chapter_desc = chapter_data.get('description', '')
+                                if isinstance(chapter_desc, str):
+                                    chapter_desc = {'en': chapter_desc, 'ms': '', 'zh': ''}
+                                
+                                chapter, _ = Chapter.objects.update_or_create(
+                                    course=course,
+                                    order=chapter_data.get('order', 1),
+                                    defaults={
+                                        'title': chapter_title,
+                                        'description': chapter_desc,
+                                    }
+                                )
+                                
+                                # Import lessons if provided
+                                lessons_data = chapter_data.get('lessons', [])
+                                for lesson_data in lessons_data:
+                                    lesson_title = lesson_data.get('title')
+                                    if isinstance(lesson_title, str):
+                                        lesson_title = {'en': lesson_title, 'ms': '', 'zh': ''}
+                                    
+                                    lesson_content = lesson_data.get('content', '')
+                                    if isinstance(lesson_content, str):
+                                        lesson_content = {'en': lesson_content, 'ms': '', 'zh': ''}
+                                    
+                                    Lesson.objects.update_or_create(
+                                        chapter=chapter,
+                                        order=lesson_data.get('order', 1),
+                                        defaults={
+                                            'title': lesson_title,
+                                            'content': lesson_content,
+                                        }
+                                    )
+                            
+                            imported_count += 1
+                        except Exception as e:
+                            errors.append(f"Error importing course {course_data.get('code')}: {str(e)}")
+                
+                if errors:
+                    for error in errors:
+                        messages.warning(request, error)
+                
+                if imported_count > 0:
+                    messages.success(request, f'Successfully imported {imported_count} course(s)!')
+                    return redirect('dashboard:courses')
+                else:
+                    messages.error(request, 'No courses were imported.')
+                    
+            except json.JSONDecodeError as e:
+                messages.error(request, f'Invalid JSON: {str(e)}')
+            except Exception as e:
+                messages.error(request, f'Import error: {str(e)}')
+    else:
+        form = CourseImportForm()
+    
+    context = {
+        'form': form,
+        'title': 'Import Courses',
+    }
+    return render(request, 'dashboard/course_import.html', context)
+
+
+# ============================================================================
+# INLINE EDITING API ENDPOINTS (for dashboard content management)
+# ============================================================================
+
+@login_required
+@user_passes_test(is_staff_or_admin)
+@require_http_methods(["POST"])
+def api_chapter_save(request, course_id=None, chapter_id=None):
+    """Create or update chapter - AJAX endpoint"""
+    try:
+        if chapter_id:
+            chapter = get_object_or_404(Chapter, pk=chapter_id)
+            course = chapter.course
+        else:
+            course = get_object_or_404(Course, pk=course_id)
+            chapter = Chapter(course=course)
+        
+        form = ChapterForm(request.POST, instance=chapter)
+        if form.is_valid():
+            chapter = form.save()
+            return JsonResponse({
+                'success': True,
+                'id': chapter.id,
+                'message': f'Chapter "{chapter.title.get("en")}" saved successfully'
+            })
+        else:
+            return JsonResponse({
+                'success': False,
+                'errors': form.errors
+            }, status=400)
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': str(e)
+        }, status=400)
+
+
+@login_required
+@user_passes_test(is_staff_or_admin)
+@require_http_methods(["POST"])
+def api_chapter_delete(request, chapter_id):
+    """Delete chapter - AJAX endpoint"""
+    try:
+        chapter = get_object_or_404(Chapter, pk=chapter_id)
+        course = chapter.course
+        chapter_name = get_title_text(chapter.title, 'en', 'Chapter')
+        chapter.delete()
+        return JsonResponse({
+            'success': True,
+            'message': f'Chapter "{chapter_name}" deleted successfully'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': str(e)
+        }, status=400)
+
+
+@login_required
+@user_passes_test(is_staff_or_admin)
+@require_http_methods(["POST"])
+def api_lesson_save(request, chapter_id=None, lesson_id=None):
+    """Create or update lesson - AJAX endpoint"""
+    try:
+        if lesson_id:
+            lesson = get_object_or_404(Lesson, pk=lesson_id)
+            chapter = lesson.chapter
+        else:
+            chapter = get_object_or_404(Chapter, pk=chapter_id)
+            lesson = Lesson(chapter=chapter)
+        
+        form = LessonForm(request.POST, instance=lesson)
+        if form.is_valid():
+            lesson = form.save()
+            return JsonResponse({
+                'success': True,
+                'id': lesson.id,
+                'message': f'Lesson "{lesson.title.get("en")}" saved successfully'
+            })
+        else:
+            return JsonResponse({
+                'success': False,
+                'errors': form.errors
+            }, status=400)
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': str(e)
+        }, status=400)
+
+
+@login_required
+@user_passes_test(is_staff_or_admin)
+@require_http_methods(["POST"])
+def api_lesson_delete(request, lesson_id):
+    """Delete lesson - AJAX endpoint"""
+    try:
+        lesson = get_object_or_404(Lesson, pk=lesson_id)
+        lesson_name = get_title_text(lesson.title, 'en', 'Lesson')
+        lesson.delete()
+        return JsonResponse({
+            'success': True,
+            'message': f'Lesson "{lesson_name}" deleted successfully'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': str(e)
+        }, status=400)
+
+
+@login_required
+@user_passes_test(is_staff_or_admin)
+@require_http_methods(["POST"])
+def api_quiz_save(request, chapter_id=None, quiz_id=None):
+    """Create or update quiz - AJAX endpoint"""
+    try:
+        if quiz_id:
+            quiz = get_object_or_404(Quiz, pk=quiz_id)
+            chapter = quiz.chapter
+        else:
+            chapter = get_object_or_404(Chapter, pk=chapter_id)
+            quiz = Quiz(chapter=chapter)
+        
+        form = QuizForm(request.POST, instance=quiz)
+        if form.is_valid():
+            quiz = form.save()
+            return JsonResponse({
+                'success': True,
+                'id': quiz.id,
+                'message': f'Quiz "{quiz.title.get("en")}" saved successfully'
+            })
+        else:
+            return JsonResponse({
+                'success': False,
+                'errors': form.errors
+            }, status=400)
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': str(e)
+        }, status=400)
+
+
+@login_required
+@user_passes_test(is_staff_or_admin)
+@require_http_methods(["POST"])
+def api_quiz_delete(request, quiz_id):
+    """Delete quiz - AJAX endpoint"""
+    try:
+        quiz = get_object_or_404(Quiz, pk=quiz_id)
+        quiz_name = get_title_text(quiz.title, 'en', 'Quiz')
+        quiz.delete()
+        return JsonResponse({
+            'success': True,
+            'message': f'Quiz "{quiz_name}" deleted successfully'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': str(e)
+        }, status=400)
+
+
+@login_required
+@user_passes_test(is_staff_or_admin)
+@require_http_methods(["POST"])
+def api_exercise_save(request, chapter_id=None, exercise_id=None):
+    """Create or update practice exercise - AJAX endpoint"""
+    try:
+        if exercise_id:
+            exercise = get_object_or_404(PracticeExercise, pk=exercise_id)
+            chapter = exercise.chapter
+        else:
+            chapter = get_object_or_404(Chapter, pk=chapter_id)
+            exercise = PracticeExercise(chapter=chapter)
+        
+        form = PracticeExerciseForm(request.POST, instance=exercise)
+        if form.is_valid():
+            exercise = form.save()
+            return JsonResponse({
+                'success': True,
+                'id': exercise.id,
+                'message': f'Exercise "{exercise.title.get("en")}" saved successfully'
+            })
+        else:
+            return JsonResponse({
+                'success': False,
+                'errors': form.errors
+            }, status=400)
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': str(e)
+        }, status=400)
+
+
+@login_required
+@user_passes_test(is_staff_or_admin)
+@require_http_methods(["POST"])
+def api_exercise_delete(request, exercise_id):
+    """Delete practice exercise - AJAX endpoint"""
+    try:
+        exercise = get_object_or_404(PracticeExercise, pk=exercise_id)
+        exercise_name = get_title_text(exercise.title, 'en', 'Exercise')
+        exercise.delete()
+        return JsonResponse({
+            'success': True,
+            'message': f'Exercise "{exercise_name}" deleted successfully'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': str(e)
+        }, status=400)
+
+
+@login_required
+@user_passes_test(is_staff_or_admin)
+def dashboard_course_delete(request, course_id):
+    """Delete a course"""
+    course = get_object_or_404(Course, pk=course_id)
+    
+    if request.method == 'POST':
+        course_name = f"{course.code} - {get_title_text(course.title, 'en', 'Untitled')}"
+        course.delete()
+        messages.success(request, f'Course "{course_name}" deleted successfully!')
+        return redirect('dashboard:courses')
+    
+    context = {
+        'course': course,
+        'title': 'Confirm Delete',
+    }
+    return render(request, 'dashboard/course_confirm_delete.html', context)
 
 @login_required
 @user_passes_test(is_staff_or_admin)
 def dashboard_progress(request):
-    """User progress tracking page"""
-    # Get course progress with user info
-    course_progress = CourseProgress.objects.select_related('user', 'course').all()
+    """User progress tracking page - Shows individual student progress with summary view"""
     
-    # Filter by course if specified
-    course_id = request.GET.get('course')
-    if course_id:
-        course_progress = course_progress.filter(course_id=course_id)
+    # Get all users with enrollments
+    users_with_enrollments = CustomUser.objects.filter(
+        course_enrollments__isnull=False
+    ).distinct().select_related().prefetch_related(
+        'course_enrollments__course',
+        'course_enrollments__course__chapters'
+    )
     
     # Search functionality
     search_query = request.GET.get('search', '')
     if search_query:
-        course_progress = course_progress.filter(
-            Q(user__username__icontains=search_query) |
-            Q(user__email__icontains=search_query)
+        users_with_enrollments = users_with_enrollments.filter(
+            Q(username__icontains=search_query) |
+            Q(email__icontains=search_query) |
+            Q(first_name__icontains=search_query) |
+            Q(last_name__icontains=search_query)
         )
     
     # Sorting
-    sort_by = request.GET.get('sort', '-updated_at')
-    course_progress = course_progress.order_by(sort_by)
+    sort_by = request.GET.get('sort', '-last_login')
+    if sort_by == 'alphabetical':
+        users_with_enrollments = users_with_enrollments.order_by('username')
+    elif sort_by == 'recent':
+        users_with_enrollments = users_with_enrollments.order_by('-last_login')
+    elif sort_by == 'progress':
+        # Sort by average progress (requires annotation)
+        from django.db.models import Avg as AvgAggregate
+        users_with_enrollments = users_with_enrollments.annotate(
+            avg_progress=AvgAggregate('course_enrollments__progress_percentage')
+        ).order_by('-avg_progress')
+    else:
+        users_with_enrollments = users_with_enrollments.order_by('-last_login')
+    
+    # Build student summary data
+    student_rows = []
+    for user in users_with_enrollments:
+        enrollments = CourseEnrollment.objects.filter(user=user).select_related('course').order_by('-updated_at')
+        
+        if not enrollments.exists():
+            continue
+        
+        # Get latest enrollment
+        latest_enrollment = enrollments.first()
+        
+        # Calculate stats
+        completed_count = enrollments.filter(status='completed').count()
+        in_progress_count = enrollments.filter(status='in_progress').count()
+        total_enrollments = enrollments.count()
+        avg_progress = enrollments.aggregate(avg=Avg('progress_percentage'))['avg'] or 0
+        
+        # Get chapter progress for latest course
+        chapter_progress = ChapterProgress.objects.filter(
+            user=user,
+            chapter__course=latest_enrollment.course
+        ).aggregate(
+            total=Count('id'),
+            completed=Count('id', filter=Q(is_complete=True))
+        )
+        
+        latest_activity = None
+        if user.last_login:
+            latest_activity = user.last_login
+        
+        student_rows.append({
+            'user': user,
+            'latest_enrollment': latest_enrollment,
+            'total_enrollments': total_enrollments,
+            'completed_count': completed_count,
+            'in_progress_count': in_progress_count,
+            'avg_progress': round(avg_progress, 1),
+            'latest_activity': latest_activity,
+            'chapter_progress': chapter_progress,
+            'all_enrollments': list(enrollments[:5]),  # Latest 5 for quick preview
+        })
     
     # Pagination
     page = request.GET.get('page', 1)
-    per_page = 25
-    total = course_progress.count()
-    start = (int(page) - 1) * per_page
-    end = start + per_page
+    per_page = 12  # Shows more students per page
+    paginator = Paginator(student_rows, per_page)
+    total_pages = paginator.num_pages
+    total = paginator.count
     
-    progress_paginated = course_progress[start:end]
-    progress_rows = list(progress_paginated)
-    for row in progress_rows:
-        row.display_progress = normalize_progress_value(row.progress)
-
-    total_pages = (total + per_page - 1) // per_page
-
-    avg_progress_raw = CourseProgress.objects.aggregate(avg=Avg('progress'))['avg'] or 0
+    try:
+        page_obj = paginator.page(page)
+        paginated_students = page_obj.object_list
+    except:
+        page_obj = paginator.page(1)
+        paginated_students = page_obj.object_list
+    
+    # Overall statistics
+    total_users = CustomUser.objects.filter(course_enrollments__isnull=False).distinct().count()
+    total_enrollments = CourseEnrollment.objects.count()
+    completed = CourseEnrollment.objects.filter(status='completed').count()
+    in_progress = CourseEnrollment.objects.filter(status='in_progress').count()
+    enrolled = CourseEnrollment.objects.filter(status='enrolled').count()
+    avg_progress = CourseEnrollment.objects.aggregate(avg=Avg('progress_percentage'))['avg'] or 0
+    
+    # Get most active students (based on recent activity)
+    most_active = CustomUser.objects.filter(
+        course_enrollments__isnull=False
+    ).distinct().order_by('-last_login')[:5]
     
     context = {
-        'progress': progress_rows,
-        'courses': Course.objects.all(),
+        'students': paginated_students,
         'total': total,
-        'current_page': int(page),
+        'current_page': page_obj.number,
         'total_pages': total_pages,
         'search_query': search_query,
-        'selected_course': course_id,
         'sort_by': sort_by,
         'stats': {
-            'avg_progress': normalize_progress_value(avg_progress_raw),
-            'completed_courses': CourseProgress.objects.filter(completed=True).count(),
-            'in_progress_courses': CourseProgress.objects.filter(completed=False).count(),
-        }
+            'avg_progress': round(avg_progress, 1),
+            'completed_enrollments': completed,
+            'in_progress_enrollments': in_progress,
+            'enrolled_only': enrolled,
+            'total_enrollments': total_enrollments,
+            'total_active_users': total_users,
+        },
+        'most_active': most_active,
     }
     return render(request, 'dashboard/progress.html', context)
 
 @login_required
 @user_passes_test(is_staff_or_admin)
+def dashboard_student_progress(request, user_id):
+    """
+    API endpoint to get full progress details for a specific student.
+    Used by modals/detail views to show complete enrollment history.
+    """
+    user = get_object_or_404(CustomUser, pk=user_id)
+    enrollments = CourseEnrollment.objects.filter(user=user).select_related('course').prefetch_related('course__chapters').order_by('-updated_at')
+    
+    enrollment_details = []
+    for enrollment in enrollments:
+        # Get chapter progress
+        chapter_progress_qs = ChapterProgress.objects.filter(
+            user=user,
+            chapter__course=enrollment.course
+        ).select_related('chapter')
+        
+        completed_chapters = chapter_progress_qs.filter(is_complete=True).count()
+        total_chapters = enrollment.course.chapters.count()
+        
+        # Calculate progress
+        progress_pct = (completed_chapters / total_chapters * 100) if total_chapters > 0 else 0
+        
+        # Get quiz performance
+        quiz_attempts = QuizAttempt.objects.filter(
+            user=user,
+            quiz__chapter__course=enrollment.course
+        ) if hasattr(QuizAttempt, 'objects') else []
+        
+        avg_quiz_score = quiz_attempts.aggregate(avg=Avg('score'))['avg'] if quiz_attempts.exists() else None
+        
+        enrollment_details.append({
+            'enrollment': {
+                'id': enrollment.id,
+                'course_code': enrollment.course.code,
+                'course_title': get_title_text(enrollment.course.title, 'en', 'Untitled'),
+                'status': enrollment.get_status_display(),
+                'progress_percentage': enrollment.progress_percentage,
+                'enrollment_date': enrollment.enrollment_date.isoformat() if enrollment.enrollment_date else None,
+                'completed_date': enrollment.completed_date.isoformat() if enrollment.completed_date else None,
+                'final_score': enrollment.final_score,
+            },
+            'chapters': {
+                'completed': completed_chapters,
+                'total': total_chapters,
+                'percentage': progress_pct,
+            },
+            'quiz_avg': round(avg_quiz_score, 1) if avg_quiz_score else None,
+        })
+    
+    return JsonResponse({
+        'user': {
+            'id': user.id,
+            'username': user.username,
+            'email': user.email,
+            'name': f"{user.first_name} {user.last_name}".strip(),
+            'last_login': user.last_login.isoformat() if user.last_login else None,
+        },
+        'enrollments': enrollment_details,
+        'summary': {
+            'total_courses': len(enrollments),
+            'completed': len([e for e in enrollments if e.status == 'completed']),
+            'in_progress': len([e for e in enrollments if e.status == 'in_progress']),
+            'enrolled': len([e for e in enrollments if e.status == 'enrolled']),
+            'avg_progress': round(enrollments.aggregate(avg=Avg('progress_percentage'))['avg'] or 0, 1),
+        }
+    })
+
+
+@login_required
+@user_passes_test(is_staff_or_admin)
+@require_http_methods(["POST"])
+def dashboard_reset_student_progress(request, user_id):
+    """
+    Reset a student's learning progress.
+    If enrollment_id is provided, only reset that course enrollment.
+    Otherwise reset all learning progress for the student.
+    """
+    user = get_object_or_404(CustomUser, pk=user_id)
+
+    payload = {}
+    if request.body:
+        try:
+            payload = json.loads(request.body.decode('utf-8'))
+        except json.JSONDecodeError:
+            payload = {}
+
+    enrollment_id = payload.get('enrollment_id')
+    enrollments = CourseEnrollment.objects.filter(user=user)
+    target_course_ids = None
+
+    if enrollment_id:
+        enrollment = get_object_or_404(enrollments.select_related('course'), pk=enrollment_id)
+        enrollments = enrollments.filter(pk=enrollment.pk)
+        target_course_ids = [enrollment.course_id]
+        reset_scope = f'course {enrollment.course.code}'
+    else:
+        target_course_ids = list(enrollments.values_list('course_id', flat=True))
+        reset_scope = 'all courses'
+
+    with transaction.atomic():
+        lesson_progress_qs = LessonProgress.objects.filter(user=user)
+        chapter_progress_qs = ChapterProgress.objects.filter(user=user)
+        practice_attempt_qs = PracticeAttempt.objects.filter(user=user)
+        quiz_attempt_qs = QuizAttempt.objects.filter(user=user)
+
+        if target_course_ids:
+            lesson_progress_qs = lesson_progress_qs.filter(lesson__chapter__course_id__in=target_course_ids)
+            chapter_progress_qs = chapter_progress_qs.filter(chapter__course_id__in=target_course_ids)
+            practice_attempt_qs = practice_attempt_qs.filter(exercise__chapter__course_id__in=target_course_ids)
+            quiz_attempt_qs = quiz_attempt_qs.filter(quiz__chapter__course_id__in=target_course_ids)
+
+        lesson_progress_deleted = lesson_progress_qs.count()
+        chapter_progress_deleted = chapter_progress_qs.count()
+        practice_attempt_deleted = practice_attempt_qs.count()
+        quiz_attempt_deleted = quiz_attempt_qs.count()
+
+        lesson_progress_qs.delete()
+        chapter_progress_qs.delete()
+        practice_attempt_qs.delete()
+        quiz_attempt_qs.delete()
+
+        for enrollment in enrollments.select_related('course'):
+            enrollment.status = 'enrolled'
+            enrollment.started_date = None
+            enrollment.completed_date = None
+            enrollment.completed_chapters = 0
+            enrollment.total_chapters = enrollment.course.chapters.count()
+            enrollment.progress_percentage = 0
+            enrollment.final_score = None
+            enrollment.total_time_spent = 0
+            enrollment.save(update_fields=[
+                'status', 'started_date', 'completed_date', 'completed_chapters',
+                'total_chapters', 'progress_percentage', 'final_score',
+                'total_time_spent', 'updated_at'
+            ])
+
+    return JsonResponse({
+        'ok': True,
+        'message': f'Reset progress for {user.username} ({reset_scope}).',
+        'deleted': {
+            'lesson_progress': lesson_progress_deleted,
+            'chapter_progress': chapter_progress_deleted,
+            'practice_attempts': practice_attempt_deleted,
+            'quiz_attempts': quiz_attempt_deleted,
+        }
+    })
+
+
+@login_required
+@user_passes_test(is_staff_or_admin)
 def dashboard_badges(request):
+<<<<<<< HEAD
     """Badge management and approval page"""
     if request.method == 'POST':
         action = request.POST.get('action')
@@ -816,17 +1842,227 @@ def dashboard_badges(request):
             return redirect('dashboard:badges')
 
     # Get badges
+=======
+    """Badge management, tracking, and admin approval page"""
+    from user_progress.services import (
+        revoke_badge, re_grant_badge, grant_course_completion_badge,
+        check_and_grant_achievement_badges, get_badge_leaderboard
+    )
+    
+    # Handle AJAX badge details request
+    if request.method == 'GET' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        action = request.GET.get('action')
+        
+        if action == 'badge_details':
+            badge_id = request.GET.get('badge_id')
+            badge = Badge.objects.filter(id=badge_id).first()
+            if not badge:
+                return JsonResponse({'ok': False, 'error': 'Badge not found.'}, status=404)
+            
+            users = UserBadge.objects.filter(badge=badge).select_related('user', 'awarded_by', 'revoked_by').order_by('-awarded_at')
+            
+            badge_data = []
+            for user_badge in users:
+                badge_data.append({
+                    'id': user_badge.id,
+                    'user_id': user_badge.user.id,
+                    'username': user_badge.user.username,
+                    'email': user_badge.user.email,
+                    'status': user_badge.status,
+                    'is_awarded': user_badge.is_awarded,
+                    'awarded_at': user_badge.awarded_at.strftime('%b %d, %Y %H:%M') if user_badge.awarded_at else '',
+                    'awarded_by': user_badge.awarded_by.username if user_badge.awarded_by else 'System',
+                    'revoked_at': user_badge.revoked_at.strftime('%b %d, %Y %H:%M') if user_badge.revoked_at else '',
+                    'revoked_by': user_badge.revoked_by.username if user_badge.revoked_by else '',
+                })
+            
+            return JsonResponse({
+                'ok': True,
+                'badge': {
+                    'id': badge.id,
+                    'name': badge.name,
+                    'description': badge.description or '',
+                    'is_major': badge.is_major_badge,
+                    'users': badge_data,
+                }
+            })
+        
+        elif action == 'user_badges':
+            user_id = request.GET.get('user_id')
+            user = CustomUser.objects.filter(id=user_id).first()
+            if not user:
+                return JsonResponse({'ok': False, 'error': 'User not found.'}, status=404)
+            
+            user_badges = UserBadge.objects.filter(user=user).select_related('badge', 'revoked_by').order_by('-awarded_at')
+            
+            badges_data = []
+            for user_badge in user_badges:
+                badges_data.append({
+                    'id': user_badge.id,
+                    'badge_id': user_badge.badge.id,
+                    'name': user_badge.badge.name,
+                    'status': user_badge.status,
+                    'is_awarded': user_badge.is_awarded,
+                    'is_major': user_badge.badge.is_major_badge,
+                    'awarded_at': user_badge.awarded_at.strftime('%b %d, %Y') if user_badge.awarded_at else '',
+                    'revoked_at': user_badge.revoked_at.strftime('%b %d, %Y') if user_badge.revoked_at else '',
+                })
+            
+            return JsonResponse({
+                'ok': True,
+                'user': {
+                    'id': user.id,
+                    'username': user.username,
+                    'email': user.email,
+                },
+                'badges': badges_data,
+            })
+
+    # Handle POST actions
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+        
+        if action == 'revoke_badge':
+            user_badge_id = request.POST.get('user_badge_id')
+            try:
+                user_badge = UserBadge.objects.get(id=user_badge_id)
+                revoke_badge(user_badge.user, user_badge.badge, request.user)
+                
+                if is_ajax:
+                    return JsonResponse({'ok': True, 'message': f'Badge revoked: {user_badge.badge.name}'})
+                
+                messages.success(request, f'Badge revoked: {user_badge.badge.name}')
+                return redirect('dashboard:badges')
+            except UserBadge.DoesNotExist:
+                if is_ajax:
+                    return JsonResponse({'ok': False, 'error': 'Badge not found.'}, status=404)
+                messages.error(request, 'Badge not found.')
+                return redirect('dashboard:badges')
+        
+        elif action == 're_grant_badge':
+            user_badge_id = request.POST.get('user_badge_id')
+            try:
+                user_badge = UserBadge.objects.get(id=user_badge_id)
+                re_grant_badge(user_badge.user, user_badge.badge, request.user)
+                
+                if is_ajax:
+                    return JsonResponse({'ok': True, 'message': f'Badge re-granted: {user_badge.badge.name}'})
+                
+                messages.success(request, f'Badge re-granted: {user_badge.badge.name}')
+                return redirect('dashboard:badges')
+            except UserBadge.DoesNotExist:
+                if is_ajax:
+                    return JsonResponse({'ok': False, 'error': 'Badge not found.'}, status=404)
+                messages.error(request, 'Badge not found.')
+                return redirect('dashboard:badges')
+        
+        elif action == 'manual_grant_course_badge':
+            user_id = request.POST.get('user_id')
+            course_id = request.POST.get('course_id')
+            try:
+                user = CustomUser.objects.get(id=user_id)
+                course = Course.objects.get(id=course_id)
+                grant_course_completion_badge(user, course)
+                
+                if is_ajax:
+                    return JsonResponse({'ok': True, 'message': f'Course badge granted: {course.code}'})
+                
+                messages.success(request, f'Course badge granted: {course.code}')
+                return redirect('dashboard:badges')
+            except (CustomUser.DoesNotExist, Course.DoesNotExist) as e:
+                if is_ajax:
+                    return JsonResponse({'ok': False, 'error': str(e)}, status=404)
+                messages.error(request, str(e))
+                return redirect('dashboard:badges')
+        
+        elif action == 'approve_badge':
+            """Approve a pending badge and notify user"""
+            from notifications.services import create_notification_for_user
+            user_badge_id = request.POST.get('user_badge_id')
+            try:
+                user_badge = UserBadge.objects.get(id=user_badge_id)
+                
+                if user_badge.status != 'pending':
+                    if is_ajax:
+                        return JsonResponse({'ok': False, 'error': 'Badge is not pending.'}, status=400)
+                    messages.error(request, 'Badge is not pending.')
+                    return redirect('dashboard:badges')
+                
+                # Approve the badge
+                user_badge.status = 'granted'
+                user_badge.is_awarded = True
+                user_badge.awarded_by = request.user
+                user_badge.save()
+                
+                # Notify user about approval
+                from user_progress.services import notify_badge_granted_to_user
+                notify_badge_granted_to_user(user_badge, admin_user=request.user)
+                
+                if is_ajax:
+                    return JsonResponse({'ok': True, 'message': f'Badge approved: {user_badge.badge.name}'})
+                
+                messages.success(request, f'✓ Badge approved: {user_badge.badge.name} | Notification sent to {user_badge.user.email}')
+                return redirect('dashboard:badges')
+            except UserBadge.DoesNotExist:
+                if is_ajax:
+                    return JsonResponse({'ok': False, 'error': 'Badge not found.'}, status=404)
+                messages.error(request, 'Badge not found.')
+                return redirect('dashboard:badges')
+        
+        elif action == 'reject_badge':
+            """Reject a pending badge"""
+            user_badge_id = request.POST.get('user_badge_id')
+            try:
+                user_badge = UserBadge.objects.get(id=user_badge_id)
+                
+                if user_badge.status != 'pending':
+                    if is_ajax:
+                        return JsonResponse({'ok': False, 'error': 'Badge is not pending.'}, status=400)
+                    messages.error(request, 'Badge is not pending.')
+                    return redirect('dashboard:badges')
+                
+                # Reject the badge
+                user_badge.status = 'rejected'
+                user_badge.is_awarded = False
+                user_badge.save()
+                
+                # Optional: Notify user about rejection
+                from notifications.services import create_notification_for_user
+                create_notification_for_user(
+                    user=user_badge.user,
+                    title=f'Badge request declined: {user_badge.badge.name}',
+                    description='Your badge request was not approved.',
+                    full_text=(f'Your request for the badge "{user_badge.badge.name}" was reviewed and declined '
+                              f'by {request.user.email}. You may request review again later.'),
+                    created_by=request.user,
+                    related_user=user_badge.user,
+                )
+                
+                if is_ajax:
+                    return JsonResponse({'ok': True, 'message': f'Badge rejected: {user_badge.badge.name}'})
+                
+                messages.success(request, f'✓ Badge rejected: {user_badge.badge.name}')
+                return redirect('dashboard:badges')
+            except UserBadge.DoesNotExist:
+                if is_ajax:
+                    return JsonResponse({'ok': False, 'error': 'Badge not found.'}, status=404)
+                messages.error(request, 'Badge not found.')
+                return redirect('dashboard:badges')
+
+    # Get all badges with stats
+>>>>>>> 612c397 (DevBuild 1.1.0 Backend Server updates)
     badges = Badge.objects.annotate(
-        total_users=Count('user_badges'),
+        total_granted=Count('user_badges', filter=Q(user_badges__status='granted', user_badges__is_awarded=True)),
+        total_revoked=Count('user_badges', filter=Q(user_badges__revoked_at__isnull=False)),
         pending_approvals=Count('user_badges', filter=Q(user_badges__status='pending')),
-        granted_badges=Count('user_badges', filter=Q(user_badges__status='granted')),
-    ).all()
+    ).order_by('-total_granted')
     
-    # Get pending badge requests
-    pending_badges = UserBadge.objects.filter(
-        status='pending'
-    ).select_related('user', 'badge').order_by('-awarded_at')
+    # Separate course badges and achievement badges
+    course_badges = badges.filter(is_major_badge=False).filter(course__isnull=False)
+    achievement_badges = badges.filter(is_major_badge=True)
     
+<<<<<<< HEAD
     # Pagination
     page = request.GET.get('page', 1)
     per_page = 20
@@ -850,7 +2086,50 @@ def dashboard_badges(request):
             'total_granted': UserBadge.objects.filter(status='granted').count(),
         },
         'courses': Course.objects.all().order_by('id'),
+=======
+    # Get badge stats
+    all_user_badges = UserBadge.objects.all()
+    stats = {
+        'total_badges': Badge.objects.count(),
+        'course_badges': Badge.objects.filter(is_major_badge=False, course__isnull=False).count(),
+        'achievement_badges': Badge.objects.filter(is_major_badge=True).count(),
+        'total_granted': all_user_badges.filter(status='granted', is_awarded=True).count(),
+        'total_revoked': all_user_badges.filter(revoked_at__isnull=False).count(),
+        'pending_approvals': all_user_badges.filter(status='pending').count(),
+>>>>>>> 612c397 (DevBuild 1.1.0 Backend Server updates)
     }
+    
+    # Get pending badges for admin approval
+    pending_user_badges = UserBadge.objects.filter(status='pending').select_related('user', 'badge').order_by('-awarded_at')
+    
+    # Get badge leaderboard
+    leaderboard = get_badge_leaderboard(limit=10)
+    
+    # Pagination for courses (if showing course-specific badges)
+    page = request.GET.get('page', 1)
+    per_page = 15
+    paginator = Paginator(course_badges, per_page)
+    total_pages = paginator.num_pages
+    
+    try:
+        page_obj = paginator.page(page)
+        paginated_badges = page_obj.object_list
+    except:
+        page_obj = paginator.page(1)
+        paginated_badges = page_obj.object_list
+    
+    context = {
+        'badges': paginated_badges,
+        'achievement_badges': achievement_badges,
+        'pending_badges': pending_user_badges,
+        'total_pending': pending_user_badges.count(),
+        'leaderboard': leaderboard,
+        'stats': stats,
+        'current_page': page_obj.number,
+        'total_pages': total_pages,
+        'courses': Course.objects.all().order_by('code'),
+    }
+    
     return render(request, 'dashboard/badges.html', context)
 
 def get_guide_queryset():

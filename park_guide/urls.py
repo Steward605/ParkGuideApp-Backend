@@ -1,29 +1,18 @@
 """
 URL configuration for park_guide project.
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/6.0/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.urls import path, include
 
-from .admin_site import admin_site
-
 urlpatterns = [
-    path('', include('dashboard.urls')),
-    path('admin/', admin_site.urls),
-    path('api/', include('courses.urls')),
+    # Fresh API routes MUST come FIRST to avoid conflicts with dashboard api/* patterns
+    path('api/', include('courses.urls_fresh')),  # Fresh API - complete rewrite
     path('api/notifications/', include('notifications.urls')),
     path('api/user-progress/', include('user_progress.urls')),
     path('api/secure-files/', include('secure_files.urls')),
-    path('api/accounts/', include('accounts.urls')),  # <- added
+    path('api/accounts/', include('accounts.urls')),
+    
+    # Dashboard routes (includes conflicting api/* patterns, so must come after)
+    path('', include('dashboard.urls')),
+    # Admin disabled - not needed for this app
+    # path('admin/', admin_site.urls),
 ]

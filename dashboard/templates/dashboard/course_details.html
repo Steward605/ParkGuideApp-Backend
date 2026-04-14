@@ -1,0 +1,1093 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+
+{% block title %}{{ course.title }} - Courses{% endblock %}
+
+{% block content %}
+<div style="flex: 1; display: flex; flex-direction: column; overflow-y: auto;">
+    <!-- Page Content -->
+    <div style="padding: 2.5rem; max-width: 1400px; width: 100%; margin: 0 auto;">
+        
+        <!-- Header Section -->
+        <div class="glass-card" style="margin-bottom: 2rem; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); color: white; border: 1px solid rgba(255,255,255,0.2);">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <h1 style="font-size: 2rem; margin: 0 0 0.5rem 0; font-weight: 800;">
+                        <i class="bi bi-book" style="margin-right: 0.75rem;"></i>{{ course_title_display }}
+                    </h1>
+                    <p style="margin: 0; opacity: 0.95; max-width: 600px;">{{ course.description|truncatewords:30 }}</p>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Statistics Grid -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 3rem;">
+            <div class="glass-card" style="border-left: 4px solid var(--primary);">
+                <div class="stat-icon" style="background: rgba(45, 106, 79, 0.1); color: var(--primary);">
+                    <i class="bi bi-diagram-2"></i>
+                </div>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0 0 0.5rem 0; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Total Chapters</p>
+                <p style="font-size: 2.5rem; margin: 0; font-weight: 800; color: var(--text-main);" id="chapCount">0</p>
+            </div>
+
+            <div class="glass-card" style="border-left: 4px solid var(--accent);">
+                <div class="stat-icon" style="background: rgba(255, 159, 28, 0.1); color: var(--accent);">
+                    <i class="bi bi-file-text"></i>
+                </div>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0 0 0.5rem 0; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Total Lessons</p>
+                <p style="font-size: 2.5rem; margin: 0; font-weight: 800; color: var(--text-main);" id="lessonCount">0</p>
+            </div>
+
+            <div class="glass-card" style="border-left: 4px solid #52b788;">
+                <div class="stat-icon" style="background: rgba(82, 183, 136, 0.1); color: #52b788;">
+                    <i class="bi bi-question-circle"></i>
+                </div>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0 0 0.5rem 0; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Total Quizzes</p>
+                <p style="font-size: 2.5rem; margin: 0; font-weight: 800; color: var(--text-main);" id="quizCount">0</p>
+            </div>
+
+
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div style="display: flex; gap: 1rem; margin-bottom: 2rem; border-bottom: 1px solid var(--border); overflow-x: auto; padding-bottom: 0;">
+            <button class="tab-btn active" data-tab="chapters" onclick="switchTab('chapters', this)" style="padding: 0.75rem 1.5rem; border: none; background: none; color: var(--text-main); font-weight: 600; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.3s ease; white-space: nowrap;">
+                <i class="bi bi-diagram-2" style="margin-right: 0.5rem;"></i>Chapters
+            </button>
+            <button class="tab-btn" data-tab="lessons" onclick="switchTab('lessons', this)" style="padding: 0.75rem 1.5rem; border: none; background: none; color: var(--text-muted); font-weight: 600; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.3s ease; white-space: nowrap;">
+                <i class="bi bi-file-text" style="margin-right: 0.5rem;"></i>Lessons
+            </button>
+            <button class="tab-btn" data-tab="quizzes" onclick="switchTab('quizzes', this)" style="padding: 0.75rem 1.5rem; border: none; background: none; color: var(--text-muted); font-weight: 600; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.3s ease; white-space: nowrap;">
+                <i class="bi bi-question-circle" style="margin-right: 0.5rem;"></i>Quizzes
+            </button>
+        </div>
+
+        <!-- Tab Contents -->
+        <div id="chapters" class="tab-content active" style="display: block;">
+            <div class="glass-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h3 style="margin: 0; font-size: 1.3rem; font-weight: 700;">Chapters</h3>
+                    <button onclick="openAddChapter()" class="btn" style="background: var(--primary); color: white; border: none; border-radius: 10px; padding: 0.6rem 1.2rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; transition: all 0.3s ease;">
+                        <i class="bi bi-plus-lg"></i>Add Chapter
+                    </button>
+                </div>
+                <div id="chaptersContainer">
+                    <div style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
+                        <i class="bi bi-inbox" style="font-size: 2rem; display: block; margin-bottom: 0.5rem; opacity: 0.5;"></i>
+                        <p>Loading chapters...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="lessons" class="tab-content" style="display: none;">
+            <div class="glass-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h3 style="margin: 0; font-size: 1.3rem; font-weight: 700;">Lessons</h3>
+                    <button onclick="openAddLesson()" class="btn" style="background: var(--primary); color: white; border: none; border-radius: 10px; padding: 0.6rem 1.2rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; transition: all 0.3s ease;">
+                        <i class="bi bi-plus-lg"></i>Add Lesson
+                    </button>
+                </div>
+                <div id="lessonsContainer">
+                    <div style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
+                        <i class="bi bi-inbox" style="font-size: 2rem; display: block; margin-bottom: 0.5rem; opacity: 0.5;"></i>
+                        <p>Loading lessons...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="quizzes" class="tab-content" style="display: none;">
+            <div class="glass-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h3 style="margin: 0; font-size: 1.3rem; font-weight: 700;">Quizzes</h3>
+                    <button onclick="openAddQuiz()" class="btn" style="background: var(--primary); color: white; border: none; border-radius: 10px; padding: 0.6rem 1.2rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; transition: all 0.3s ease;">
+                        <i class="bi bi-plus-lg"></i>Add Quiz
+                    </button>
+                </div>
+                <div id="quizzesContainer">
+                    <div style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
+                        <i class="bi bi-inbox" style="font-size: 2rem; display: block; margin-bottom: 0.5rem; opacity: 0.5;"></i>
+                        <p>Loading quizzes...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+    </div>
+</div>
+
+<!-- Modals -->
+<div style="display: none;" id="chapterModal" class="modal-backdrop">
+    <div class="modal-dialog">
+        <div class="glass-card" style="border-radius: 16px; max-width: 500px; width: 90%; margin: 0 auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem;">
+                <h5 style="margin: 0; font-size: 1.2rem; font-weight: 700;">Add Chapter</h5>
+                <button onclick="closeModal('chapterModal')" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted);">×</button>
+            </div>
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-main);">Title (English) <span style="color: var(--accent);">*</span></label>
+                <input type="text" id="chap_title_en" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-body); color: var(--text-main); font-family: inherit; font-size: 1rem; transition: border-color 0.3s ease;">
+            </div>
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-main);">Title (Malay)</label>
+                <input type="text" id="chap_title_ms" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-body); color: var(--text-main); font-family: inherit; font-size: 1rem; transition: border-color 0.3s ease;">
+            </div>
+            <div style="margin-bottom: 2rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-main);">Title (Chinese)</label>
+                <input type="text" id="chap_title_zh" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-body); color: var(--text-main); font-family: inherit; font-size: 1rem; transition: border-color 0.3s ease;">
+            </div>
+            <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                <button onclick="closeModal('chapterModal')" style="background: var(--bg-body); color: var(--text-main); border: 1px solid var(--border); border-radius: 10px; padding: 0.75rem 1.5rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease;">Cancel</button>
+                <button onclick="saveChapter()" style="background: var(--primary); color: white; border: none; border-radius: 10px; padding: 0.75rem 1.5rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease;">Save Chapter</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div style="display: none;" id="lessonModal" class="modal-backdrop">
+    <div class="modal-dialog">
+        <div class="glass-card" style="border-radius: 16px; max-width: 600px; width: 90%; margin: 0 auto; max-height: 85vh; overflow-y: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem; position: sticky; top: 0; background: var(--bg-card); z-index: 10;">
+                <h5 style="margin: 0; font-size: 1.2rem; font-weight: 700;">Add Lesson with Content</h5>
+                <button onclick="closeModal('lessonModal')" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted);">×</button>
+            </div>
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-main);">Chapter <span style="color: var(--accent);">*</span></label>
+                <select id="lesson_chapter_id" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-body); color: var(--text-main); font-family: inherit; font-size: 1rem; transition: border-color 0.3s ease;">
+                    <option value="">Select a chapter...</option>
+                </select>
+            </div>
+            
+            <!-- Multilingual Titles -->
+            <div style="background: rgba(45, 106, 79, 0.05); padding: 1rem; border-radius: 10px; margin-bottom: 1.5rem; border: 1px solid var(--border);">
+                <h6 style="margin: 0 0 1rem 0; font-weight: 700; color: var(--text-main);">Titles</h6>
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-main);">Title (English) <span style="color: var(--accent);">*</span></label>
+                    <input type="text" id="lesson_title_en" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-body); color: var(--text-main); font-family: inherit; font-size: 1rem;">
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-main);">Title (Malay)</label>
+                    <input type="text" id="lesson_title_ms" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-body); color: var(--text-main); font-family: inherit; font-size: 1rem;">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-main);">Title (Chinese)</label>
+                    <input type="text" id="lesson_title_zh" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-body); color: var(--text-main); font-family: inherit; font-size: 1rem;">
+                </div>
+            </div>
+            
+            <!-- Multilingual Content -->
+            <div style="background: rgba(45, 106, 79, 0.05); padding: 1rem; border-radius: 10px; margin-bottom: 1.5rem; border: 1px solid var(--border);">
+                <h6 style="margin: 0 0 1rem 0; font-weight: 700; color: var(--text-main);">Content (Markdown supported)</h6>
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-main);">Content (English)</label>
+                    <textarea id="lesson_content_en" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-body); color: var(--text-main); font-family: monospace; font-size: 0.9rem; min-height: 120px; resize: vertical;"></textarea>
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-main);">Content (Malay)</label>
+                    <textarea id="lesson_content_ms" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-body); color: var(--text-main); font-family: monospace; font-size: 0.9rem; min-height: 120px; resize: vertical;"></textarea>
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-main);">Content (Chinese)</label>
+                    <textarea id="lesson_content_zh" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-body); color: var(--text-main); font-family: monospace; font-size: 0.9rem; min-height: 120px; resize: vertical;"></textarea>
+                </div>
+            </div>
+            
+            <!-- Other Fields -->
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-main);">Estimated Time (minutes)</label>
+                <input type="number" id="lesson_estimated_time" value="30" min="1" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-body); color: var(--text-main); font-family: inherit; font-size: 1rem;">
+            </div>
+            
+            <div style="display: flex; gap: 1rem; justify-content: flex-end; position: sticky; bottom: 0; background: var(--bg-card); padding-top: 1rem; border-top: 1px solid var(--border);">
+                <button onclick="closeModal('lessonModal')" style="background: var(--bg-body); color: var(--text-main); border: 1px solid var(--border); border-radius: 10px; padding: 0.75rem 1.5rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease;">Cancel</button>
+                <button onclick="saveLesson()" style="background: var(--primary); color: white; border: none; border-radius: 10px; padding: 0.75rem 1.5rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease;">Save Lesson</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div style="display: none;" id="quizModal" class="modal-backdrop">
+    <div class="modal-dialog">
+        <div class="glass-card" style="border-radius: 16px; max-width: 600px; width: 90%; margin: 0 auto; max-height: 85vh; overflow-y: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem; position: sticky; top: 0; background: var(--bg-card); z-index: 10;">
+                <h5 style="margin: 0; font-size: 1.2rem; font-weight: 700;">Add Quiz</h5>
+                <button onclick="closeModal('quizModal')" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted);">×</button>
+            </div>
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-main);">Chapter <span style="color: var(--accent);">*</span></label>
+                <select id="quiz_chapter_id" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-body); color: var(--text-main); font-family: inherit; font-size: 1rem;">
+                    <option value="">Select a chapter...</option>
+                </select>
+            </div>
+            
+            <!-- Multilingual Titles -->
+            <div style="background: rgba(45, 106, 79, 0.05); padding: 1rem; border-radius: 10px; margin-bottom: 1.5rem; border: 1px solid var(--border);">
+                <h6 style="margin: 0 0 1rem 0; font-weight: 700; color: var(--text-main);">Titles</h6>
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-main);">Title (English) <span style="color: var(--accent);">*</span></label>
+                    <input type="text" id="quiz_title_en" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-body); color: var(--text-main); font-family: inherit; font-size: 1rem;">
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-main);">Title (Malay)</label>
+                    <input type="text" id="quiz_title_ms" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-body); color: var(--text-main); font-family: inherit; font-size: 1rem;">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-main);">Title (Chinese)</label>
+                    <input type="text" id="quiz_title_zh" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-body); color: var(--text-main); font-family: inherit; font-size: 1rem;">
+                </div>
+            </div>
+            
+            <!-- Settings -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-main);">Passing Score (%)</label>
+                    <input type="number" id="quiz_passing_score" value="70" min="0" max="100" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-body); color: var(--text-main); font-family: inherit; font-size: 1rem;">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-main);">Time Limit (minutes)</label>
+                    <input type="number" id="quiz_time_limit" value="15" min="0" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-body); color: var(--text-main); font-family: inherit; font-size: 1rem;">
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 1rem; justify-content: flex-end; position: sticky; bottom: 0; background: var(--bg-card); padding-top: 1rem; border-top: 1px solid var(--border);">
+                <button onclick="closeModal('quizModal')" style="background: var(--bg-body); color: var(--text-main); border: 1px solid var(--border); border-radius: 10px; padding: 0.75rem 1.5rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease;">Cancel</button>
+                <button onclick="saveQuizAndManageQuestions()" style="background: var(--primary); color: white; border: none; border-radius: 10px; padding: 0.75rem 1.5rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease;">Save & Manage Questions</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<div style="display: none;" id="questionsModal" class="modal-backdrop">
+    <div class="modal-dialog">
+        <div class="glass-card" style="border-radius: 16px; max-width: 800px; width: 95%; margin: 0 auto; max-height: 90vh; display: flex; flex-direction: column;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem;">
+                <h5 style="margin: 0; font-size: 1.2rem; font-weight: 700;">Manage Questions</h5>
+                <button onclick="closeModal('questionsModal')" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted);">×</button>
+            </div>
+            
+            <div style="flex: 1; overflow-y: auto; margin-bottom: 1.5rem;">
+                <div id="questionsContainer" style="display: flex; flex-direction: column; gap: 1rem;">
+                    <!-- Questions will be rendered here -->
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 1rem; justify-content: flex-end; border-top: 1px solid var(--border); padding-top: 1rem;">
+                <button onclick="addNewQuestionForm()" style="background: var(--accent); color: white; border: none; border-radius: 10px; padding: 0.75rem 1.5rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="bi bi-plus-lg"></i> Add Question
+                </button>
+                <button onclick="closeModal('questionsModal')" style="background: var(--bg-body); color: var(--text-main); border: 1px solid var(--border); border-radius: 10px; padding: 0.75rem 1.5rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease;">Close</button>
+                <button onclick="saveAllQuestions()" style="background: var(--primary); color: white; border: none; border-radius: 10px; padding: 0.75rem 1.5rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease;">Save Questions</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .question-form {
+        background: rgba(45, 106, 79, 0.05);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 1.5rem;
+    }
+    
+    .question-form h6 {
+        margin: 0 0 1rem 0;
+        font-weight: 700;
+        color: var(--text-main);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .question-form .lang-section {
+        margin-bottom: 1.5rem;
+    }
+    
+    .question-form label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: var(--text-main);
+        font-size: 0.9rem;
+    }
+    
+    .question-form input,
+    .question-form textarea {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--bg-body);
+        color: var(--text-main);
+        font-family: inherit;
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .option-item {
+        background: var(--bg-body);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+    }
+    
+    .btn-remove {
+        background: #dc3545;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 0.4rem 0.8rem;
+        font-size: 0.85rem;
+        cursor: pointer;
+    }
+
+    [data-theme="dark"] input,
+    [data-theme="dark"] select {
+        background-color: #1a221e !important;
+        border-color: #34413b !important;
+        color: #eef3f0 !important;
+    }
+
+    [data-theme="dark"] input::placeholder,
+    [data-theme="dark"] select::placeholder {
+        color: #97a8a0;
+    }
+
+    .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1050;
+        padding: 1rem;
+        pointer-events: auto;
+    }
+
+    .modal-backdrop.show {
+        display: flex !important;
+    }
+
+    .modal-dialog {
+        width: 100%;
+        max-width: 500px;
+        pointer-events: auto;
+        z-index: 1051;
+    }
+
+    .item-container {
+        display: grid;
+        gap: 1rem;
+    }
+
+    .item-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1.25rem;
+        background: var(--bg-body);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        transition: all 0.3s ease;
+    }
+
+    .item-row:hover {
+        background: rgba(45, 106, 79, 0.05);
+        border-color: var(--primary);
+    }
+
+    .item-info h6 {
+        margin: 0 0 0.35rem 0;
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: var(--text-main);
+    }
+
+    .item-info small {
+        display: block;
+        color: var(--text-muted);
+        font-size: 0.85rem;
+    }
+
+    .item-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .btn-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: var(--bg-card);
+        color: var(--text-main);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+    }
+
+    .btn-icon:hover {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+    }
+
+    .btn-icon.danger:hover {
+        background: #dc3545;
+        border-color: #dc3545;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem 2rem;
+        color: var(--text-muted);
+    }
+
+    .empty-state i {
+        font-size: 2.5rem;
+        opacity: 0.3;
+        display: block;
+        margin-bottom: 1rem;
+    }
+
+    .alert {
+        position: fixed;
+        top: 2rem;
+        right: 2rem;
+        z-index: 1100;
+        min-width: 300px;
+        max-width: 500px;
+        padding: 1rem 1.5rem;
+        border-radius: 12px;
+        border: 1px solid;
+        animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateX(100%);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    .alert-success {
+        background: rgba(40, 167, 69, 0.1);
+        border-color: #28a745;
+        color: #28a745;
+    }
+
+    .alert-danger {
+        background: rgba(220, 53, 69, 0.1);
+        border-color: #dc3545;
+        color: #dc3545;
+    }
+
+    .alert-warning {
+        background: rgba(255, 193, 7, 0.1);
+        border-color: #ffc107;
+        color: #ffc107;
+    }
+
+    .tab-btn.active {
+        color: var(--primary);
+        border-bottom-color: var(--primary);
+    }
+</style>
+
+<script>
+const courseId = {{ course.id }};
+let chapters = [], lessons = [], quizzes = [];
+
+function getCSRFToken() {
+    const input = document.querySelector('[name="csrfmiddlewaretoken"]');
+    if (input) return input.value;
+    const cookies = document.cookie.split(';');
+    for (let c of cookies) {
+        const [k, v] = c.trim().split('=');
+        if (k === 'csrftoken') return decodeURIComponent(v);
+    }
+    return '';
+}
+
+async function api(endpoint, method = 'GET', data = null) {
+    const csrfToken = getCSRFToken();
+    const options = {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+    };
+    if (csrfToken && method !== 'GET') options.headers['X-CSRFToken'] = csrfToken;
+    if (data) options.body = JSON.stringify(data);
+    
+    try {
+        const resp = await fetch(`/api${endpoint}`, options);
+        if (!resp.ok) {
+            let errMsg = `HTTP ${resp.status}`;
+            try {
+                const err = await resp.json();
+                errMsg = err.detail || err.message || errMsg;
+            } catch (e) {}
+            throw new Error(errMsg);
+        }
+        if (resp.status === 204) return { success: true };
+        return await resp.json();
+    } catch (e) {
+        console.error(`API Error on ${method} ${endpoint}:`, e.message);
+        throw e;
+    }
+}
+
+function showAlert(msg, type = 'success') {
+    const div = document.createElement('div');
+    div.className = `alert alert-${type}`;
+    div.innerHTML = `${msg}`;
+    document.body.appendChild(div);
+    setTimeout(() => div.remove(), 4000);
+}
+
+function switchTab(tab, btn) {
+    document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+    document.querySelectorAll('.tab-btn').forEach(b => {
+        b.style.color = 'var(--text-muted)';
+        b.style.borderBottomColor = 'transparent';
+    });
+    document.getElementById(tab).style.display = 'block';
+    btn.style.color = 'var(--primary)';
+    btn.style.borderBottomColor = 'var(--primary)';
+}
+
+function openModal(id) {
+    const modal = document.getElementById(id);
+    modal.classList.add('show');
+    modal.style.display = 'flex';
+    modal.style.visibility = 'visible';
+    modal.style.opacity = '1';
+}
+
+function closeModal(id) {
+    const modal = document.getElementById(id);
+    modal.classList.remove('show');
+    modal.style.display = 'none';
+    modal.style.visibility = 'hidden';
+    modal.style.opacity = '0';
+}
+
+function getTitleText(item) {
+    if (item.title && typeof item.title === 'object') return item.title.en || item.title.ms || item.title.zh || 'Untitled';
+    return item.title || 'Untitled';
+}
+
+async function loadChapters() {
+    try {
+        const data = await api(`/chapters/?course_id=${courseId}`);
+        chapters = data.results || data;
+        renderChapters();
+        loadAllContent();
+    } catch (e) {
+        document.getElementById('chaptersContainer').innerHTML = `<div class="empty-state"><i class="bi bi-exclamation-circle"></i><p>${e.message}</p></div>`;
+    }
+}
+
+function renderChapters() {
+    if (chapters.length === 0) {
+        document.getElementById('chaptersContainer').innerHTML = '<div class="empty-state"><i class="bi bi-inbox"></i><p>No chapters yet. Create one to get started!</p></div>';
+        return;
+    }
+    const html = chapters.map(ch => `
+        <div class="item-row">
+            <div class="item-info">
+                <h6>${getTitleText(ch)}</h6>
+                <small><i class="bi bi-diagram-2" style="margin-right: 0.3rem;"></i>${ch.lessons?.length || 0} lessons</small>
+            </div>
+            <div class="item-actions">
+                <button class="btn-icon" onclick="editChapter(${ch.id})" title="Edit"><i class="bi bi-pencil"></i></button>
+                <button class="btn-icon danger" onclick="delChapter(${ch.id})" title="Delete"><i class="bi bi-trash"></i></button>
+            </div>
+        </div>
+    `).join('');
+    document.getElementById('chaptersContainer').innerHTML = `<div class="item-container">${html}</div>`;
+}
+
+function openAddChapter() {
+    ['chap_title_en', 'chap_title_ms', 'chap_title_zh'].forEach(id => document.getElementById(id).value = '');
+    openModal('chapterModal');
+}
+
+function editChapter(id) {
+    const ch = chapters.find(c => c.id === id);
+    if (!ch) return;
+    document.getElementById('chap_title_en').value = ch.title?.en || '';
+    document.getElementById('chap_title_ms').value = ch.title?.ms || '';
+    document.getElementById('chap_title_zh').value = ch.title?.zh || '';
+    document.getElementById('chapterModal').dataset.editId = id;
+    openModal('chapterModal');
+}
+
+async function saveChapter() {
+    const title_en = document.getElementById('chap_title_en').value.trim();
+    if (!title_en) { showAlert('Title (English) is required', 'warning'); return; }
+    
+    const editId = document.getElementById('chapterModal').dataset.editId;
+    const data = {
+        title: {
+            en: title_en,
+            ms: document.getElementById('chap_title_ms').value.trim(),
+            zh: document.getElementById('chap_title_zh').value.trim()
+        }
+    };
+    
+    if (!editId) {
+        data.course = courseId;
+        data.order = Math.max(...chapters.map(c => c.order || 0), 0) + 1;
+    }
+    
+    try {
+        const endpoint = editId ? `/chapters/${editId}/` : '/chapters/';
+        const method = editId ? 'PATCH' : 'POST';
+        await api(endpoint, method, data);
+        showAlert(editId ? 'Chapter updated!' : 'Chapter created!');
+        closeModal('chapterModal');
+        delete document.getElementById('chapterModal').dataset.editId;
+        loadChapters();
+    } catch (e) {
+        showAlert(e.message, 'danger');
+    }
+}
+
+async function delChapter(id) {
+    if (!confirm('Delete this chapter? All lessons, quizzes, and exercises will also be deleted.')) return;
+    try {
+        await api(`/chapters/${id}/`, 'DELETE');
+        showAlert('Chapter deleted!');
+        loadChapters();
+    } catch (e) {
+        showAlert(e.message, 'danger');
+    }
+}
+
+async function loadAllContent() {
+    try {
+        lessons = []; quizzes = [];
+        for (const ch of chapters) {
+            const l = await api(`/lessons/?chapter_id=${ch.id}`);
+            lessons.push(...(l.results || l));
+            const q = await api(`/quizzes/?chapter_id=${ch.id}`);
+            quizzes.push(...(q.results || q));
+        }
+        renderLessons();
+        renderQuizzes();
+        updateCounts();
+    } catch (e) {
+        console.error('Load content error:', e);
+    }
+}
+
+function renderLessons() {
+    if (lessons.length === 0) {
+        document.getElementById('lessonsContainer').innerHTML = '<div class="empty-state"><i class="bi bi-inbox"></i><p>No lessons yet</p></div>';
+        return;
+    }
+    const html = lessons.map(l => `
+        <div class="item-row">
+            <div class="item-info">
+                <h6>${getTitleText(l)}</h6>
+                <small><i class="bi bi-folder" style="margin-right: 0.3rem;"></i>Chapter ${l.chapter} | <i class="bi bi-clock" style="margin-right: 0.3rem;"></i>${l.estimated_time || 30} min</small>
+            </div>
+            <div class="item-actions">
+                <button class="btn-icon" onclick="editLesson(${l.id})" title="Edit"><i class="bi bi-pencil"></i></button>
+                <button class="btn-icon danger" onclick="delLesson(${l.id})" title="Delete"><i class="bi bi-trash"></i></button>
+            </div>
+        </div>
+    `).join('');
+    document.getElementById('lessonsContainer').innerHTML = `<div class="item-container">${html}</div>`;
+}
+
+function openAddLesson() {
+    const select = document.getElementById('lesson_chapter_id');
+    select.innerHTML = '<option value="">Select a chapter...</option>' + chapters.map(c => `<option value="${c.id}">${getTitleText(c)}</option>`).join('');
+    ['lesson_title_en', 'lesson_title_ms', 'lesson_title_zh', 'lesson_content_en', 'lesson_content_ms', 'lesson_content_zh'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('lesson_estimated_time').value = '30';
+    delete document.getElementById('lessonModal').dataset.editId;
+    openModal('lessonModal');
+}
+
+function editLesson(id) {
+    const l = lessons.find(x => x.id === id);
+    if (!l) return;
+    const select = document.getElementById('lesson_chapter_id');
+    select.innerHTML = '<option value="">Select a chapter...</option>' + chapters.map(c => `<option value="${c.id}" ${c.id === l.chapter ? 'selected' : ''}>${getTitleText(c)}</option>`).join('');
+    document.getElementById('lesson_title_en').value = l.title?.en || '';
+    document.getElementById('lesson_title_ms').value = l.title?.ms || '';
+    document.getElementById('lesson_title_zh').value = l.title?.zh || '';
+    document.getElementById('lesson_content_en').value = l.content_text?.en || '';
+    document.getElementById('lesson_content_ms').value = l.content_text?.ms || '';
+    document.getElementById('lesson_content_zh').value = l.content_text?.zh || '';
+    document.getElementById('lesson_estimated_time').value = l.estimated_time || 30;
+    document.getElementById('lessonModal').dataset.editId = id;
+    openModal('lessonModal');
+}
+
+async function saveLesson() {
+    const chapter = document.getElementById('lesson_chapter_id').value;
+    const title_en = document.getElementById('lesson_title_en').value.trim();
+    if (!chapter || !title_en) { showAlert('Chapter and Title (English) required', 'warning'); return; }
+    
+    const editId = document.getElementById('lessonModal').dataset.editId;
+    const data = {
+        title: {
+            en: title_en,
+            ms: document.getElementById('lesson_title_ms').value.trim() || title_en,
+            zh: document.getElementById('lesson_title_zh').value.trim() || title_en
+        },
+        content_text: {
+            en: document.getElementById('lesson_content_en').value.trim(),
+            ms: document.getElementById('lesson_content_ms').value.trim(),
+            zh: document.getElementById('lesson_content_zh').value.trim()
+        },
+        estimated_time: parseInt(document.getElementById('lesson_estimated_time').value) || 30
+    };
+    
+    if (!editId) {
+        data.chapter = parseInt(chapter);
+        const chapterLessons = lessons.filter(l => l.chapter === parseInt(chapter));
+        data.order = chapterLessons.length + 1;
+    }
+    
+    try {
+        const endpoint = editId ? `/lessons/${editId}/` : '/lessons/';
+        const method = editId ? 'PATCH' : 'POST';
+        await api(endpoint, method, data);
+        showAlert(editId ? 'Lesson updated!' : 'Lesson created!');
+        closeModal('lessonModal');
+        delete document.getElementById('lessonModal').dataset.editId;
+        loadAllContent();
+    } catch (e) {
+        showAlert(e.message, 'danger');
+    }
+}
+
+async function delLesson(id) {
+    if (!confirm('Delete this lesson?')) return;
+    try {
+        await api(`/lessons/${id}/`, 'DELETE');
+        showAlert('Lesson deleted!');
+        loadAllContent();
+    } catch (e) {
+        showAlert(e.message, 'danger');
+    }
+}
+
+function renderQuizzes() {
+    if (quizzes.length === 0) {
+        document.getElementById('quizzesContainer').innerHTML = '<div class="empty-state"><i class="bi bi-inbox"></i><p>No quizzes yet</p></div>';
+        return;
+    }
+    const html = quizzes.map(q => `
+        <div class="item-row">
+            <div class="item-info">
+                <h6>${getTitleText(q)}</h6>
+                <small><i class="bi bi-question-circle" style="margin-right: 0.3rem;"></i>${q.questions?.length || 0} questions | <i class="bi bi-check-circle" style="margin-right: 0.3rem;"></i>Pass: ${q.passing_score}%</small>
+            </div>
+            <div class="item-actions">
+                <button class="btn-icon" onclick="editQuiz(${q.id})" title="Edit"><i class="bi bi-pencil"></i></button>
+                <button class="btn-icon danger" onclick="delQuiz(${q.id})" title="Delete"><i class="bi bi-trash"></i></button>
+            </div>
+        </div>
+    `).join('');
+    document.getElementById('quizzesContainer').innerHTML = `<div class="item-container">${html}</div>`;
+}
+
+function openAddQuiz() {
+    const select = document.getElementById('quiz_chapter_id');
+    select.innerHTML = '<option value="">Select a chapter...</option>' + chapters.map(c => `<option value="${c.id}">${getTitleText(c)}</option>`).join('');
+    ['quiz_title_en', 'quiz_title_ms', 'quiz_title_zh'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('quiz_passing_score').value = '70';
+    document.getElementById('quiz_time_limit').value = '15';
+    delete document.getElementById('quizModal').dataset.editId;
+    openModal('quizModal');
+}
+
+function editQuiz(id) {
+    const q = quizzes.find(x => x.id === id);
+    if (!q) return;
+    const select = document.getElementById('quiz_chapter_id');
+    select.innerHTML = '<option value="">Select a chapter...</option>' + chapters.map(c => `<option value="${c.id}" ${c.id === q.chapter ? 'selected' : ''}>${getTitleText(c)}</option>`).join('');
+    document.getElementById('quiz_title_en').value = q.title?.en || '';
+    document.getElementById('quiz_title_ms').value = q.title?.ms || '';
+    document.getElementById('quiz_title_zh').value = q.title?.zh || '';
+    document.getElementById('quiz_passing_score').value = q.passing_score || 70;
+    document.getElementById('quiz_time_limit').value = (q.time_limit || 900) / 60;
+    document.getElementById('quizModal').dataset.editId = id;
+    openModal('quizModal');
+}
+
+async function saveQuiz() {
+    const chapter = document.getElementById('quiz_chapter_id').value;
+    const title_en = document.getElementById('quiz_title_en').value.trim();
+    if (!chapter || !title_en) { showAlert('Chapter and Title (English) required', 'warning'); return; }
+    
+    const editId = document.getElementById('quizModal').dataset.editId;
+    const data = {
+        title: {
+            en: title_en,
+            ms: document.getElementById('quiz_title_ms').value.trim() || title_en,
+            zh: document.getElementById('quiz_title_zh').value.trim() || title_en
+        },
+        passing_score: parseInt(document.getElementById('quiz_passing_score').value) || 70,
+        time_limit: (parseInt(document.getElementById('quiz_time_limit').value) || 15) * 60,
+        show_answers: true
+    };
+    
+    if (!editId) {
+        data.chapter = parseInt(chapter);
+        data.questions = [];
+        const chapterQuizzes = quizzes.filter(q => q.chapter === parseInt(chapter));
+        data.order = chapterQuizzes.length + 1;
+    }
+    
+    try {
+        const endpoint = editId ? `/quizzes/${editId}/` : '/quizzes/';
+        const method = editId ? 'PATCH' : 'POST';
+        const result = await api(endpoint, method, data);
+        showAlert(editId ? 'Quiz updated!' : 'Quiz created!');
+        closeModal('quizModal');
+        const quizId = editId || result.id;
+        document.getElementById('questionsModal').dataset.contentType = 'quiz';
+        document.getElementById('questionsModal').dataset.contentId = quizId;
+        const quiz = editId ? quizzes.find(q => q.id === quizId) : result;
+        loadQuestionsEditor(quiz || {});
+        openModal('questionsModal');
+        loadAllContent();
+    } catch (e) {
+        showAlert(e.message, 'danger');
+    }
+}
+
+async function saveQuizAndManageQuestions() {
+    await saveQuiz();
+}
+
+
+
+async function delQuiz(id) {
+    if (!confirm('Delete this quiz?')) return;
+    try {
+        await api(`/quizzes/${id}/`, 'DELETE');
+        showAlert('Quiz deleted!');
+        loadAllContent();
+    } catch (e) {
+        showAlert(e.message, 'danger');
+    }
+}
+
+
+
+// Questions Management Functions
+let questionsData = [];
+
+function loadQuestionsEditor(content) {
+    questionsData = content.questions ? [...content.questions] : [];
+    renderQuestionsEditor();
+}
+
+function renderQuestionsEditor() {
+    const container = document.getElementById('questionsContainer');
+    if (questionsData.length === 0) {
+        container.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--text-muted);"><i class="bi bi-inbox" style="font-size: 2rem; display: block; margin-bottom: 0.5rem;"></i>No questions yet. Add one to get started!</div>';
+        return;
+    }
+    
+    container.innerHTML = questionsData.map((q, idx) => `
+        <div class="question-form">
+            <h6>Question ${idx + 1}
+                <button onclick="removeQuestion(${idx})" class="btn-remove"><i class="bi bi-trash"></i> Remove</button>
+            </h6>
+            ${renderLanguageField(q, idx, 'text')}
+            ${renderOptionsEditor(q, idx)}
+        </div>
+    `).join('');
+}
+
+function renderLanguageField(question, qIdx, field) {
+    const value = question[field] || {};
+    const isText = field === 'text';
+    const label = isText ? 'Question Text' : field.charAt(0).toUpperCase() + field.slice(1);
+    
+    return `
+        <div class="lang-section">
+            <label>${label} (English)</label>
+            <${isText ? 'input type="text"' : 'textarea'} 
+                id="q${qIdx}_${field}_en" 
+                value="${value.en || ''}"
+                onchange="questionsData[${qIdx}].${field} = questionsData[${qIdx}].${field} || {}; questionsData[${qIdx}].${field}.en = this.value;"
+                ${!isText ? '' : ''}
+            >${!isText ? value.en || '' : ''}</${isText ? 'input' : 'textarea'}>
+            <label>${label} (Malay)</label>
+            <${isText ? 'input type="text"' : 'textarea'} 
+                id="q${qIdx}_${field}_ms" 
+                value="${value.ms || ''}"
+                onchange="questionsData[${qIdx}].${field} = questionsData[${qIdx}].${field} || {}; questionsData[${qIdx}].${field}.ms = this.value;"
+            >${!isText ? value.ms || '' : ''}</${isText ? 'input' : 'textarea'}>
+            <label>${label} (Chinese)</label>
+            <${isText ? 'input type="text"' : 'textarea'} 
+                id="q${qIdx}_${field}_zh" 
+                value="${value.zh || ''}"
+                onchange="questionsData[${qIdx}].${field} = questionsData[${qIdx}].${field} || {}; questionsData[${qIdx}].${field}.zh = this.value;"
+            >${!isText ? value.zh || '' : ''}</${isText ? 'input' : 'textarea'}>
+        </div>
+    `;
+}
+
+function renderOptionsEditor(question, qIdx) {
+    const options = question.options || [];
+    return `
+        <div style="margin-bottom: 1rem;">
+            <label style="font-weight: 700; color: var(--text-main); margin-bottom: 0.75rem; display: block;">Options</label>
+            ${options.map((opt, oIdx) => `
+                <div class="option-item">
+                    <label>Option ${oIdx + 1} - English</label>
+                    <input type="text" value="${opt.text?.en || ''}" onchange="questionsData[${qIdx}].options[${oIdx}].text = questionsData[${qIdx}].options[${oIdx}].text || {}; questionsData[${qIdx}].options[${oIdx}].text.en = this.value;">
+                    
+                    <label>Option ${oIdx + 1} - Malay</label>
+                    <input type="text" value="${opt.text?.ms || ''}" onchange="questionsData[${qIdx}].options[${oIdx}].text = questionsData[${qIdx}].options[${oIdx}].text || {}; questionsData[${qIdx}].options[${oIdx}].text.ms = this.value;">
+                    
+                    <label>Option ${oIdx + 1} - Chinese</label>
+                    <input type="text" value="${opt.text?.zh || ''}" onchange="questionsData[${qIdx}].options[${oIdx}].text = questionsData[${qIdx}].options[${oIdx}].text || {}; questionsData[${qIdx}].options[${oIdx}].text.zh = this.value;">
+                    
+                    <label><input type="checkbox" ${opt.is_correct ? 'checked' : ''} onchange="questionsData[${qIdx}].options[${oIdx}].is_correct = this.checked;"> Correct Answer</label>
+                    
+                    <button onclick="removeOption(${qIdx}, ${oIdx})" class="btn-remove" style="margin-top: 0.5rem;">Remove Option</button>
+                </div>
+            `).join('')}
+            <button onclick="addOption(${qIdx})" style="background: var(--primary); color: white; border: none; border-radius: 8px; padding: 0.5rem 1rem; font-size: 0.85rem; cursor: pointer; margin-top: 0.5rem;"><i class="bi bi-plus-lg"></i> Add Option</button>
+        </div>
+    `;
+}
+
+function addOption(qIdx) {
+    if (!questionsData[qIdx]) return;
+    if (!questionsData[qIdx].options) questionsData[qIdx].options = [];
+    questionsData[qIdx].options.push({
+        text: { en: '', ms: '', zh: '' },
+        is_correct: false
+    });
+    renderQuestionsEditor();
+}
+
+function removeOption(qIdx, oIdx) {
+    if (questionsData[qIdx]) {
+        questionsData[qIdx].options.splice(oIdx, 1);
+        renderQuestionsEditor();
+    }
+}
+
+function addNewQuestionForm() {
+    questionsData.push({
+        text: { en: '', ms: '', zh: '' },
+        options: [
+            { text: { en: '', ms: '', zh: '' }, is_correct: false },
+            { text: { en: '', ms: '', zh: '' }, is_correct: false }
+        ],
+        correctIndex: 0
+    });
+    renderQuestionsEditor();
+}
+
+function removeQuestion(idx) {
+    if (confirm('Delete this question?')) {
+        questionsData.splice(idx, 1);
+        renderQuestionsEditor();
+    }
+}
+
+async function saveAllQuestions() {
+    const contentType = document.getElementById('questionsModal').dataset.contentType;
+    const contentId = document.getElementById('questionsModal').dataset.contentId;
+    
+    if (!contentType || !contentId) {
+        showAlert('Error: Content type or ID missing', 'danger');
+        return;
+    }
+    
+    // Validate questions
+    if (questionsData.length === 0) {
+        showAlert('Add at least one question', 'warning');
+        return;
+    }
+    
+    for (const q of questionsData) {
+        if (!q.text?.en) {
+            showAlert('All questions must have English text', 'warning');
+            return;
+        }
+        if (!q.options || q.options.length < 2) {
+            showAlert('Each question must have at least 2 options', 'warning');
+            return;
+        }
+        if (!q.options.some(o => o.is_correct)) {
+            showAlert('Each question must have at least one correct answer', 'warning');
+            return;
+        }
+    }
+    
+    try {
+        const endpoint = contentType === 'quiz' ? `/quizzes/${contentId}/add_questions/` : `/practice/${contentId}/add_questions/`;
+        // Use PUT to replace all questions
+        await api(endpoint, 'PUT', { questions: questionsData });
+        showAlert('Questions saved successfully!');
+        closeModal('questionsModal');
+        loadAllContent();
+    } catch (e) {
+        showAlert(e.message, 'danger');
+    }
+}
+
+function updateCounts() {
+    document.getElementById('chapCount').textContent = chapters.length;
+    document.getElementById('lessonCount').textContent = lessons.length;
+    document.getElementById('quizCount').textContent = quizzes.length;
+}
+
+
+
+document.addEventListener('DOMContentLoaded', function() {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    document.documentElement.setAttribute('data-bs-theme', savedTheme);
+    loadChapters();
+    
+    // Close modal when clicking outside (on backdrop)
+    document.querySelectorAll('.modal-backdrop').forEach(modal => {
+        modal.addEventListener('click', function(e) {
+            // Only close if clicking directly on the backdrop, not on the dialog
+            if (e.target === this) {
+                closeModal(this.id);
+            }
+        });
+        
+        // Prevent closing when clicking inside the dialog
+        const dialog = modal.querySelector('.modal-dialog');
+        if (dialog) {
+            dialog.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+        }
+    });
+});
+</script>
+{% endblock %}

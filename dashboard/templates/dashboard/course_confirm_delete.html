@@ -1,0 +1,48 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}{{ title }} - Dashboard{% endblock %}
+{% block page_title %}<i class="bi bi-exclamation-triangle me-2"></i>{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-6 mx-auto">
+            <div class="glass-card text-center">
+                <div class="display-4 mb-3 text-danger"><i class="bi bi-exclamation-triangle"></i></div>
+                
+                <h3 class="mb-3">Delete Course?</h3>
+                
+                <p class="mb-3">
+                    Are you sure you want to delete <strong>{{ course.name }}</strong> ({{ course.code }})?
+                </p>
+                
+                <div class="alert alert-warning">
+                    <strong>Warning:</strong> This will also delete all associated chapters, lessons, quizzes, and student progress data. This action cannot be undone.
+                </div>
+                
+                <form method="post" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger btn-lg">
+                        <i class="bi bi-trash me-2"></i>Delete Course
+                    </button>
+                </form>
+                
+                <a href="{% url 'dashboard:courses' %}" class="btn btn-secondary btn-lg ms-2">
+                    <i class="bi bi-x-circle me-2"></i>Cancel
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.glass-card {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    padding: 2rem;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+</style>
+{% endblock %}

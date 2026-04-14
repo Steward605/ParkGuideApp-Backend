@@ -1,0 +1,292 @@
+/* Dashboard Enhancements - Light & Dark Mode Support */
+
+:root {
+    /* Light Mode */
+    --primary: #2d6a4f;
+    --primary-light: #52b788;
+    --primary-dark: #081c15;
+    --accent: #ff9f1c;
+    --success: #198754;
+    --warning: #ffc107;
+    --danger: #dc3545;
+    --info: #0dcaf0;
+    
+    --bg-body: #f4f7f5;
+    --bg-card: #ffffff;
+    --bg-hover: #f8fafb;
+    --text-main: #1b4332;
+    --text-muted: #6c757d;
+    --text-light: #adb5bd;
+    --border: #e9ecef;
+    --border-light: #dee2e6;
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
+    --shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 20px 50px rgba(0, 0, 0, 0.12);
+}
+
+[data-theme="dark"] {
+    /* Dark Mode */
+    --bg-body: #0b0f0d;
+    --bg-card: #161b18;
+    --bg-hover: #1d2620;
+    --text-main: #f8f9fa;
+    --text-muted: #adb5bd;
+    --text-light: #6c757d;
+    --border: #2d3632;
+    --border-light: #3d4138;
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+    --shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 20px 50px rgba(0, 0, 0, 0.6);
+}
+
+/* Smooth Theme Transitions */
+body, 
+[data-theme] *:not(.no-transition) {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Glass Card Enhancement */
+.glass-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.5rem;
+    backdrop-filter: blur(8px);
+    box-shadow: var(--shadow);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card:hover {
+    border-color: var(--primary-light);
+    box-shadow: var(--shadow-lg);
+}
+
+/* Input Fields */
+input:not([type="hidden"]),
+textarea,
+select {
+    background-color: var(--bg-card);
+    color: var(--text-main);
+    border-color: var(--border);
+}
+
+input:not([type="hidden"]):focus,
+textarea:focus,
+select:focus {
+    background-color: var(--bg-card);
+    color: var(--text-main);
+    border-color: var(--primary-light);
+    box-shadow: 0 0 0 0.2rem rgba(82, 183, 136, 0.15);
+}
+
+/* Buttons - Enhanced Styling */
+.btn {
+    font-weight: 600;
+    border-radius: 8px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: none;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px rgba(45, 106, 79, 0.3);
+    background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+}
+
+.btn-outline-primary {
+    color: var(--primary);
+    border: 2px solid var(--primary);
+}
+
+.btn-outline-primary:hover {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: white;
+    border-color: var(--primary-light);
+}
+
+/* Alert Enhancements */
+.alert {
+    background: linear-gradient(135deg, transparent, rgba(45, 106, 79, 0.02));
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text-main);
+}
+
+.alert-info {
+    border-left: 4px solid var(--info);
+}
+
+.alert-warning {
+    border-left: 4px solid var(--warning);
+}
+
+.alert-success {
+    border-left: 4px solid var(--success);
+}
+
+.alert-danger {
+    border-left: 4px solid var(--danger);
+}
+
+/* Badge Enhancements */
+.badge {
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.8rem;
+}
+
+/* Cards Grid Responsive */
+@media (max-width: 576px) {
+    .stats-card {
+        padding: 1.25rem;
+    }
+    
+    .stats-card .stat-value {
+        font-size: 1.75rem;
+    }
+    
+    .course-card {
+        margin-bottom: 1rem;
+    }
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-body);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-light);
+}
+
+/* Floating Action Button */
+.fab {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 12px 28px rgba(45, 106, 79, 0.3);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 50;
+}
+
+.fab:hover {
+    transform: scale(1.1) translateY(-4px);
+    box-shadow: 0 16px 36px rgba(45, 106, 79, 0.4);
+}
+
+/* Loading State */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.loading::after {
+    content: '';
+    display: inline-block;
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid var(--border);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Skeleton Loader */
+.skeleton {
+    background: linear-gradient(90deg, var(--border) 25%, var(--bg-hover) 50%, var(--border) 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    border-radius: 8px;
+}
+
+@keyframes loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* Accessibility Enhancements */
+:focus-visible {
+    outline: 2px solid var(--primary-light);
+    outline-offset: 2px;
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* Print Styles */
+@media print {
+    .sidebar,
+    .no-print,
+    .btn-group,
+    .dashboard-toolbar {
+        display: none;
+    }
+    
+    body {
+        background: white;
+    }
+    
+    .glass-card {
+        box-shadow: none;
+        border: 1px solid #ccc;
+        page-break-inside: avoid;
+    }
+}
+
+/* Tooltip Enhancement */
+.tooltip-inner {
+    background: var(--bg-card);
+    color: var(--text-main);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+}
+
+/* Minimal Dark Mode Flicker Fix */
+html {
+    color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+    html:not([data-theme]) {
+        background: var(--bg-body);
+        color: var(--text-main);
+    }
+}

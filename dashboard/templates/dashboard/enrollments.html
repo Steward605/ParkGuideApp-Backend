@@ -1,0 +1,554 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}Enrollments - Dashboard{% endblock %}
+{% block page_title %}<i class="bi bi-journal-check me-2"></i>Enrollment Management{% endblock %}
+
+{% block extra_css %}
+<style>
+    .enrollment-stat-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        padding: 1.25rem;
+        height: 100%;
+        box-shadow: var(--shadow);
+    }
+
+    .enrollment-stat-label {
+        color: var(--text-muted);
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-bottom: 0.5rem;
+    }
+
+    .enrollment-stat-value {
+        color: var(--text-main);
+        font-size: 2rem;
+        font-weight: 800;
+        line-height: 1;
+    }
+
+    .enrollment-filter-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        padding: 1.5rem;
+        box-shadow: var(--shadow);
+    }
+
+    .enrollment-progress-bar {
+        height: 8px;
+        background: rgba(45, 106, 79, 0.10);
+        border-radius: 999px;
+        overflow: hidden;
+    }
+
+    .enrollment-progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--primary), var(--primary-light));
+        border-radius: 999px;
+    }
+
+    .enrollment-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 1.25rem;
+    }
+
+    .enrollment-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        padding: 1.25rem;
+        box-shadow: var(--shadow);
+        transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .enrollment-card::before {
+        content: '';
+        position: absolute;
+        inset: 0 auto auto 0;
+        width: 100%;
+        height: 4px;
+        background: linear-gradient(90deg, var(--primary), var(--primary-light));
+        opacity: 0;
+        transition: opacity 0.2s ease;
+    }
+
+    .enrollment-card:hover {
+        transform: translateY(-4px);
+        border-color: rgba(82, 183, 136, 0.4);
+        box-shadow: 0 18px 36px rgba(45, 106, 79, 0.12);
+    }
+
+    .enrollment-card:hover::before {
+        opacity: 1;
+    }
+
+    .enrollment-card-button {
+        border: 0;
+        padding: 0;
+        background: transparent;
+        color: inherit;
+        text-align: left;
+        width: 100%;
+    }
+
+    .enrollment-card-button:focus-visible {
+        outline: 2px solid var(--primary-light);
+        outline-offset: 4px;
+        border-radius: 12px;
+    }
+
+    .enrollment-card-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .enrollment-user {
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+    }
+
+    .enrollment-avatar {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        color: white;
+        background: linear-gradient(135deg, var(--primary), var(--primary-light));
+        flex: 0 0 44px;
+    }
+
+    .enrollment-course-panel {
+        background: rgba(45, 106, 79, 0.05);
+        border: 1px solid rgba(45, 106, 79, 0.08);
+        border-radius: 14px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    [data-theme="dark"] .enrollment-course-panel {
+        background: rgba(82, 183, 136, 0.08);
+        border-color: rgba(82, 183, 136, 0.14);
+    }
+
+    .enrollment-detail-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.75rem;
+        margin-top: 1rem;
+    }
+
+    .enrollment-detail-box {
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 0.85rem;
+        background: rgba(255, 255, 255, 0.35);
+    }
+
+    [data-theme="dark"] .enrollment-detail-box {
+        background: rgba(255, 255, 255, 0.03);
+    }
+
+    .enrollment-detail-label {
+        font-size: 0.72rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        font-weight: 700;
+        margin-bottom: 0.2rem;
+    }
+
+    .enrollment-detail-value {
+        font-weight: 700;
+        color: var(--text-main);
+    }
+
+    .enrollment-meta {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
+
+    .enrollment-actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .enrollment-actions form {
+        margin: 0;
+    }
+
+    .status-pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.35rem 0.7rem;
+        border-radius: 999px;
+        font-size: 0.74rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+    .status-pill.enrolled {
+        background: rgba(108, 117, 125, 0.12);
+        color: var(--text-muted);
+    }
+
+    .status-pill.in_progress {
+        background: rgba(13, 202, 240, 0.16);
+        color: #0b7285;
+    }
+
+    .status-pill.completed {
+        background: rgba(25, 135, 84, 0.16);
+        color: #1b7f4d;
+    }
+
+    .status-pill.failed {
+        background: rgba(220, 53, 69, 0.16);
+        color: #b02a37;
+    }
+
+    .status-pill.discontinued {
+        background: rgba(255, 159, 28, 0.16);
+        color: #b06a00;
+    }
+
+    [data-theme="dark"] .status-pill.in_progress {
+        color: #7bdff2;
+    }
+
+    [data-theme="dark"] .status-pill.completed {
+        color: #72d6a1;
+    }
+
+    [data-theme="dark"] .status-pill.failed {
+        color: #ff9aa5;
+    }
+
+    [data-theme="dark"] .status-pill.discontinued {
+        color: #ffd08a;
+    }
+
+    .enrollment-modal-content {
+        background: var(--bg-card);
+        color: var(--text-main);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+    }
+
+    .enrollment-modal-header,
+    .enrollment-modal-footer {
+        border-color: var(--border);
+    }
+
+    @media (max-width: 768px) {
+        .enrollment-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .enrollment-detail-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row g-3 g-lg-4 mb-4">
+        <div class="col-md-3">
+            <div class="enrollment-stat-card">
+                <div class="enrollment-stat-label">Total Enrollments</div>
+                <div class="enrollment-stat-value">{{ stats.total }}</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="enrollment-stat-card">
+                <div class="enrollment-stat-label">Completed</div>
+                <div class="enrollment-stat-value text-success">{{ stats.completed }}</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="enrollment-stat-card">
+                <div class="enrollment-stat-label">In Progress</div>
+                <div class="enrollment-stat-value text-info">{{ stats.in_progress }}</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="enrollment-stat-card">
+                <div class="enrollment-stat-label">Avg Progress</div>
+                <div class="enrollment-stat-value">{{ stats.avg_progress }}%</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="enrollment-filter-card mb-4">
+        <form method="get" class="row g-3">
+            <div class="col-lg-5">
+                <label class="form-label small fw-bold">Search</label>
+                <input type="text" name="search" class="form-control" value="{{ search_query }}" placeholder="Username, email, or course code">
+            </div>
+            <div class="col-lg-3">
+                <label class="form-label small fw-bold">Status</label>
+                <select name="status" class="form-select">
+                    <option value="">All statuses</option>
+                    {% for value, label in status_choices %}
+                        <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-lg-2">
+                <label class="form-label small fw-bold">Course</label>
+                <select name="course" class="form-select">
+                    <option value="">All courses</option>
+                    {% for course in course_options %}
+                        <option value="{{ course.id }}" {% if course_filter == course.id|stringformat:'s' %}selected{% endif %}>{{ course.code }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-lg-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search me-2"></i>Apply
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="glass-card">
+        {% if enrollments %}
+            <div class="enrollment-grid">
+                {% for enrollment in enrollments %}
+                    <div class="enrollment-card">
+                        <button
+                            type="button"
+                            class="enrollment-card-button"
+                            data-bs-toggle="modal"
+                            data-bs-target="#enrollmentModal{{ enrollment.id }}"
+                        >
+                            <div class="enrollment-card-header">
+                                <div class="enrollment-user">
+                                    <div class="enrollment-avatar">
+                                        {{ enrollment.user.username|first|upper }}
+                                    </div>
+                                    <div>
+                                        <div class="fw-semibold">{{ enrollment.user.username }}</div>
+                                        <div class="enrollment-meta">{{ enrollment.user.email }}</div>
+                                    </div>
+                                </div>
+                                <span class="status-pill {{ enrollment.status }}">{{ enrollment.get_status_display }}</span>
+                            </div>
+
+                            <div class="enrollment-course-panel">
+                                <div class="d-flex justify-content-between align-items-start gap-3">
+                                    <div>
+                                        <div class="fw-semibold">{{ enrollment.course.code }}</div>
+                                        <div class="enrollment-meta">{{ enrollment.course.title.en|default:"Untitled Course" }}</div>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="fw-semibold">{{ enrollment.progress_percentage|floatformat:0 }}%</div>
+                                        <div class="enrollment-meta">Progress</div>
+                                    </div>
+                                </div>
+                                <div class="enrollment-progress-bar mt-3">
+                                    <div class="enrollment-progress-fill" style="width: {{ enrollment.progress_percentage }}%;"></div>
+                                </div>
+                            </div>
+
+                            <div class="enrollment-detail-grid">
+                                <div class="enrollment-detail-box">
+                                    <div class="enrollment-detail-label">Chapters</div>
+                                    <div class="enrollment-detail-value">{{ enrollment.completed_chapters }}/{{ enrollment.total_chapters }}</div>
+                                </div>
+                                <div class="enrollment-detail-box">
+                                    <div class="enrollment-detail-label">Final Score</div>
+                                    <div class="enrollment-detail-value">
+                                        {% if enrollment.final_score is not None %}
+                                            {{ enrollment.final_score|floatformat:0 }}%
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-3 enrollment-meta">
+                                Enrolled {{ enrollment.enrollment_date|timesince }} ago
+                                {% if enrollment.completed_date %}
+                                    <br>Completed {{ enrollment.completed_date|timesince }} ago
+                                {% endif %}
+                            </div>
+                        </button>
+
+                        <div class="enrollment-actions mt-3">
+                            <form method="post" class="flex-grow-1">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="update_status">
+                                <input type="hidden" name="enrollment_id" value="{{ enrollment.id }}">
+                                <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+                                    {% for value, label in status_choices %}
+                                        <option value="{{ value }}" {% if enrollment.status == value %}selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </form>
+                            <form method="post" onsubmit="return confirm('Reset progress for {{ enrollment.user.username }} in {{ enrollment.course.code }}?');">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="reset_progress">
+                                <input type="hidden" name="enrollment_id" value="{{ enrollment.id }}">
+                                <button type="submit" class="btn btn-sm btn-outline-warning">
+                                    <i class="bi bi-arrow-counterclockwise"></i>
+                                </button>
+                            </form>
+                            <form method="post" onsubmit="return confirm('Unenroll {{ enrollment.user.username }} from {{ enrollment.course.code }}?');">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="delete_enrollment">
+                                <input type="hidden" name="enrollment_id" value="{{ enrollment.id }}">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                    <i class="bi bi-person-dash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-5 text-muted">No enrollments match the current filters.</div>
+        {% endif %}
+
+        {% if page_obj.paginator.num_pages > 1 %}
+            <nav class="mt-4" aria-label="Enrollments pagination">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if course_filter %}&course={{ course_filter }}{% endif %}">Previous</a>
+                        </li>
+                    {% endif %}
+                    <li class="page-item active disabled">
+                        <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                    </li>
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if course_filter %}&course={{ course_filter }}{% endif %}">Next</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+    </div>
+</div>
+
+{% for enrollment in enrollments %}
+    <div class="modal fade" id="enrollmentModal{{ enrollment.id }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content enrollment-modal-content">
+                <div class="modal-header enrollment-modal-header">
+                    <div>
+                        <h5 class="modal-title fw-bold mb-1">{{ enrollment.course.code }} Enrollment</h5>
+                        <div class="enrollment-meta">{{ enrollment.user.username }} · {{ enrollment.user.email }}</div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <div class="enrollment-detail-box h-100">
+                                <div class="enrollment-detail-label">Status</div>
+                                <div class="enrollment-detail-value">{{ enrollment.get_status_display }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="enrollment-detail-box h-100">
+                                <div class="enrollment-detail-label">Progress</div>
+                                <div class="enrollment-detail-value">{{ enrollment.progress_percentage|floatformat:0 }}%</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="enrollment-detail-box h-100">
+                                <div class="enrollment-detail-label">Final Score</div>
+                                <div class="enrollment-detail-value">
+                                    {% if enrollment.final_score is not None %}
+                                        {{ enrollment.final_score|floatformat:0 }}%
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="enrollment-course-panel mb-4">
+                        <div class="fw-semibold mb-1">{{ enrollment.course.title.en|default:"Untitled Course" }}</div>
+                        <div class="enrollment-meta mb-3">Chapters completed: {{ enrollment.completed_chapters }}/{{ enrollment.total_chapters }}</div>
+                        <div class="enrollment-progress-bar">
+                            <div class="enrollment-progress-fill" style="width: {{ enrollment.progress_percentage }}%;"></div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="enrollment-detail-box h-100">
+                                <div class="enrollment-detail-label">Enrollment Date</div>
+                                <div class="enrollment-detail-value">{{ enrollment.enrollment_date|date:"d M Y, H:i" }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="enrollment-detail-box h-100">
+                                <div class="enrollment-detail-label">Last Updated</div>
+                                <div class="enrollment-detail-value">{{ enrollment.updated_at|date:"d M Y, H:i" }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="enrollment-detail-box h-100">
+                                <div class="enrollment-detail-label">Started Date</div>
+                                <div class="enrollment-detail-value">
+                                    {% if enrollment.started_date %}{{ enrollment.started_date|date:"d M Y, H:i" }}{% else %}-{% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="enrollment-detail-box h-100">
+                                <div class="enrollment-detail-label">Completed Date</div>
+                                <div class="enrollment-detail-value">
+                                    {% if enrollment.completed_date %}{{ enrollment.completed_date|date:"d M Y, H:i" }}{% else %}-{% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer enrollment-modal-footer">
+                    <form method="post" class="me-auto">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="reset_progress">
+                        <input type="hidden" name="enrollment_id" value="{{ enrollment.id }}">
+                        <button type="submit" class="btn btn-outline-warning" onclick="return confirm('Reset progress for {{ enrollment.user.username }} in {{ enrollment.course.code }}?');">
+                            <i class="bi bi-arrow-counterclockwise me-2"></i>Reset Progress
+                        </button>
+                    </form>
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="delete_enrollment">
+                        <input type="hidden" name="enrollment_id" value="{{ enrollment.id }}">
+                        <button type="submit" class="btn btn-outline-danger" onclick="return confirm('Unenroll {{ enrollment.user.username }} from {{ enrollment.course.code }}?');">
+                            <i class="bi bi-person-dash me-2"></i>Unenroll
+                        </button>
+                    </form>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endfor %}
+{% endblock %}
