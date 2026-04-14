@@ -59,11 +59,15 @@ class Command(BaseCommand):
         
         # Create courses & modules
         for course_data in data:
-            course = Course.objects.create(title=course_data['title'])
+            course = Course.objects.create(
+                code=course_data.get('id'),  # Use the code from JSON (e.g., "course1")
+                title=course_data['title']
+            )
             for module_data in course_data.get('modules', []):
                 raw_quizzes = module_data.get('quizzes', module_data.get('quiz', None))
                 Module.objects.create(
                     course=course,
+                    code=module_data.get('id'),  # Use the code from JSON (e.g., "1.1", "1.2")
                     title=module_data.get('title'),
                     content=module_data.get('content'),
                     quiz=normalize_quiz_payload(raw_quizzes)

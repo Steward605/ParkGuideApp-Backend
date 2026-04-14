@@ -1,11 +1,12 @@
 from django.contrib import admin
 from django.db.models import Count, Q, Sum
 from django.utils.html import format_html
+from django import forms
 
 from courses.models import CourseProgress, ModuleProgress
 from park_guide.admin_mixins import DashboardStatsChangeListMixin
 
-from .models import Course, Module
+from .models import Course, Module, Chapter, Lesson, Quiz, PracticeExercise
 
 
 class ModuleInline(admin.TabularInline):
@@ -116,3 +117,362 @@ class ModuleAdmin(DashboardStatsChangeListMixin, admin.ModelAdmin):
             {'label': 'Without quiz', 'value': total - with_quiz},
             {'label': 'Completions', 'value': module_completions},
         ]
+
+
+# ============================================================================
+# NEW COURSE SYSTEM ADMIN (Multi-language support)
+# ============================================================================
+
+class MultiLanguageForm(forms.ModelForm):
+    """Base form with multi-language field support"""
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        instance = kwargs.get('instance')
+        
+        # Process title field
+        if instance and instance.title:
+            self.fields['title_en'] = forms.CharField(
+                label='Title (English)',
+                initial=instance.title.get('en', ''),
+                required=True,
+                widget=forms.TextInput(attrs={'size': 50})
+            )
+            self.fields['title_ms'] = forms.CharField(
+                label='Title (Malay)',
+                initial=instance.title.get('ms', ''),
+                required=False,
+                widget=forms.TextInput(attrs={'size': 50}),
+                help_text='Tajuk (Bahasa Malaysia)'
+            )
+            self.fields['title_zh'] = forms.CharField(
+                label='Title (Chinese)',
+                initial=instance.title.get('zh', ''),
+                required=False,
+                widget=forms.TextInput(attrs={'size': 50}),
+                help_text='标题（中文）'
+            )
+        else:
+            self.fields['title_en'] = forms.CharField(
+                label='Title (English)',
+                required=True,
+                widget=forms.TextInput(attrs={'size': 50})
+            )
+            self.fields['title_ms'] = forms.CharField(
+                label='Title (Malay)',
+                required=False,
+                widget=forms.TextInput(attrs={'size': 50}),
+                help_text='Tajuk (Bahasa Malaysia)'
+            )
+            self.fields['title_zh'] = forms.CharField(
+                label='Title (Chinese)',
+                required=False,
+                widget=forms.TextInput(attrs={'size': 50}),
+                help_text='标题（中文）'
+            )
+
+
+class CourseNewSystemForm(MultiLanguageForm):
+    """Form for the new Course system with multi-language support"""
+    description_en = forms.CharField(
+        label='Description (English)',
+        required=False,
+        widget=forms.Textarea(attrs={'rows': 3, 'cols': 50})
+    )
+    description_ms = forms.CharField(
+        label='Description (Malay)',
+        required=False,
+        widget=forms.Textarea(attrs={'rows': 3, 'cols': 50}),
+        help_text='Penerangan (Bahasa Malaysia)'
+    )
+    description_zh = forms.CharField(
+        label='Description (Chinese)',
+        required=False,
+        widget=forms.Textarea(attrs={'rows': 3, 'cols': 50}),
+        help_text='描述（中文）'
+    )
+    
+    class Meta:
+        model = Course
+        fields = ['code', 'title', 'description', 'thumbnail', 'is_published', 'prerequisites']
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        instance = kwargs.get('instance')
+        
+        if instance and instance.description:
+            self.fields['description_en'].initial = instance.description.get('en', '')
+            self.fields['description_ms'].initial = instance.description.get('ms', '')
+            self.fields['description_zh'].initial = instance.description.get('zh', '')
+    
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        instance.title = {
+            'en': self.cleaned_data.get('title_en', ''),
+            'ms': self.cleaned_data.get('title_ms', ''),
+            'zh': self.cleaned_data.get('title_zh', ''),
+        }
+        instance.description = {
+            'en': self.cleaned_data.get('description_en', ''),
+            'ms': self.cleaned_data.get('description_ms', ''),
+            'zh': self.cleaned_data.get('description_zh', ''),
+        }
+        if commit:
+            instance.save()
+        return instance
+
+
+class ChapterForm(MultiLanguageForm):
+    """Form for Chapters with multi-language support"""
+    description_en = forms.CharField(
+        label='Description (English)',
+        required=False,
+        widget=forms.Textarea(attrs={'rows': 3, 'cols': 50})
+    )
+    description_ms = forms.CharField(
+        label='Description (Malay)',
+        required=False,
+        widget=forms.Textarea(attrs={'rows': 3, 'cols': 50}),
+        help_text='Penerangan (Bahasa Malaysia)'
+    )
+    description_zh = forms.CharField(
+        label='Description (Chinese)',
+        required=False,
+        widget=forms.Textarea(attrs={'rows': 3, 'cols': 50}),
+        help_text='描述（中文）'
+    )
+    
+    class Meta:
+        model = Chapter
+        fields = ['course', 'title', 'description', 'order']
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        instance = kwargs.get('instance')
+        
+        if instance and instance.description:
+            self.fields['description_en'].initial = instance.description.get('en', '')
+            self.fields['description_ms'].initial = instance.description.get('ms', '')
+            self.fields['description_zh'].initial = instance.description.get('zh', '')
+    
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        instance.title = {
+            'en': self.cleaned_data.get('title_en', ''),
+            'ms': self.cleaned_data.get('title_ms', ''),
+            'zh': self.cleaned_data.get('title_zh', ''),
+        }
+        instance.description = {
+            'en': self.cleaned_data.get('description_en', ''),
+            'ms': self.cleaned_data.get('description_ms', ''),
+            'zh': self.cleaned_data.get('description_zh', ''),
+        }
+        if commit:
+            instance.save()
+        return instance
+
+
+class LessonForm(MultiLanguageForm):
+    """Form for Lessons with multi-language support"""
+    content_text_en = forms.CharField(
+        label='Content (English)',
+        required=False,
+        widget=forms.Textarea(attrs={'rows': 8, 'cols': 50}),
+        help_text='Markdown or HTML content'
+    )
+    content_text_ms = forms.CharField(
+        label='Content (Malay)',
+        required=False,
+        widget=forms.Textarea(attrs={'rows': 8, 'cols': 50}),
+        help_text='Kandungan (Bahasa Malaysia) - Markdown atau HTML'
+    )
+    content_text_zh = forms.CharField(
+        label='Content (Chinese)',
+        required=False,
+        widget=forms.Textarea(attrs={'rows': 8, 'cols': 50}),
+        help_text='内容（中文）- Markdown或HTML'
+    )
+    
+    class Meta:
+        model = Lesson
+        fields = ['chapter', 'title', 'content_text', 'content_images', 'content_videos', 'order', 'estimated_time']
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        instance = kwargs.get('instance')
+        
+        if instance and instance.content_text:
+            self.fields['content_text_en'].initial = instance.content_text.get('en', '')
+            self.fields['content_text_ms'].initial = instance.content_text.get('ms', '')
+            self.fields['content_text_zh'].initial = instance.content_text.get('zh', '')
+    
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        instance.title = {
+            'en': self.cleaned_data.get('title_en', ''),
+            'ms': self.cleaned_data.get('title_ms', ''),
+            'zh': self.cleaned_data.get('title_zh', ''),
+        }
+        instance.content_text = {
+            'en': self.cleaned_data.get('content_text_en', ''),
+            'ms': self.cleaned_data.get('content_text_ms', ''),
+            'zh': self.cleaned_data.get('content_text_zh', ''),
+        }
+        if commit:
+            instance.save()
+        return instance
+
+
+class QuizForm(MultiLanguageForm):
+    """Form for Quizzes with multi-language support"""
+    description_en = forms.CharField(
+        label='Description (English)',
+        required=False,
+        widget=forms.Textarea(attrs={'rows': 3, 'cols': 50})
+    )
+    description_ms = forms.CharField(
+        label='Description (Malay)',
+        required=False,
+        widget=forms.Textarea(attrs={'rows': 3, 'cols': 50}),
+        help_text='Penerangan (Bahasa Malaysia)'
+    )
+    description_zh = forms.CharField(
+        label='Description (Chinese)',
+        required=False,
+        widget=forms.Textarea(attrs={'rows': 3, 'cols': 50}),
+        help_text='描述（中文）'
+    )
+    
+    class Meta:
+        model = Quiz
+        fields = ['chapter', 'title', 'description', 'questions', 'passing_score', 'time_limit', 'show_answers', 'order']
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        instance = kwargs.get('instance')
+        
+        if instance and instance.description:
+            self.fields['description_en'].initial = instance.description.get('en', '')
+            self.fields['description_ms'].initial = instance.description.get('ms', '')
+            self.fields['description_zh'].initial = instance.description.get('zh', '')
+    
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        instance.title = {
+            'en': self.cleaned_data.get('title_en', ''),
+            'ms': self.cleaned_data.get('title_ms', ''),
+            'zh': self.cleaned_data.get('title_zh', ''),
+        }
+        instance.description = {
+            'en': self.cleaned_data.get('description_en', ''),
+            'ms': self.cleaned_data.get('description_ms', ''),
+            'zh': self.cleaned_data.get('description_zh', ''),
+        }
+        if commit:
+            instance.save()
+        return instance
+
+
+class PracticeExerciseForm(MultiLanguageForm):
+    """Form for Practice Exercises with multi-language support"""
+    description_en = forms.CharField(
+        label='Description (English)',
+        required=False,
+        widget=forms.Textarea(attrs={'rows': 3, 'cols': 50})
+    )
+    description_ms = forms.CharField(
+        label='Description (Malay)',
+        required=False,
+        widget=forms.Textarea(attrs={'rows': 3, 'cols': 50}),
+        help_text='Penerangan (Bahasa Malaysia)'
+    )
+    description_zh = forms.CharField(
+        label='Description (Chinese)',
+        required=False,
+        widget=forms.Textarea(attrs={'rows': 3, 'cols': 50}),
+        help_text='描述（中文）'
+    )
+    
+    class Meta:
+        model = PracticeExercise
+        fields = ['chapter', 'title', 'description', 'exercise_type', 'questions', 'passing_score', 'order']
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        instance = kwargs.get('instance')
+        
+        if instance and instance.description:
+            self.fields['description_en'].initial = instance.description.get('en', '')
+            self.fields['description_ms'].initial = instance.description.get('ms', '')
+            self.fields['description_zh'].initial = instance.description.get('zh', '')
+    
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        instance.title = {
+            'en': self.cleaned_data.get('title_en', ''),
+            'ms': self.cleaned_data.get('title_ms', ''),
+            'zh': self.cleaned_data.get('title_zh', ''),
+        }
+        instance.description = {
+            'en': self.cleaned_data.get('description_en', ''),
+            'ms': self.cleaned_data.get('description_ms', ''),
+            'zh': self.cleaned_data.get('description_zh', ''),
+        }
+        if commit:
+            instance.save()
+        return instance
+
+
+# ============================================================================
+# ADMIN REGISTRATIONS
+# ============================================================================
+
+@admin.register(Chapter)
+class ChapterAdmin(admin.ModelAdmin):
+    form = ChapterForm
+    list_display = ('id', 'course', 'title_en', 'order')
+    list_filter = ('course',)
+    search_fields = ('title',)
+    ordering = ('course', 'order')
+    
+    def title_en(self, obj):
+        return obj.title.get('en', 'Untitled')
+    title_en.short_description = 'Title'
+
+
+@admin.register(Lesson)
+class LessonAdmin(admin.ModelAdmin):
+    form = LessonForm
+    list_display = ('id', 'chapter', 'title_en', 'order', 'estimated_time')
+    list_filter = ('chapter__course', 'chapter')
+    search_fields = ('title',)
+    ordering = ('chapter', 'order')
+    
+    def title_en(self, obj):
+        return obj.title.get('en', 'Untitled')
+    title_en.short_description = 'Title'
+
+
+@admin.register(Quiz)
+class QuizAdmin(admin.ModelAdmin):
+    form = QuizForm
+    list_display = ('id', 'chapter', 'title_en', 'passing_score', 'time_limit')
+    list_filter = ('chapter__course', 'chapter')
+    search_fields = ('title',)
+    
+    def title_en(self, obj):
+        return obj.title.get('en', 'Untitled')
+    title_en.short_description = 'Title'
+
+
+@admin.register(PracticeExercise)
+class PracticeExerciseAdmin(admin.ModelAdmin):
+    form = PracticeExerciseForm
+    list_display = ('id', 'chapter', 'title_en', 'exercise_type', 'passing_score', 'order')
+    list_filter = ('chapter__course', 'chapter', 'exercise_type')
+    search_fields = ('title',)
+    ordering = ('chapter', 'order')
+    
+    def title_en(self, obj):
+        return obj.title.get('en', 'Untitled')
+    title_en.short_description = 'Title'

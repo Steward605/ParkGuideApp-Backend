@@ -17,3 +17,5 @@ secrets
 google-services.json
 *.secrets.json
 **/*-key.json
+.backup
+.codex

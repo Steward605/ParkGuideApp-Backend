@@ -1,0 +1,1397 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}{{ course.code }} - Dashboard{% endblock %}
+{% block page_title %}<i class="bi bi-book-fill me-2"></i>{{ course.title.en|default:"Course" }} - Content Management{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-color: #2d6a4f;
+        --secondary-color: #52b788;
+        --light-color: #d8f3dc;
+        --border-color: rgba(45, 106, 79, 0.1);
+        --hover-bg: rgba(82, 183, 136, 0.08);
+    }
+
+    /* Glass Card Styling */
+    .glass-card {
+        background: rgba(255, 255, 255, 0.85);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.75rem;
+        box-shadow: 0 8px 32px rgba(45, 106, 79, 0.08);
+        transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+        backdrop-filter: blur(10px);
+    }
+    
+    .glass-card:hover {
+        box-shadow: 0 16px 48px rgba(45, 106, 79, 0.12);
+        transform: translateY(-2px);
+        border-color: rgba(82, 183, 136, 0.2);
+    }
+
+    /* Stat Card Styling */
+    .stat-card {
+        border: none;
+        background: linear-gradient(135deg, rgba(45, 106, 79, 0.05), rgba(82, 183, 136, 0.05));
+        padding: 2rem 1.5rem;
+        text-align: center;
+        transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+        border-radius: 12px;
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(82, 183, 136, 0.1), transparent);
+        transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 16px 32px rgba(45, 106, 79, 0.15);
+        background: linear-gradient(135deg, rgba(45, 106, 79, 0.12), rgba(82, 183, 136, 0.12));
+    }
+
+    .stat-card:hover::before {
+        top: -25%;
+        right: -25%;
+    }
+
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        background: rgba(82, 183, 136, 0.25);
+        margin: 0 auto 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .stat-card:hover .stat-icon {
+        background: rgba(82, 183, 136, 0.4);
+        transform: scale(1.1) rotate(5deg);
+    }
+
+    /* List Group Styling */
+    .list-group-item {
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        margin-bottom: 0.75rem;
+        transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+        padding: 1rem !important;
+        background: rgba(255, 255, 255, 0.5);
+    }
+
+    .list-group-item:hover {
+        background-color: var(--hover-bg);
+        border-color: rgba(82, 183, 136, 0.4);
+        transform: translateX(4px);
+        box-shadow: 0 4px 12px rgba(45, 106, 79, 0.08);
+    }
+
+    .list-group-item .btn-group {
+        opacity: 0.6;
+        transition: opacity 0.3s ease;
+    }
+
+    .list-group-item:hover .btn-group {
+        opacity: 1;
+    }
+
+    /* Badge Styling */
+    .badge {
+        padding: 0.4rem 0.8rem;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 0.8rem;
+    }
+
+    .badge.bg-warning-subtle {
+        background: rgba(255, 193, 7, 0.15) !important;
+    }
+
+    .badge.bg-info-subtle {
+        background: rgba(23, 162, 184, 0.15) !important;
+    }
+
+    /* Button Styling */
+    .btn-outline-primary, .btn-outline-danger, .btn-outline-success, 
+    .btn-outline-warning, .btn-outline-secondary {
+        border-radius: 8px;
+        transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+        font-weight: 500;
+        border-width: 1.5px;
+    }
+
+    .btn-outline-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(45, 106, 79, 0.2);
+        background: var(--primary-color);
+    }
+
+    .btn-outline-danger:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(220, 53, 69, 0.2);
+    }
+
+    .btn-outline-success:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(40, 167, 69, 0.2);
+    }
+
+    .btn-sm {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.85rem;
+    }
+
+    /* Form Styling */
+    .form-control, .form-select {
+        border-radius: 10px;
+        border: 1.5px solid var(--border-color);
+        transition: all 0.3s ease;
+        background: rgba(255, 255, 255, 0.8);
+        padding: 0.75rem;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: var(--secondary-color);
+        box-shadow: 0 0 0 0.3rem rgba(82, 183, 136, 0.15);
+        background: rgba(255, 255, 255, 1);
+    }
+
+    /* Modal Styling */
+    .modal-content {
+        border-radius: 16px;
+        border: none;
+        box-shadow: 0 20px 60px rgba(45, 106, 79, 0.2);
+    }
+
+    .modal-header {
+        border-bottom: 1px solid var(--border-color);
+        background: linear-gradient(135deg, rgba(45, 106, 79, 0.05), rgba(82, 183, 136, 0.05));
+        border-radius: 16px 16px 0 0;
+    }
+
+    .modal-header .btn-close:focus {
+        box-shadow: 0 0 0 0.25rem rgba(82, 183, 136, 0.25);
+    }
+
+    /* Chapter Header Styling */
+    .chapter-header {
+        background: linear-gradient(135deg, rgba(45, 106, 79, 0.08), rgba(82, 183, 136, 0.08));
+        padding: 1.5rem;
+        border-left: 5px solid var(--primary-color);
+        border-radius: 12px;
+        margin-bottom: 1.75rem;
+        transition: all 0.3s ease;
+    }
+
+    .chapter-header:hover {
+        background: linear-gradient(135deg, rgba(45, 106, 79, 0.12), rgba(82, 183, 136, 0.12));
+        box-shadow: 0 8px 20px rgba(45, 106, 79, 0.1);
+    }
+
+    .chapter-header h5 {
+        color: var(--primary-color);
+        margin-bottom: 0.5rem;
+    }
+
+    /* Content Section Styling */
+    .content-section {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.6), rgba(216, 243, 220, 0.3));
+        padding: 1.5rem;
+        border-radius: 12px;
+        border: 1px solid rgba(82, 183, 136, 0.15);
+        margin-bottom: 1.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .content-section:hover {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(216, 243, 220, 0.5));
+        border-color: rgba(82, 183, 136, 0.3);
+    }
+
+    .content-section h6 {
+        color: var(--primary-color);
+        font-weight: 700;
+        margin-bottom: 1rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid rgba(82, 183, 136, 0.2);
+    }
+
+    /* Add Controls Styling */
+    .add-controls {
+        background: linear-gradient(135deg, rgba(82, 183, 136, 0.08), rgba(45, 106, 79, 0.05));
+        padding: 1.25rem;
+        border-radius: 10px;
+        border: 1px dashed rgba(82, 183, 136, 0.3);
+        margin-top: 1.5rem;
+    }
+
+    .add-controls .btn {
+        border-radius: 8px;
+        margin: 0.25rem 0.5rem 0.25rem 0;
+        transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+        font-weight: 500;
+    }
+
+    .add-controls .btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+    }
+
+    /* Empty State Styling */
+    .text-center .display-6 {
+        font-size: 4rem;
+        opacity: 0.4;
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 768px) {
+        .glass-card {
+            padding: 1.25rem;
+        }
+
+        .stat-card {
+            padding: 1.5rem;
+        }
+
+        .chapter-header {
+            padding: 1rem;
+        }
+
+        .content-section {
+            padding: 1rem;
+        }
+
+        .add-controls .btn {
+            display: block;
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+    }
+
+    /* Animations */
+    @keyframes slideInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .glass-card, .stat-card, .chapter-header, .content-section {
+        animation: slideInUp 0.4s ease-out;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Course Header -->
+    <div class="glass-card mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h4 class="fw-bold mb-1">{{ course.title.en|default:"Untitled Course" }}</h4>
+                <p class="text-muted mb-2">Code: <strong>{{ course.code }}</strong></p>
+                {% if course.prerequisites.all %}
+                    <div class="small">
+                        <strong>Prerequisites:</strong>
+                        {% for prereq in course.prerequisites.all %}
+                            <span class="badge bg-warning">{{ prereq.code }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            <div class="col-md-4 text-end">
+                <a href="{% url 'dashboard:courses' %}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left me-2"></i>Back to Courses
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Statistics -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="glass-card stat-card">
+                <div class="stat-icon text-info mb-2"><i class="bi bi-bookmark-fill fs-5"></i></div>
+                <div class="small text-muted fw-bold">TOTAL CHAPTERS</div>
+                <div class="display-6 fw-bold text-info">{{ course_content|length }}</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-card stat-card">
+                <div class="stat-icon text-success mb-2"><i class="bi bi-file-text fs-5"></i></div>
+                <div class="small text-muted fw-bold">TOTAL LESSONS</div>
+                <div class="display-6 fw-bold text-success">{{ total_lessons }}</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-card stat-card">
+                <div class="stat-icon text-warning mb-2"><i class="bi bi-pencil-square fs-5"></i></div>
+                <div class="small text-muted fw-bold">TOTAL QUIZZES</div>
+                <div class="display-6 fw-bold text-warning">{{ total_quizzes }}</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-card stat-card">
+                <div class="stat-icon text-primary mb-2"><i class="bi bi-hammer fs-5"></i></div>
+                <div class="small text-muted fw-bold">TOTAL EXERCISES</div>
+                <div class="display-6 fw-bold text-primary">{{ total_exercises }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Chapter Button -->
+    <div class="mb-4">
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addChapterModal">
+            <i class="bi bi-plus-circle me-2"></i>Add Chapter
+        </button>
+    </div>
+
+    <!-- Chapters, Lessons, Quizzes, Exercises -->
+    <div class="glass-card">
+        {% if course_content %}
+            {% for content in course_content %}
+                <div class="mb-4 pb-4">
+                    <!-- Chapter Header -->
+                    <div class="chapter-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="flex-grow-1">
+                                <h5 class="fw-bold mb-1">
+                                    <i class="bi bi-bookmark-fill me-2" style="color: #2d6a4f;"></i>
+                                    {{ content.chapter.title.en|default:"Chapter" }} 
+                                    <span class="badge bg-secondary" style="background: linear-gradient(135deg, #2d6a4f, #52b788) !important;">{{ content.chapter.order }}</span>
+                                </h5>
+                                <p class="text-muted small mb-0">{{ content.total_content }} content item{{ content.total_content|pluralize }}</p>
+                            </div>
+                            <div class="btn-group" role="group">
+                                <button class="btn btn-sm btn-outline-primary edit-chapter" data-chapter-id="{{ content.chapter.id }}" title="Edit this chapter">
+                                    <i class="bi bi-pencil"></i> Edit
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger delete-chapter" data-chapter-id="{{ content.chapter.id }}" title="Delete this chapter">
+                                    <i class="bi bi-trash"></i> Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Content Sections -->
+                    {% if content.lessons %}
+                        <div class="content-section mb-3">
+                            <h6 class="fw-semibold mb-3">
+                                <i class="bi bi-file-text me-2"></i> Lessons ({{ content.lesson_count }})
+                            </h6>
+                            <div class="list-group">
+                                {% for lesson in content.lessons %}
+                                    <div class="list-group-item d-flex justify-content-between align-items-center p-3">
+                                        <div class="flex-grow-1">
+                                            <strong class="d-block mb-1">{{ lesson.title.en|default:"Lesson" }}</strong>
+                                            <div class="small text-muted">
+                                                <i class="bi bi-clock"></i> Est. {{ lesson.estimated_time|default:"--" }} min
+                                            </div>
+                                        </div>
+                                        <div class="btn-group btn-group-sm ms-2" role="group">
+                                            <button class="btn btn-outline-primary edit-lesson" data-lesson-id="{{ lesson.id }}" title="Edit lesson">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <button class="btn btn-outline-danger delete-lesson" data-lesson-id="{{ lesson.id }}" title="Delete lesson">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    {% if content.quizzes %}
+                        <div class="content-section mb-3">
+                            <h6 class="fw-semibold mb-3">
+                                <i class="bi bi-pencil-square me-2"></i> Quizzes ({{ content.quiz_count }})
+                            </h6>
+                            <div class="list-group">
+                                {% for quiz in content.quizzes %}
+                                    <div class="list-group-item d-flex justify-content-between align-items-center p-3">
+                                        <div class="flex-grow-1">
+                                            <strong class="d-block mb-1">{{ quiz.title.en|default:"Quiz" }}</strong>
+                                            <div class="small text-muted">
+                                                <span class="badge bg-warning-subtle text-warning me-2">Pass: {{ quiz.passing_score }}%</span>
+                                                <i class="bi bi-hourglass-split"></i> {{ quiz.time_limit|default:"No limit" }} min
+                                            </div>
+                                        </div>
+                                        <div class="btn-group btn-group-sm ms-2" role="group">
+                                            <button class="btn btn-outline-primary edit-quiz" data-quiz-id="{{ quiz.id }}" title="Edit quiz">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <button class="btn btn-outline-danger delete-quiz" data-quiz-id="{{ quiz.id }}" title="Delete quiz">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    {% if content.exercises %}
+                        <div class="content-section mb-3">
+                            <h6 class="fw-semibold mb-3">
+                                <i class="bi bi-hammer me-2"></i> Practice Exercises ({{ content.exercise_count }})
+                            </h6>
+                            <div class="list-group">
+                                {% for exercise in content.exercises %}
+                                    <div class="list-group-item d-flex justify-content-between align-items-center p-3">
+                                        <div class="flex-grow-1">
+                                            <strong class="d-block mb-1">{{ exercise.title.en|default:"Exercise" }}</strong>
+                                            <div class="small text-muted">
+                                                <span class="badge bg-info-subtle text-info me-2">{{ exercise.exercise_type }}</span>
+                                                Pass: {{ exercise.passing_score }}%
+                                            </div>
+                                        </div>
+                                        <div class="btn-group btn-group-sm ms-2" role="group">
+                                            <button class="btn btn-outline-primary edit-exercise" data-exercise-id="{{ exercise.id }}" title="Edit exercise">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <button class="btn btn-outline-danger delete-exercise" data-exercise-id="{{ exercise.id }}" title="Delete exercise">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <!-- Add Content to Chapter -->
+                    <div class="add-controls pt-3">
+                        <button class="btn btn-sm btn-outline-success add-lesson" data-chapter-id="{{ content.chapter.id }}">
+                            <i class="bi bi-plus-circle me-1"></i>Add Lesson
+                        </button>
+                        <button class="btn btn-sm btn-outline-warning add-quiz" data-chapter-id="{{ content.chapter.id }}">
+                            <i class="bi bi-plus-circle me-1"></i>Add Quiz
+                        </button>
+                        <button class="btn btn-sm btn-outline-primary add-exercise" data-chapter-id="{{ content.chapter.id }}">
+                            <i class="bi bi-plus-circle me-1"></i>Add Exercise
+                        </button>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="text-center py-5">
+                <div class="display-6 mb-3 text-muted"><i class="bi bi-inbox"></i></div>
+                <p class="lead mb-0">No chapters yet. <strong>Add one to get started.</strong></p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- ===== MODALS ===== -->
+
+<!-- Add/Edit Chapter Modal -->
+<div class="modal fade" id="addChapterModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="chapterModalTitle">Add Chapter</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="chapterForm">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <!-- English Title -->
+                    <div class="mb-3">
+                        <label class="form-label">Chapter Title (English) *</label>
+                        <input type="text" name="title_en" class="form-control" placeholder="Chapter title in English" required>
+                    </div>
+
+                    <!-- Malay & Chinese Titles -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label">Chapter Title (Malay)</label>
+                            <input type="text" name="title_ms" class="form-control" placeholder="Tajuk bab dalam Bahasa Melayu">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Chapter Title (Chinese)</label>
+                            <input type="text" name="title_zh" class="form-control" placeholder="用中文表示的章节标题">
+                        </div>
+                    </div>
+
+                    <!-- English Description -->
+                    <div class="mb-3 mt-3">
+                        <label class="form-label">Description (English)</label>
+                        <textarea name="description_en" class="form-control" rows="2" placeholder="Optional description in English"></textarea>
+                    </div>
+
+                    <!-- Malay & Chinese Descriptions -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label">Description (Malay)</label>
+                            <textarea name="description_ms" class="form-control" rows="2" placeholder="Huraian pilihan dalam bahasa Melayu"></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Description (Chinese)</label>
+                            <textarea name="description_zh" class="form-control" rows="2" placeholder="可选的中文描述"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Order -->
+                    <div class="mb-3 mt-3">
+                        <label class="form-label">Order</label>
+                        <input type="number" name="order" class="form-control" value="1" min="1">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Chapter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Lesson Modal -->
+<div class="modal fade" id="addLessonModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Lesson</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="lessonForm">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <!-- English Title -->
+                    <div class="mb-3">
+                        <label class="form-label">Lesson Title (English) *</label>
+                        <input type="text" name="title_en" class="form-control" placeholder="Lesson title in English" required>
+                    </div>
+                    
+                    <!-- Malay & Chinese Titles -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label">Lesson Title (Malay)</label>
+                            <input type="text" name="title_ms" class="form-control" placeholder="Tajuk pelajaran dalam Bahasa Melayu">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Lesson Title (Chinese)</label>
+                            <input type="text" name="title_zh" class="form-control" placeholder="用中文表示的课程标题">
+                        </div>
+                    </div>
+
+                    <!-- English Content -->
+                    <div class="mb-3 mt-3">
+                        <label class="form-label">Content (English) *</label>
+                        <textarea name="content_text_en" class="form-control" rows="4" placeholder="Lesson content in English" required></textarea>
+                    </div>
+
+                    <!-- Malay & Chinese Content -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label">Content (Malay)</label>
+                            <textarea name="content_text_ms" class="form-control" rows="4" placeholder="Kandungan pelajaran dalam bahasa Melayu"></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Content (Chinese)</label>
+                            <textarea name="content_text_zh" class="form-control" rows="4" placeholder="课程内容（中文）"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Other Fields -->
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Order</label>
+                            <input type="number" name="order" class="form-control" value="1" min="1">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Estimated Time (minutes)</label>
+                            <input type="number" name="estimated_time" class="form-control" placeholder="30" min="0">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Lesson</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Quiz Modal -->
+<div class="modal fade" id="addQuizModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Quiz</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="quizForm">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <!-- English Title -->
+                    <div class="mb-3">
+                        <label class="form-label">Quiz Title (English) *</label>
+                        <input type="text" name="title_en" class="form-control" placeholder="Quiz title in English" required>
+                    </div>
+
+                    <!-- Malay & Chinese Titles -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label">Quiz Title (Malay)</label>
+                            <input type="text" name="title_ms" class="form-control" placeholder="Tajuk kuiz dalam Bahasa Melayu">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Quiz Title (Chinese)</label>
+                            <input type="text" name="title_zh" class="form-control" placeholder="用中文表示的测验标题">
+                        </div>
+                    </div>
+
+                    <!-- English Description -->
+                    <div class="mb-3 mt-3">
+                        <label class="form-label">Description (English)</label>
+                        <textarea name="description_en" class="form-control" rows="3" placeholder="Quiz description in English"></textarea>
+                    </div>
+
+                    <!-- Malay & Chinese Descriptions -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label">Description (Malay)</label>
+                            <textarea name="description_ms" class="form-control" rows="3" placeholder="Penerangan kuiz dalam bahasa Melayu"></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Description (Chinese)</label>
+                            <textarea name="description_zh" class="form-control" rows="3" placeholder="测验说明（中文）"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Settings -->
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Order</label>
+                            <input type="number" name="order" class="form-control" value="1" min="1">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Passing Score (%)</label>
+                            <input type="number" name="passing_score" class="form-control" value="70" min="0" max="100">
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Time Limit (minutes, 0 for no limit)</label>
+                            <input type="number" name="time_limit" class="form-control" value="0" min="0">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-check mt-3">
+                                <input type="checkbox" name="show_answers" class="form-check-input">
+                                <span class="form-check-label">Show answers after submission</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Questions Section -->
+                    <div class="mt-4 pt-3 border-top">
+                        <h6 class="mb-3">Quiz Questions</h6>
+                        <div id="quizQuestionsContainer"></div>
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="addQuizQuestionBtn">
+                            <i class="bi bi-plus-lg"></i> Add Question
+                        </button>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Quiz</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Exercise Modal -->
+<div class="modal fade" id="addExerciseModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Practice Exercise</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="exerciseForm">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <!-- English Title -->
+                    <div class="mb-3">
+                        <label class="form-label">Exercise Title (English) *</label>
+                        <input type="text" name="title_en" class="form-control" placeholder="Exercise title in English" required>
+                    </div>
+
+                    <!-- Malay & Chinese Titles -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label">Exercise Title (Malay)</label>
+                            <input type="text" name="title_ms" class="form-control" placeholder="Tajuk latihan dalam Bahasa Melayu">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Exercise Title (Chinese)</label>
+                            <input type="text" name="title_zh" class="form-control" placeholder="用中文表示的练习标题">
+                        </div>
+                    </div>
+
+                    <!-- English Description -->
+                    <div class="mb-3 mt-3">
+                        <label class="form-label">Description (English)</label>
+                        <textarea name="description_en" class="form-control" rows="3" placeholder="Exercise description in English"></textarea>
+                    </div>
+
+                    <!-- Malay & Chinese Descriptions -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label">Description (Malay)</label>
+                            <textarea name="description_ms" class="form-control" rows="3" placeholder="Penerangan latihan dalam bahasa Melayu"></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Description (Chinese)</label>
+                            <textarea name="description_zh" class="form-control" rows="3" placeholder="练习说明（中文）"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Settings -->
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Order</label>
+                            <input type="number" name="order" class="form-control" value="1" min="1">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Exercise Type</label>
+                            <select name="exercise_type" class="form-select">
+                                <option value="multiple_choice">Multiple Choice</option>
+                                <option value="code_challenge">Code Challenge</option>
+                                <option value="project">Project</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3 mt-3">
+                        <label class="form-label">Passing Score (%)</label>
+                        <input type="number" name="passing_score" class="form-control" value="70" min="0" max="100">
+                    </div>
+
+                    <!-- Questions Section -->
+                    <div class="mt-4 pt-3 border-top">
+                        <h6 class="mb-3">Exercise Questions</h6>
+                        <div id="exerciseQuestionsContainer"></div>
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="addExerciseQuestionBtn">
+                            <i class="bi bi-plus-lg"></i> Add Question
+                        </button>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Exercise</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.glass-card {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    padding: 2rem;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.list-group-item {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+</style>
+<script>
+const courseId = {{ course.id }};
+let currentChapterId = null;
+let currentEditId = null;
+let currentEditType = null;
+
+// Question storage
+let quizQuestions = [];
+let exerciseQuestions = [];
+let currentQuestionForm = null;
+
+// ============================================================================
+// AUTHENTICATION & UTILITY FUNCTIONS
+// ============================================================================
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function getAuthHeaders() {
+    // Get proper authentication headers for API requests
+    const headers = {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCookie('csrftoken')
+    };
+    
+    // Try to get JWT token from various sources
+    let token = null;
+    
+    // 1. Try sessionStorage (React/Vue apps typically store here)
+    token = sessionStorage.getItem('access_token') || sessionStorage.getItem('token');
+    
+    // 2. Try localStorage (common for SPAs)
+    if (!token) {
+        token = localStorage.getItem('access_token') || localStorage.getItem('token');
+    }
+    
+    // 3. Try to extract from data attribute (if embedded in template)
+    if (!token) {
+        const tokenElement = document.getElementById('auth-token');
+        if (tokenElement) {
+            token = tokenElement.getAttribute('data-token');
+        }
+    }
+    
+    // 4. If we have a token, add Authorization header
+    if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+    }
+    
+    return headers;
+}
+
+// ============================================================================
+// QUESTION MANAGEMENT FUNCTIONS
+// ============================================================================
+
+function renderQuizQuestion(index, question) {
+    return `
+        <div class="card mb-2" data-question-index="${index}">
+            <div class="card-body">
+                <div class="mb-2">
+                    <small class="text-muted">Question ${index + 1}</small>
+                    <button type="button" class="btn btn-sm btn-danger float-end" onclick="removeQuizQuestion(${index})">Remove</button>
+                </div>
+                
+                <div class="row mb-2">
+                    <div class="col-12">
+                        <label class="form-label form-label-sm">Question Text (English)</label>
+                        <input type="text" class="form-control form-control-sm" value="${question.question_text?.en || ''}" 
+                               onchange="quizQuestions[${index}].question_text.en = this.value" placeholder="Question in English">
+                    </div>
+                </div>
+                
+                <div class="row mb-2">
+                    <div class="col-6">
+                        <label class="form-label form-label-sm">Question Text (Malay)</label>
+                        <input type="text" class="form-control form-control-sm" value="${question.question_text?.ms || ''}" 
+                               onchange="quizQuestions[${index}].question_text.ms = this.value" placeholder="Soalan dalam Bahasa Melayu">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label form-label-sm">Question Text (Chinese)</label>
+                        <input type="text" class="form-control form-control-sm" value="${question.question_text?.zh || ''}" 
+                               onchange="quizQuestions[${index}].question_text.zh = this.value" placeholder="用中文提问">
+                    </div>
+                </div>
+                
+                <div class="mb-2">
+                    <label class="form-label form-label-sm">Options</label>
+                    <div id="quizOptions${index}">
+                        ${question.options?.map((opt, i) => `
+                            <div class="input-group input-group-sm mb-1">
+                                <input type="text" class="form-control" value="${opt.option_text || ''}" 
+                                       onchange="quizQuestions[${index}].options[${i}].option_text = this.value" placeholder="Option text">
+                                <label class="input-group-text">
+                                    <input type="checkbox" ${opt.is_correct ? 'checked' : ''} 
+                                           onchange="quizQuestions[${index}].options[${i}].is_correct = this.checked"> Correct
+                                </label>
+                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeQuizOption(${index}, ${i})">✕</button>
+                            </div>
+                        `).join('') || ''}
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="addQuizOption(${index})">+ Add Option</button>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function renderExerciseQuestion(index, question) {
+    return `
+        <div class="card mb-2" data-question-index="${index}">
+            <div class="card-body">
+                <div class="mb-2">
+                    <small class="text-muted">Question ${index + 1}</small>
+                    <button type="button" class="btn btn-sm btn-danger float-end" onclick="removeExerciseQuestion(${index})">Remove</button>
+                </div>
+                
+                <div class="row mb-2">
+                    <div class="col-12">
+                        <label class="form-label form-label-sm">Question Text (English)</label>
+                        <input type="text" class="form-control form-control-sm" value="${question.question_text?.en || ''}" 
+                               onchange="exerciseQuestions[${index}].question_text.en = this.value" placeholder="Question in English">
+                    </div>
+                </div>
+                
+                <div class="row mb-2">
+                    <div class="col-6">
+                        <label class="form-label form-label-sm">Question Text (Malay)</label>
+                        <input type="text" class="form-control form-control-sm" value="${question.question_text?.ms || ''}" 
+                               onchange="exerciseQuestions[${index}].question_text.ms = this.value" placeholder="Soalan dalam Bahasa Melayu">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label form-label-sm">Question Text (Chinese)</label>
+                        <input type="text" class="form-control form-control-sm" value="${question.question_text?.zh || ''}" 
+                               onchange="exerciseQuestions[${index}].question_text.zh = this.value" placeholder="用中文提问">
+                    </div>
+                </div>
+                
+                <div class="mb-2">
+                    <label class="form-label form-label-sm">Options</label>
+                    <div id="exerciseOptions${index}">
+                        ${question.options?.map((opt, i) => `
+                            <div class="input-group input-group-sm mb-1">
+                                <input type="text" class="form-control" value="${opt.option_text || ''}" 
+                                       onchange="exerciseQuestions[${index}].options[${i}].option_text = this.value" placeholder="Option text">
+                                <label class="input-group-text">
+                                    <input type="checkbox" ${opt.is_correct ? 'checked' : ''} 
+                                           onchange="exerciseQuestions[${index}].options[${i}].is_correct = this.checked"> Correct
+                                </label>
+                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeExerciseOption(${index}, ${i})">✕</button>
+                            </div>
+                        `).join('') || ''}
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="addExerciseOption(${index})">+ Add Option</button>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function addQuizQuestion() {
+    const newQuestion = {
+        question_text: { en: '', ms: '', zh: '' },
+        question_type: 'multiple_choice',
+        options: [
+            { option_text: '', is_correct: false }
+        ]
+    };
+    quizQuestions.push(newQuestion);
+    updateQuizQuestionsDisplay();
+}
+
+function addExerciseQuestion() {
+    const newQuestion = {
+        question_text: { en: '', ms: '', zh: '' },
+        question_type: 'multiple_choice',
+        options: [
+            { option_text: '', is_correct: false }
+        ]
+    };
+    exerciseQuestions.push(newQuestion);
+    updateExerciseQuestionsDisplay();
+}
+
+function removeQuizQuestion(index) {
+    quizQuestions.splice(index, 1);
+    updateQuizQuestionsDisplay();
+}
+
+function removeExerciseQuestion(index) {
+    exerciseQuestions.splice(index, 1);
+    updateExerciseQuestionsDisplay();
+}
+
+function addQuizOption(questionIndex) {
+    quizQuestions[questionIndex].options.push({ option_text: '', is_correct: false });
+    updateQuizQuestionsDisplay();
+}
+
+function addExerciseOption(questionIndex) {
+    exerciseQuestions[questionIndex].options.push({ option_text: '', is_correct: false });
+    updateExerciseQuestionsDisplay();
+}
+
+function removeQuizOption(questionIndex, optionIndex) {
+    quizQuestions[questionIndex].options.splice(optionIndex, 1);
+    updateQuizQuestionsDisplay();
+}
+
+function removeExerciseOption(questionIndex, optionIndex) {
+    exerciseQuestions[questionIndex].options.splice(optionIndex, 1);
+    updateExerciseQuestionsDisplay();
+}
+
+function updateQuizQuestionsDisplay() {
+    const container = document.getElementById('quizQuestionsContainer');
+    container.innerHTML = quizQuestions.map((q, i) => renderQuizQuestion(i, q)).join('');
+}
+
+function updateExerciseQuestionsDisplay() {
+    const container = document.getElementById('exerciseQuestionsContainer');
+    container.innerHTML = exerciseQuestions.map((q, i) => renderExerciseQuestion(i, q)).join('');
+}
+
+// ============================================================================
+// MODAL TRIGGERS
+// ============================================================================
+
+// Show modals on add button clicks
+document.querySelectorAll('.add-lesson').forEach(btn => {
+    btn.addEventListener('click', function() {
+        currentChapterId = this.dataset.chapterId;
+        currentEditId = null;
+        currentEditType = 'lesson';
+        document.getElementById('lessonForm').reset();
+        new bootstrap.Modal(document.getElementById('addLessonModal')).show();
+    });
+});
+
+document.querySelectorAll('.add-quiz').forEach(btn => {
+    btn.addEventListener('click', function() {
+        currentChapterId = this.dataset.chapterId;
+        currentEditId = null;
+        currentEditType = 'quiz';
+        quizQuestions = [];
+        updateQuizQuestionsDisplay();
+        document.getElementById('quizForm').reset();
+        new bootstrap.Modal(document.getElementById('addQuizModal')).show();
+    });
+});
+
+document.querySelectorAll('.add-exercise').forEach(btn => {
+    btn.addEventListener('click', function() {
+        currentChapterId = this.dataset.chapterId;
+        currentEditId = null;
+        currentEditType = 'exercise';
+        exerciseQuestions = [];
+        updateExerciseQuestionsDisplay();
+        document.getElementById('exerciseForm').reset();
+        new bootstrap.Modal(document.getElementById('addExerciseModal')).show();
+    });
+});
+
+// Add question button listeners
+document.addEventListener('click', function(e) {
+    if (e.target?.id === 'addQuizQuestionBtn') {
+        e.preventDefault();
+        addQuizQuestion();
+    }
+    if (e.target?.id === 'addExerciseQuestionBtn') {
+        e.preventDefault();
+        addExerciseQuestion();
+    }
+});
+
+// ============================================================================
+// DELETE OPERATIONS
+// ============================================================================
+
+document.querySelectorAll('.delete-lesson').forEach(btn => {
+    btn.addEventListener('click', function() {
+        if (confirm('Delete this lesson?')) {
+            const lessonId = this.dataset.lessonId;
+            fetch(`/api/lessons/${lessonId}/`, {
+                method: 'DELETE',
+                headers: getAuthHeaders()
+            })
+            .then(r => {
+                if (r.status === 204) {
+                    alert('Lesson deleted successfully!');
+                    location.reload();
+                } else if (r.status === 404) {
+                    alert('Lesson not found');
+                } else if (r.status === 401) {
+                    alert('Not authenticated. Please log in again.');
+                } else {
+                    r.text().then(msg => alert('Error: ' + msg));
+                }
+            })
+            .catch(e => {
+                console.error('Delete error:', e);
+                alert('Error deleting lesson: ' + e.message);
+            });
+        }
+    });
+});
+
+document.querySelectorAll('.delete-quiz').forEach(btn => {
+    btn.addEventListener('click', function() {
+        if (confirm('Delete this quiz?')) {
+            const quizId = this.dataset.quizId;
+            fetch(`/api/quizzes/${quizId}/`, {
+                method: 'DELETE',
+                headers: getAuthHeaders()
+            })
+            .then(r => {
+                if (r.status === 204) {
+                    alert('Quiz deleted successfully!');
+                    location.reload();
+                } else if (r.status === 401) {
+                    alert('Not authenticated. Please log in again.');
+                }
+            })
+            .catch(e => console.error('Delete error:', e));
+        }
+    });
+});
+
+document.querySelectorAll('.delete-exercise').forEach(btn => {
+    btn.addEventListener('click', function() {
+        if (confirm('Delete this exercise?')) {
+            const exerciseId = this.dataset.exerciseId;
+            fetch(`/api/practice-exercises/${exerciseId}/`, {
+                method: 'DELETE',
+                headers: getAuthHeaders()
+            })
+            .then(r => {
+                if (r.status === 204) {
+                    alert('Exercise deleted successfully!');
+                    location.reload();
+                } else if (r.status === 401) {
+                    alert('Not authenticated. Please log in again.');
+                }
+            })
+            .catch(e => console.error('Delete error:', e));
+        }
+    });
+});
+
+// ============================================================================
+// FORM SUBMISSIONS
+// ============================================================================
+
+document.getElementById('chapterForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const data = {
+        course: courseId,
+        title_en: formData.get('title_en'),
+        title_ms: formData.get('title_ms') || formData.get('title_en'),
+        title_zh: formData.get('title_zh') || formData.get('title_en'),
+        description_en: formData.get('description_en') || '',
+        description_ms: formData.get('description_ms') || formData.get('description_en') || '',
+        description_zh: formData.get('description_zh') || formData.get('description_en') || '',
+        order: parseInt(formData.get('order')) || 1
+    };
+    
+    fetch('/api/chapters/', {
+        method: 'POST',
+        body: JSON.stringify(data),
+        headers: {
+            ...getAuthHeaders(),
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(r => {
+        if (r.ok) {
+            alert('Chapter saved successfully!');
+            location.reload();
+        } else if (r.status === 401) {
+            alert('Error: Not authenticated. Please log in and try again.');
+            console.error('Auth error');
+        } else {
+            return r.text().then(text => {
+                try {
+                    const err = JSON.parse(text);
+                    console.error('Error:', err);
+                    alert('Error saving chapter: ' + JSON.stringify(err));
+                } catch (e) {
+                    console.error('Server error:', text);
+                    alert('Server error: ' + text.substring(0, 200));
+                }
+            });
+        }
+    })
+    .catch(e => {
+        console.error('Error:', e);
+        alert('Error saving chapter: ' + e.message);
+    });
+});
+
+document.getElementById('lessonForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const data = {
+        chapter: parseInt(currentChapterId),
+        title_en: formData.get('title_en'),
+        title_ms: formData.get('title_ms') || formData.get('title_en'),
+        title_zh: formData.get('title_zh') || formData.get('title_en'),
+        content_text_en: formData.get('content_text_en'),
+        content_text_ms: formData.get('content_text_ms') || formData.get('content_text_en'),
+        content_text_zh: formData.get('content_text_zh') || formData.get('content_text_en'),
+        content_images: [],
+        content_videos: [],
+        order: parseInt(formData.get('order')) || 1,
+        estimated_time: parseInt(formData.get('estimated_time')) || 30
+    };
+    
+    fetch('/api/lessons/', {
+        method: 'POST',
+        body: JSON.stringify(data),
+        headers: {
+            ...getAuthHeaders(),
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(r => {
+        if (r.ok) {
+            alert('Lesson saved successfully!');
+            location.reload();
+        } else if (r.status === 401) {
+            alert('Error: Not authenticated. Please log in and try again.');
+            console.error('Auth error');
+        } else {
+            return r.text().then(text => {
+                try {
+                    const err = JSON.parse(text);
+                    console.error('Error:', err);
+                    alert('Error saving lesson: ' + JSON.stringify(err));
+                } catch (e) {
+                    console.error('Server error:', text);
+                    alert('Server error: ' + text.substring(0, 200));
+                }
+            });
+        }
+    })
+    .catch(e => {
+        console.error('Error:', e);
+        alert('Error saving lesson: ' + e.message);
+    });
+});
+
+document.getElementById('quizForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const data = {
+        chapter: parseInt(currentChapterId),
+        title_en: formData.get('title_en'),
+        title_ms: formData.get('title_ms') || formData.get('title_en'),
+        title_zh: formData.get('title_zh') || formData.get('title_en'),
+        description_en: formData.get('description_en') || '',
+        description_ms: formData.get('description_ms') || formData.get('description_en') || '',
+        description_zh: formData.get('description_zh') || formData.get('description_en') || '',
+        order: parseInt(formData.get('order')) || 1,
+        passing_score: parseInt(formData.get('passing_score')) || 70,
+        time_limit: parseInt(formData.get('time_limit')) || 0,
+        show_answers: formData.get('show_answers') ? true : false,
+        questions: quizQuestions
+    };
+    
+    fetch('/api/quizzes/', {
+        method: 'POST',
+        body: JSON.stringify(data),
+        headers: {
+            ...getAuthHeaders(),
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(r => {
+        if (r.ok) {
+            alert('Quiz saved successfully!');
+            location.reload();
+        } else if (r.status === 401) {
+            alert('Error: Not authenticated. Please log in and try again.');
+            console.error('Auth error');
+        } else {
+            return r.text().then(text => {
+                try {
+                    const err = JSON.parse(text);
+                    console.error('Error:', err);
+                    alert('Error saving quiz: ' + JSON.stringify(err));
+                } catch (e) {
+                    console.error('Server error:', text);
+                    alert('Server error: ' + text.substring(0, 200));
+                }
+            });
+        }
+    })
+    .catch(e => {
+        console.error('Error:', e);
+        alert('Error saving quiz: ' + e.message);
+    });
+});
+
+document.getElementById('exerciseForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const data = {
+        chapter: parseInt(currentChapterId),
+        title_en: formData.get('title_en'),
+        title_ms: formData.get('title_ms') || formData.get('title_en'),
+        title_zh: formData.get('title_zh') || formData.get('title_en'),
+        description_en: formData.get('description_en') || '',
+        description_ms: formData.get('description_ms') || formData.get('description_en') || '',
+        description_zh: formData.get('description_zh') || formData.get('description_en') || '',
+        order: parseInt(formData.get('order')) || 1,
+        exercise_type: formData.get('exercise_type') || 'multiple_choice',
+        passing_score: parseInt(formData.get('passing_score')) || 70,
+        questions: exerciseQuestions
+    };
+    
+    fetch('/api/practice/', {
+        method: 'POST',
+        body: JSON.stringify(data),
+        headers: {
+            ...getAuthHeaders(),
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(r => {
+        if (r.ok) {
+            alert('Exercise saved successfully!');
+            location.reload();
+        } else if (r.status === 401) {
+            alert('Error: Not authenticated. Please log in and try again.');
+            console.error('Auth error');
+        } else {
+            return r.text().then(text => {
+                try {
+                    const err = JSON.parse(text);
+                    console.error('Error:', err);
+                    alert('Error saving exercise: ' + JSON.stringify(err));
+                } catch (e) {
+                    console.error('Server error:', text);
+                    alert('Server error: ' + text.substring(0, 200));
+                }
+            });
+        }
+    })
+    .catch(e => {
+        console.error('Error:', e);
+        alert('Error saving exercise: ' + e.message);
+    });
+});
+</script>
+{% endblock %}

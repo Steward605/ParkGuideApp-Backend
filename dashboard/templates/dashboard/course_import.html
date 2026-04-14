@@ -1,0 +1,103 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}{{ title }} - Dashboard{% endblock %}
+{% block page_title %}<i class="bi bi-upload me-2"></i>{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="glass-card">
+                <h5 class="mb-3">Import Courses from JSON</h5>
+                <p class="text-muted mb-4">Upload a JSON file or paste JSON content to import courses with their chapters and lessons.</p>
+                
+                <form method="post" enctype="multipart/form-data" class="needs-validation">
+                    {% csrf_token %}
+                    
+                    <div class="mb-4">
+                        <h6 class="mb-2">Option 1: Upload JSON File</h6>
+                        {{ form.json_file }}
+                        {% if form.json_file.errors %}
+                            <div class="text-danger mt-2">{{ form.json_file.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="text-center text-muted my-3">OR</div>
+                    
+                    <div class="mb-4">
+                        <h6 class="mb-2">Option 2: Paste JSON Content</h6>
+                        {{ form.json_text }}
+                        {% if form.json_text.errors %}
+                            <div class="text-danger mt-2">{{ form.json_text.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}
+                                {{ error }}<br>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    
+                    <div class="alert alert-info mb-4">
+                        <strong>JSON Format Example:</strong>
+                        <pre><code>[
+  {
+    "code": "PARK-GUIDE-101",
+    "name": "Park Guide Fundamentals",
+    "description": "Introduction to park guiding",
+    "thumbnail_image": "https://example.com/image.jpg",
+    "estimated_duration": 120,
+    "prerequisites": ["PARK-GUIDE-101"],
+    "chapters": [
+      {
+        "order": 1,
+        "title": "Getting Started",
+        "description": "Get started with park guiding",
+        "lessons": [
+          {
+            "order": 1,
+            "title": "Introduction",
+            "content": "Welcome to..."
+          }
+        ]
+      }
+    ]
+  }
+]</code></pre>
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-upload me-2"></i>Import Courses
+                        </button>
+                        <a href="{% url 'dashboard:courses' %}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle me-2"></i>Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.glass-card {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    padding: 2rem;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+pre {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 1rem;
+    border-radius: 6px;
+    overflow-x: auto;
+    font-size: 0.85rem;
+}
+</style>
+{% endblock %}

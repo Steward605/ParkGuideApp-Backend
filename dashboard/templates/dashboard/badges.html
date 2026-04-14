@@ -525,12 +525,17 @@
                     throw new Error(data.error || 'Failed to load badge details.');
                 }
                 const badge = data.badge;
+                
+                // Separate users by status
+                const grantedUsers = badge.users ? badge.users.filter(u => u.status === 'granted' && u.is_awarded) : [];
+                const pendingUsers = badge.users ? badge.users.filter(u => u.status === 'pending') : [];
+                
                 badgeDetailTitle.textContent = badge.name;
                 badgeDetailDescription.textContent = badge.description || 'No description provided.';
-                badgeDetailGrantedCount.textContent = badge.granted_count;
-                badgeDetailPendingCount.textContent = badge.pending_count;
-                renderBadgeUserList(badgeDetailGrantedList, badge.granted_users, 'No granted users yet.');
-                renderBadgeUserList(badgeDetailPendingList, badge.pending_users, 'No pending users.');
+                badgeDetailGrantedCount.textContent = grantedUsers.length;
+                badgeDetailPendingCount.textContent = pendingUsers.length;
+                renderBadgeUserList(badgeDetailGrantedList, grantedUsers, 'No granted users yet.');
+                renderBadgeUserList(badgeDetailPendingList, pendingUsers, 'No pending users.');
                 badgeDetailModal.show();
             } catch (error) {
                 showInlineMessage(error.message || 'Could not load badge details.', 'danger');

@@ -100,6 +100,315 @@ def ensure_badge_rows_for_all_users():
     return created_count
 
 
+# ============================================================================
+# NEW BADGE SYSTEM FUNCTIONS - Auto-grant on course completion
+# ============================================================================
+
+def grant_course_completion_badge(user, course):
+    """
+    Grant course completion badge to user when they complete a course.
+    
+    Args:
+        user: The user who completed the course
+        course: The course that was completed
+        
+    Returns:
+        True if badge was newly granted, False otherwise
+    """
+    from django.db.models import Q
+    
+    # Get or create the course completion badge
+    badge_name = f"{course.code} Master"
+    badge = Badge.objects.filter(
+        name=badge_name,
+        course=course,
+        is_major_badge=False
+    ).first()
+    
+    if not badge:
+        # Create badge if it doesn't exist
+        badge = Badge.objects.create(
+            name=badge_name,
+            description=f'Completed the {course.title.get("en", "Course")} course ({course.code})',
+            course=course,
+            is_major_badge=False,
+            required_completed_modules=1,
+            auto_approve_when_eligible=True,
+            is_active=True,
+        )
+    
+    # Check if user already has this badge in granted status
+    user_badge_qs = UserBadge.objects.filter(user=user, badge=badge)
+    if user_badge_qs.filter(status='granted', is_awarded=True).exists():
+        return False  # Already has this badge
+    
+    # Get or create the user badge - start as PENDING for admin approval
+    user_badge, created = UserBadge.objects.get_or_create(
+        user=user,
+        badge=badge,
+        defaults={
+            'status': UserBadge.STATUS_PENDING,
+            'is_awarded': False,
+            'awarded_at': timezone.now(),
+        }
+    )
+    
+    if created:
+        # New pending badge - notify admins for approval
+        notify_badge_pending_for_admins(user_badge, admin_user=None)
+        # Check for achievement badges after course badge created
+        check_and_grant_achievement_badges(user)
+        return True
+    
+    # Badge already exists but in different status
+    if user_badge.status in ['pending', 'in_progress', 'rejected']:
+        # Reactivate pending badge
+        user_badge.status = UserBadge.STATUS_PENDING
+        user_badge.is_awarded = False
+        user_badge.awarded_at = timezone.now()
+        user_badge.save()
+        notify_badge_pending_for_admins(user_badge, admin_user=None)
+        return True
+    
+    return False
+
+
+def check_and_grant_achievement_badges(user):
+    """
+    Check if user is eligible for any achievement badges and grant them automatically.
+    
+    Achievement badges (major badges) are auto-approved when:
+    - User has reached the required milestone (e.g., 3 courses completed)
+    - Badge has auto_approve_when_eligible=True
+    
+    Args:
+        user: The user to check for achievement badges
+    """
+    from django.db.models import Q, Count
+    
+    # Count user's granted course completion badges
+    granted_course_badges = UserBadge.objects.filter(
+        user=user,
+        badge__is_major_badge=False,
+        badge__course__isnull=False,
+        status='granted',
+        is_awarded=True
+    ).count()
+    
+    # Get all achievement badges and check eligibility
+    achievement_badges = Badge.objects.filter(
+        is_major_badge=True,
+        is_active=True
+    ).order_by('required_badges_count')
+    
+    for badge in achievement_badges:
+        if granted_course_badges >= badge.required_badges_count:
+            # User is eligible for this achievement badge
+            user_badge_qs = UserBadge.objects.filter(user=user, badge=badge)
+            
+            if not user_badge_qs.filter(status='granted', is_awarded=True).exists():
+                user_badge, created = UserBadge.objects.get_or_create(
+                    user=user,
+                    badge=badge,
+                    defaults={
+                        'status': UserBadge.STATUS_IN_PROGRESS,
+                        'is_awarded': False,
+                        'awarded_at': timezone.now(),
+                    }
+                )
+                
+                # Check if badge should be auto-approved
+                if badge.auto_approve_when_eligible:
+                    # AUTO-GRANT: No admin approval needed
+                    user_badge.status = UserBadge.STATUS_GRANTED
+                    user_badge.is_awarded = True
+                    user_badge.awarded_at = timezone.now()
+                    user_badge.awarded_by = None  # System-awarded
+                    user_badge.save()
+                    
+                    # Notify user of automatic achievement
+                    notify_badge_granted_to_user(user_badge, admin_user=None)
+                else:
+                    # Requires admin approval - mark as PENDING
+                    user_badge.status = UserBadge.STATUS_PENDING
+                    user_badge.is_awarded = False
+                    user_badge.awarded_at = timezone.now()
+                    user_badge.save()
+                    
+                    # Notify admins for approval
+                    notify_badge_pending_for_admins(user_badge, admin_user=None)
+                    
+            elif user_badge.status in ['pending', 'in_progress', 'rejected']:
+                # User was previously rejected or pending - recheck eligibility
+                if badge.auto_approve_when_eligible:
+                    # Auto-grant if eligible and badge allows auto-approval
+                    user_badge.status = UserBadge.STATUS_GRANTED
+                    user_badge.is_awarded = True
+                    user_badge.awarded_at = timezone.now()
+                    user_badge.awarded_by = None
+                    user_badge.save()
+                    notify_badge_granted_to_user(user_badge, admin_user=None)
+                else:
+                    # Resubmit for admin approval
+                    user_badge.status = UserBadge.STATUS_PENDING
+                    user_badge.is_awarded = False
+                    user_badge.awarded_at = timezone.now()
+                    user_badge.save()
+                    notify_badge_pending_for_admins(user_badge, admin_user=None)
+
+
+def revoke_badge(user, badge, admin_user=None, reason=''):
+    """
+    Revoke a badge from a user.
+    
+    Args:
+        user: The user to revoke the badge from
+        badge: The badge to revoke
+        admin_user: The admin revoking the badge
+        reason: Reason for revocation (optional)
+        
+    Returns:
+        True if revocation was successful, False otherwise
+    """
+    try:
+        user_badge = UserBadge.objects.get(user=user, badge=badge)
+        user_badge.status = 'rejected'
+        user_badge.revoked_at = timezone.now()
+        user_badge.revoked_by = admin_user
+        user_badge.is_awarded = False
+        user_badge.save()
+        
+        notify_badge_revoked_to_user(user_badge, admin_user)
+        return True
+    except UserBadge.DoesNotExist:
+        return False
+
+
+def re_grant_badge(user, badge, admin_user=None):
+    """
+    Re-grant a previously revoked badge to a user.
+    
+    Args:
+        user: The user to grant the badge to
+        badge: The badge to grant
+        admin_user: The admin granting the badge
+        
+    Returns:
+        True if successful, False otherwise
+    """
+    try:
+        user_badge = UserBadge.objects.get(user=user, badge=badge)
+        user_badge.status = 'granted'
+        user_badge.is_awarded = True
+        user_badge.awarded_at = timezone.now()
+        user_badge.awarded_by = admin_user
+        user_badge.revoked_at = None
+        user_badge.revoked_by = None
+        user_badge.save()
+        
+        notify_badge_granted_to_user(user_badge, admin_user)
+        return True
+    except UserBadge.DoesNotExist:
+        return False
+
+
+def get_user_badge_stats(user):
+    """
+    Get badge statistics for a user.
+    
+    Args:
+        user: The user to get stats for
+        
+    Returns:
+        Dictionary with badge statistics
+    """
+    all_badges = UserBadge.objects.filter(user=user)
+    granted = all_badges.filter(status='granted', is_awarded=True).count()
+    pending = all_badges.filter(status='pending').count()
+    in_progress = all_badges.filter(status='in_progress').count()
+    rejected = all_badges.filter(status='rejected').count()
+    revoked = all_badges.filter(revoked_at__isnull=False).count()
+    
+    # Get course completion count
+    course_completions = UserBadge.objects.filter(
+        user=user,
+        badge__is_major_badge=False,
+        badge__course__isnull=False,
+        status='granted',
+        is_awarded=True
+    ).count()
+    
+    # Get achievement badges
+    achievement_badges = UserBadge.objects.filter(
+        user=user,
+        badge__is_major_badge=True,
+        status='granted',
+        is_awarded=True
+    ).count()
+    
+    return {
+        'total': all_badges.count(),
+        'granted': granted,
+        'pending': pending,
+        'in_progress': in_progress,
+        'rejected': rejected,
+        'revoked': revoked,
+        'course_completions': course_completions,
+        'achievement_badges': achievement_badges,
+    }
+
+
+def get_badge_leaderboard(limit=10):
+    """
+    Get top users by number of granted badges.
+    
+    Args:
+        limit: Number of top users to return
+        
+    Returns:
+        QuerySet of users with badge counts
+    """
+    from django.db.models import Q, Count
+    
+    User = get_user_model()
+    
+    leaderboard = User.objects.annotate(
+        badge_count=Count('badge_progress', filter=Q(
+            badge_progress__status='granted',
+            badge_progress__is_awarded=True
+        )),
+        course_badges=Count('badge_progress', filter=Q(
+            badge_progress__status='granted',
+            badge_progress__is_awarded=True,
+            badge_progress__badge__is_major_badge=False
+        )),
+        achievement_badges=Count('badge_progress', filter=Q(
+            badge_progress__status='granted',
+            badge_progress__is_awarded=True,
+            badge_progress__badge__is_major_badge=True
+        ))
+    ).filter(
+        badge_count__gt=0
+    ).order_by('-badge_count')[:limit]
+    
+    return leaderboard
+
+
+def notify_badge_revoked_to_user(user_badge, admin_user=None):
+    """Send notification to user when badge is revoked."""
+    create_notification_for_user(
+        user=user_badge.user,
+        title=f'Badge revoked: {user_badge.badge.name}',
+        description='A badge has been revoked from your account.',
+        full_text=(
+            f'Your badge "{user_badge.badge.name}" has been revoked'
+            f'{f" by {admin_user.email}" if admin_user else ""}.'
+        ),
+        created_by=admin_user,
+        related_user=user_badge.user,
+    )
+
+
 def evaluate_user_badge(user, badge, admin_user=None, completed_count=None, granted_badges_count=None):
     user_badge, created = UserBadge.objects.get_or_create(
         user=user,

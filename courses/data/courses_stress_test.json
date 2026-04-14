@@ -1,0 +1,872 @@
+[
+  {
+    "code": "park-guide-101",
+    "title": {
+      "en": "Park Guide Fundamentals",
+      "ms": "Asas Panduan Taman",
+      "zh": "公园导游基础"
+    },
+    "description": {
+      "en": "Learn the essential skills and responsibilities of a professional park guide. REQUIRED - Complete this first before any other courses!",
+      "ms": "Pelajari kemahiran penting panduan taman. DIPERLUKAN - Selesaikan ini dahulu!",
+      "zh": "学习公园导游的基本技能。必需的 - 先完成此课程！"
+    },
+    "thumbnail": "https://images.pexels.com/photos/1619317/pexels-photo-1619317.jpeg?auto=compress&cs=tinysrgb&w=600",
+    "is_published": true,
+    "prerequisites": [],
+    "chapters": [
+      {
+        "title": {
+          "en": "Park Orientation & Safety",
+          "ms": "Orientasi Taman & Keselamatan",
+          "zh": "公园导览与安全"
+        },
+        "lessons": [
+          {
+            "title": {
+              "en": "Introduction to Bako National Park",
+              "ms": "Pengenalan Taman Negara Bako",
+              "zh": "巴哥国家公园简介"
+            },
+            "content_text": {
+              "en": "Welcome to Bako National Park, established in 1957 covering 2,727 hectares of pristine rainforest. Learn the park's geography, main trails, emergency procedures and safety protocols.",
+              "ms": "Selamat datang ke Taman Negara Bako, ditubuhkan pada tahun 1957 dengan luas 2,727 hektar. Pelajari geografi, laluan utama, prosedur kecemasan dan protokol keselamatan taman.",
+              "zh": "欢迎来到1957年成立的巴哥国家公园，面积为2,727公顷的原始热带雨林。学习公园的地理、主要步道、应急程序和安全协议。"
+            },
+            "content_images": [],
+            "content_videos": [],
+            "estimated_time": 15
+          },
+          {
+            "title": {
+              "en": "Emergency Protocols & First Aid",
+              "ms": "Protokol Kecemasan & Pertolongan Pertama",
+              "zh": "应急协议和急救"
+            },
+            "content_text": {
+              "en": "Master emergency response procedures, first aid basics, and how to handle medical emergencies in remote park locations. Learn evacuation routes and communication systems.",
+              "ms": "Kuasai prosedur tindak balas kecemasan, asas pertolongan pertama, dan cara mengendalikan kecemasan perubatan di lokasi taman terpencil. Ketahui laluan evakuasi dan sistem komunikasi.",
+              "zh": "掌握应急响应程序、急救基础知识，以及如何处理偏远公园位置的医疗紧急情况。学习疏散路线和通信系统。"
+            },
+            "content_images": [],
+            "content_videos": [],
+            "estimated_time": 20
+          },
+          {
+            "title": {
+              "en": "Park Regulations & Responsibilities",
+              "ms": "Peraturan & Tanggungjawab Taman",
+              "zh": "公园法规和责任"
+            },
+            "content_text": {
+              "en": "Understand park regulations, visitor rules, environmental protection policies, and your responsibilities as a professional guide. Learn about permit requirements and reporting procedures.",
+              "ms": "Fahami peraturan taman, peraturan pelawat, dasar perlindungan alam sekitar, dan tanggungjawab anda sebagai panduan profesional. Pelajari tentang keperluan permit dan prosedur pelaporan.",
+              "zh": "了解公园法规、游客规则、环保政策，以及作为专业导游的责任。了解许可证要求和报告程序。"
+            },
+            "content_images": [],
+            "content_videos": [],
+            "estimated_time": 18
+          }
+        ],
+        "exercises": [
+          {
+            "title": {
+              "en": "Safety Protocol Practice",
+              "ms": "Amalan Protokol Keselamatan",
+              "zh": "安全协议练习"
+            },
+            "questions": [
+              {
+                "question_text": {
+                  "en": "What is the first step in a medical emergency?",
+                  "ms": "Apakah langkah pertama dalam kecemasan perubatan?",
+                  "zh": "医疗紧急情况的第一步是什么？"
+                },
+                "question_type": "multiple_choice",
+                "options": [
+                  {
+                    "text": {
+                      "en": "Assess the situation and call for help",
+                      "ms": "Nilai situasi dan panggil bantuan",
+                      "zh": "评估情况并呼救"
+                    },
+                    "is_correct": true
+                  },
+                  {
+                    "text": {
+                      "en": "Move the patient immediately",
+                      "ms": "Pindahkan pesakit segera",
+                      "zh": "立即移动患者"
+                    },
+                    "is_correct": false
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "quizzes": [
+          {
+            "title": {
+              "en": "Fundamentals Knowledge Assessment",
+              "ms": "Penilaian Pengetahuan Asas",
+              "zh": "基础知识评估"
+            },
+            "time_limit": 15,
+            "passing_score": 70,
+            "questions": [
+              {
+                "question_text": {
+                  "en": "In what year was Bako National Park established?",
+                  "ms": "Pada tahun berapa Taman Negara Bako ditubuhkan?",
+                  "zh": "巴哥国家公园是在哪一年建立的？"
+                },
+                "question_type": "multiple_choice",
+                "options": [
+                  {
+                    "text": {
+                      "en": "1957",
+                      "ms": "1957",
+                      "zh": "1957"
+                    },
+                    "is_correct": true
+                  },
+                  {
+                    "text": {
+                      "en": "1967",
+                      "ms": "1967",
+                      "zh": "1967"
+                    },
+                    "is_correct": false
+                  },
+                  {
+                    "text": {
+                      "en": "1947",
+                      "ms": "1947",
+                      "zh": "1947"
+                    },
+                    "is_correct": false
+                  }
+                ]
+              },
+              {
+                "question_text": {
+                  "en": "How many hectares does Bako cover?",
+                  "ms": "Berapa hektar yang diliputi oleh Bako?",
+                  "zh": "巴哥覆盖多少公顷？"
+                },
+                "question_type": "multiple_choice",
+                "options": [
+                  {
+                    "text": {
+                      "en": "2,727 hectares",
+                      "ms": "2,727 hektar",
+                      "zh": "2,727公顷"
+                    },
+                    "is_correct": true
+                  },
+                  {
+                    "text": {
+                      "en": "1,500 hectares",
+                      "ms": "1,500 hektar",
+                      "zh": "1,500公顷"
+                    },
+                    "is_correct": false
+                  },
+                  {
+                    "text": {
+                      "en": "5,000 hectares",
+                      "ms": "5,000 hektar",
+                      "zh": "5,000公顷"
+                    },
+                    "is_correct": false
+                  }
+                ]
+              },
+              {
+                "question_text": {
+                  "en": "What is the primary responsibility of a park guide?",
+                  "ms": "Apakah tanggungjawab utama panduan taman?",
+                  "zh": "公园导游的主要责任是什么？"
+                },
+                "question_type": "multiple_choice",
+                "options": [
+                  {
+                    "text": {
+                      "en": "Ensure visitor safety and environmental protection",
+                      "ms": "Memastikan keselamatan pelawat dan perlindungan alam sekitar",
+                      "zh": "确保游客安全和环保"
+                    },
+                    "is_correct": true
+                  },
+                  {
+                    "text": {
+                      "en": "Collect entry fees",
+                      "ms": "Mengumpul yuran masuk",
+                      "zh": "收取入场费"
+                    },
+                    "is_correct": false
+                  }
+                ]
+              },
+              {
+                "question_text": {
+                  "en": "Which emergency protocol should be followed first?",
+                  "ms": "Protokol kecemasan mana yang harus diikuti terlebih dahulu?",
+                  "zh": "应该首先遵循哪个应急协议？"
+                },
+                "question_type": "multiple_choice",
+                "options": [
+                  {
+                    "text": {
+                      "en": "Assess situation and establish communication",
+                      "ms": "Nilai situasi dan wujudkan komunikasi",
+                      "zh": "评估情况并建立沟通"
+                    },
+                    "is_correct": true
+                  },
+                  {
+                    "text": {
+                      "en": "Contact park headquarters directly",
+                      "ms": "Hubungi ibu pejabat taman secara langsung",
+                      "zh": "直接联系公园总部"
+                    },
+                    "is_correct": false
+                  }
+                ]
+              },
+              {
+                "question_text": {
+                  "en": "What are the main environmental protection policies?",
+                  "ms": "Apakah dasar perlindungan alam sekitar utama?",
+                  "zh": "主要的环保政策是什么？"
+                },
+                "question_type": "multiple_choice",
+                "options": [
+                  {
+                    "text": {
+                      "en": "Leave no trace and respect wildlife habitat",
+                      "ms": "Jangan tinggalkan jejak dan hormati habitat hidupan liar",
+                      "zh": "不留痕迹并尊重野生动物栖息地"
+                    },
+                    "is_correct": true
+                  },
+                  {
+                    "text": {
+                      "en": "Collect souvenirs",
+                      "ms": "Kumpul cenderamata",
+                      "zh": "收集纪念品"
+                    },
+                    "is_correct": false
+                  }
+                ]
+              },
+              {
+                "question_text": {
+                  "en": "How often should guides conduct safety briefings?",
+                  "ms": "Berapa kerap panduan harus menjalankan taklimat keselamatan?",
+                  "zh": "导游应该多久进行一次安全简报？"
+                },
+                "question_type": "multiple_choice",
+                "options": [
+                  {
+                    "text": {
+                      "en": "Before every tour",
+                      "ms": "Sebelum setiap lawatan",
+                      "zh": "每次旅游前"
+                    },
+                    "is_correct": true
+                  },
+                  {
+                    "text": {
+                      "en": "Once per week",
+                      "ms": "Sekali seminggu",
+                      "zh": "每周一次"
+                    },
+                    "is_correct": false
+                  }
+                ]
+              },
+              {
+                "question_text": {
+                  "en": "What should you do if a visitor is injured on the trail?",
+                  "ms": "Apa yang harus anda lakukan jika pelawat cedera di laluan?",
+                  "zh": "如果游客在步道上受伤，您应该怎么做？"
+                },
+                "question_type": "multiple_choice",
+                "options": [
+                  {
+                    "text": {
+                      "en": "Call for medical assistance and stabilize the visitor",
+                      "ms": "Panggil bantuan perubatan dan stabil pelawat",
+                      "zh": "致电寻求医疗协助并稳定游客"
+                    },
+                    "is_correct": true
+                  },
+                  {
+                    "text": {
+                      "en": "Continue the tour",
+                      "ms": "Teruskan lawatan",
+                      "zh": "继续旅游"
+                    },
+                    "is_correct": false
+                  }
+                ]
+              },
+              {
+                "question_text": {
+                  "en": "What is the maximum group size for a safe tour?",
+                  "ms": "Apakah saiz kumpulan maksimum untuk lawatan yang selamat?",
+                  "zh": "安全旅游的最大团队规模是多少？"
+                },
+                "question_type": "multiple_choice",
+                "options": [
+                  {
+                    "text": {
+                      "en": "15-20 people",
+                      "ms": "15-20 orang",
+                      "zh": "15-20人"
+                    },
+                    "is_correct": true
+                  },
+                  {
+                    "text": {
+                      "en": "Unlimited",
+                      "ms": "Tidak terbatas",
+                      "zh": "无限制"
+                    },
+                    "is_correct": false
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "title": {
+          "en": "Trail Navigation & Mapping",
+          "ms": "Navigasi Laluan & Pemetaan",
+          "zh": "步道导航和制图"
+        },
+        "lessons": [
+          {
+            "title": {
+              "en": "Park Trails Overview",
+              "ms": "Gambaran Laluan Taman",
+              "zh": "公园步道概览"
+            },
+            "content_text": {
+              "en": "Explore all major trails in Bako including Telok Assam, Lintang, Delima, and Kruin trails. Learn trail difficulty levels, estimated completion times, and seasonal considerations.",
+              "ms": "Jelajahi semua laluan utama di Bako termasuk laluan Telok Assam, Lintang, Delima, dan Kruin. Pelajari tahap kesukaran laluan, masa siap anggaran, dan pertimbangan musiman.",
+              "zh": "探索巴哥所有主要步道，包括Telok Assam、Lintang、Delima和Kruin步道。了解步道难度等级、估计完成时间和季节考虑。"
+            },
+            "content_images": [],
+            "content_videos": [],
+            "estimated_time": 25
+          },
+          {
+            "title": {
+              "en": "GPS & Navigation Tools",
+              "ms": "GPS & Alat Navigasi",
+              "zh": "GPS和导航工具"
+            },
+            "content_text": {
+              "en": "Learn to use GPS devices, topographic maps, and compass navigation. Understand waypoint marking, route planning, and how to orient visitors during tours.",
+              "ms": "Pelajari cara menggunakan peranti GPS, peta topografi, dan navigasi kompas. Fahami penandaan titik jalan, perancangan laluan, dan cara mengorientasikan pelawat semasa lawatan.",
+              "zh": "学习使用GPS设备、地形图和指南针导航。了解航路点标记、路线规划以及如何在旅游中引导游客方向。"
+            },
+            "content_images": [],
+            "content_videos": [],
+            "estimated_time": 20
+          }
+        ],
+        "exercises": [],
+        "quizzes": [
+          {
+            "title": {
+              "en": "Navigation Skills Quiz",
+              "ms": "Kuis Kemahiran Navigasi",
+              "zh": "导航技能测验"
+            },
+            "time_limit": 12,
+            "passing_score": 70,
+            "questions": [
+              {
+                "question_text": {
+                  "en": "Which trail is suitable for beginners?",
+                  "ms": "Laluan mana yang sesuai untuk pemula?",
+                  "zh": "哪条步道适合初学者？"
+                },
+                "question_type": "multiple_choice",
+                "options": [
+                  {
+                    "text": {
+                      "en": "Telok Assam (easy, 1-2 hours)",
+                      "ms": "Telok Assam (mudah, 1-2 jam)",
+                      "zh": "Telok Assam（简单，1-2小时）"
+                    },
+                    "is_correct": true
+                  },
+                  {
+                    "text": {
+                      "en": "Kruin (very difficult)",
+                      "ms": "Kruin (sangat sukar)",
+                      "zh": "Kruin（非常困难）"
+                    },
+                    "is_correct": false
+                  }
+                ]
+              },
+              {
+                "question_text": {
+                  "en": "When using a compass, what should you do first?",
+                  "ms": "Semasa menggunakan kompas, apa yang harus anda lakukan terlebih dahulu?",
+                  "zh": "使用指南针时，您应该首先做什么？"
+                },
+                "question_type": "multiple_choice",
+                "options": [
+                  {
+                    "text": {
+                      "en": "Align the compass with the map",
+                      "ms": "Selaraskan kompas dengan peta",
+                      "zh": "将指南针与地图对齐"
+                    },
+                    "is_correct": true
+                  },
+                  {
+                    "text": {
+                      "en": "Look at the needle",
+                      "ms": "Lihat jarum",
+                      "zh": "看针"
+                    },
+                    "is_correct": false
+                  }
+                ]
+              },
+              {
+                "question_text": {
+                  "en": "How often should you verify your position on a long trail?",
+                  "ms": "Berapa kerap anda harus mengesahkan kedudukan anda di laluan yang panjang?",
+                  "zh": "在长步道上，您应该多久验证一次您的位置？"
+                },
+                "question_type": "multiple_choice",
+                "options": [
+                  {
+                    "text": {
+                      "en": "Every 500m or at major landmarks",
+                      "ms": "Setiap 500m atau di mercu tanda utama",
+                      "zh": "每500米或在主要地标处"
+                    },
+                    "is_correct": true
+                  },
+                  {
+                    "text": {
+                      "en": "Only at the start and end",
+                      "ms": "Hanya di permulaan dan akhir",
+                      "zh": "仅在开始和结束时"
+                    },
+                    "is_correct": false
+                  }
+                ]
+              },
+              {
+                "question_text": {
+                  "en": "What does a waypoint mark on GPS?",
+                  "ms": "Apa yang ditandai oleh titik jalan di GPS?",
+                  "zh": "GPS上的航路点标记什么？"
+                },
+                "question_type": "multiple_choice",
+                "options": [
+                  {
+                    "text": {
+                      "en": "Important locations like water sources or rest areas",
+                      "ms": "Lokasi penting seperti sumber air atau kawasan rehat",
+                      "zh": "重要位置，如水源或休息区"
+                    },
+                    "is_correct": true
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "park-guide-201",
+    "title": {
+      "en": "Advanced Guiding Techniques",
+      "ms": "Teknik-teknik Panduan Lanjutan",
+      "zh": "高级导游技巧"
+    },
+    "description": {
+      "en": "Master storytelling and group management. REQUIRES: Park Guide Fundamentals (101)",
+      "ms": "Kuasai bercerita dan pengurusan kumpulan. MEMERLUKAN: Asas (101)",
+      "zh": "掌握讲故事和小组管理。需要：基础（101）"
+    },
+    "thumbnail": "https://images.pexels.com/photos/3807517/pexels-photo-3807517.jpeg?auto=compress&cs=tinysrgb&w=600",
+    "is_published": true,
+    "prerequisites": ["park-guide-101"],
+    "chapters": [
+      {
+        "title": {
+          "en": "Storytelling & Interpretation",
+          "ms": "Bercerita & Interpretasi",
+          "zh": "讲故事与解释"
+        },
+        "lessons": [
+          {
+            "title": {
+              "en": "Engaging Storytelling Techniques",
+              "ms": "Teknik Bercerita yang Menarik",
+              "zh": "引人入胜的讲故事技巧"
+            },
+            "content_text": {
+              "en": "Learn how to engage visitors through compelling stories about park wildlife, history, and ecology. Master the art of capturing attention and delivering educational content in an entertaining way. Use narrative techniques, dramatic timing, and authentic examples.",
+              "ms": "Pelajari cara melibatkan pelawat melalui cerita menarik tentang hidupan liar, sejarah dan ekologi taman. Kuasai seni menarik perhatian dan menyampaikan kandungan pendidikan dengan cara yang menghiburkan. Gunakan teknik naratif, pemasaan dramatis, dan contoh autentik.",
+              "zh": "学习如何通过引人入胜的故事吸引游客，这些故事涉及公园的野生动物、历史和生态。掌握吸引注意力和以娱乐方式传达教育内容的艺术。使用叙事技巧、戏剧性时机和真实例子。"
+            },
+            "content_images": [],
+            "content_videos": [],
+            "estimated_time": 25
+          },
+          {
+            "title": {
+              "en": "Environmental Interpretation",
+              "ms": "Interpretasi Alam Sekitar",
+              "zh": "环境解释"
+            },
+            "content_text": {
+              "en": "Develop skills to interpret natural phenomena, ecosystem relationships, and environmental challenges. Learn to create meaningful connections between visitors and nature through observation and discussion.",
+              "ms": "Bangunkan kemahiran untuk mentafsir fenomena semula jadi, hubungan ekosistem, dan cabaran alam sekitar. Belajar mencipta hubungan bermakna antara pelawat dan alam melalui pemerhatian dan perbincangan.",
+              "zh": "培养解释自然现象、生态系统关系和环境挑战的技能。学会通过观察和讨论在游客和自然之间建立有意义的联系。"
+            },
+            "content_images": [],
+            "content_videos": [],
+            "estimated_time": 20
+          }
+        ],
+        "exercises": [],
+        "quizzes": [
+          {
+            "title": {
+              "en": "Advanced Guiding Assessment",
+              "ms": "Penilaian Panduan Lanjutan",
+              "zh": "高级指导评估"
+            },
+            "time_limit": 15,
+            "passing_score": 75,
+            "questions": [
+              {
+                "question_text": {
+                  "en": "What is the key to engaging storytelling?",
+                  "ms": "Apakah kunci untuk bercerita yang melibatkan?",
+                  "zh": "吸引人的讲故事的关键是什么？"
+                },
+                "question_type": "multiple_choice",
+                "options": [
+                  {
+                    "text": {
+                      "en": "Capturing attention and entertaining while educating",
+                      "ms": "Menarik perhatian dan menghiburkan sambil mendidik",
+                      "zh": "吸引注意力并在教育时娱乐"
+                    },
+                    "is_correct": true
+                  },
+                  {
+                    "text": {
+                      "en": "Reading from a script",
+                      "ms": "Membaca dari skrip",
+                      "zh": "从脚本阅读"
+                    },
+                    "is_correct": false
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "park-guide-301",
+    "title": {
+      "en": "Conservation & Ecology",
+      "ms": "Pemuliharaan & Ekologi",
+      "zh": "保护与生态"
+    },
+    "description": {
+      "en": "Become an expert on wildlife conservation and ecosystem management. REQUIRES: Park Guide Fundamentals (101)",
+      "ms": "Menjadi pakar pemuliharaan hidupan liar dan pengurusan ekosistem. MEMERLUKAN: Asas (101)",
+      "zh": "成为野生动物保护和生态系统管理专家。需要：基础（101）"
+    },
+    "thumbnail": "https://images.pexels.com/photos/1390254/pexels-photo-1390254.jpeg?auto=compress&cs=tinysrgb&w=600",
+    "is_published": true,
+    "prerequisites": ["park-guide-101"],
+    "chapters": [
+      {
+        "title": {
+          "en": "Wildlife & Biodiversity",
+          "ms": "Hidupan Liar & Kepelbagaian Biologi",
+          "zh": "野生动物与生物多样性"
+        },
+        "lessons": [
+          {
+            "title": {
+              "en": "Proboscis Monkeys & Endemic Species",
+              "ms": "Monyet Hidung Panjang & Spesies Endemik",
+              "zh": "长鼻猴和特有物种"
+            },
+            "content_text": {
+              "en": "Study Bako's unique wildlife, particularly the proboscis monkeys found only in Borneo. Learn about conservation challenges, habitat protection, and sustainable tourism practices that minimize human impact on the ecosystem.",
+              "ms": "Pelajari hidupan liar unik Bako, terutama monyet hidung panjang yang hanya terdapat di Borneo. Ketahui tentang cabaran pemuliharaan, perlindungan habitat, dan amalan pelancongan berkelanjutan yang meminimalkan kesan manusia terhadap ekosistem.",
+              "zh": "研究巴哥的独特野生动物，特别是仅在婆罗洲发现的长鼻猴。了解保护挑战、栖息地保护和可持续旅游实践，以最大程度地减少人类对生态系统的影响。"
+            },
+            "content_images": [],
+            "content_videos": [],
+            "estimated_time": 22
+          },
+          {
+            "title": {
+              "en": "Rainforest Ecosystem Dynamics",
+              "ms": "Dinamika Ekosistem Hutan Hujan",
+              "zh": "热带雨林生态系统动态"
+            },
+            "content_text": {
+              "en": "Explore the complex relationships within rainforest ecosystems. Learn about food chains, nutrient cycles, and the interdependence of species. Understand the role of decomposers, plant-animal relationships, and ecosystem resilience.",
+              "ms": "Jelajahi hubungan kompleks dalam ekosistem hutan hujan. Pelajari tentang rantai makanan, kitaran nutrien, dan saling ketergantungan spesies. Fahami peranan pengurai, hubungan tumbuhan-hewan, dan daya tahan ekosistem.",
+              "zh": "探索热带雨林生态系统中的复杂关系。了解食物链、营养循环和物种的相互依存性。理解分解者的作用、植物-动物关系和生态系统恢复力。"
+            },
+            "content_images": [],
+            "content_videos": [],
+            "estimated_time": 20
+          }
+        ],
+        "exercises": [],
+        "quizzes": [
+          {
+            "title": {
+              "en": "Ecology & Conservation Quiz",
+              "ms": "Kuis Ekologi & Pemuliharaan",
+              "zh": "生态与保护测验"
+            },
+            "time_limit": 20,
+            "passing_score": 75,
+            "questions": [
+              {
+                "question_text": {
+                  "en": "Where are proboscis monkeys found?",
+                  "ms": "Di mana monyet hidung panjang ditemui?",
+                  "zh": "长鼻猴在哪里发现？"
+                },
+                "question_type": "multiple_choice",
+                "options": [
+                  {
+                    "text": {
+                      "en": "Only in Borneo",
+                      "ms": "Hanya di Borneo",
+                      "zh": "仅在婆罗洲"
+                    },
+                    "is_correct": true
+                  },
+                  {
+                    "text": {
+                      "en": "Throughout Southeast Asia",
+                      "ms": "Di seluruh Asia Tenggara",
+                      "zh": "整个东南亚"
+                    },
+                    "is_correct": false
+                  }
+                ]
+              },
+              {
+                "question_text": {
+                  "en": "What is a key role of decomposers in ecosystems?",
+                  "ms": "Apakah peranan utama pengurai dalam ekosistem?",
+                  "zh": "分解者在生态系统中的关键作用是什么？"
+                },
+                "question_type": "multiple_choice",
+                "options": [
+                  {
+                    "text": {
+                      "en": "Breaking down organic matter and returning nutrients to soil",
+                      "ms": "Memecahkan bahan organik dan mengembalikan nutrien ke tanah",
+                      "zh": "分解有机物并将养分归还给土壤"
+                    },
+                    "is_correct": true
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "park-guide-401",
+    "title": {
+      "en": "Cultural Heritage & Community",
+      "ms": "Warisan Budaya & Komuniti",
+      "zh": "文化遗产与社区"
+    },
+    "description": {
+      "en": "Learn Sarawak's rich cultural heritage and indigenous communities. REQUIRES: Park Guide Fundamentals (101)",
+      "ms": "Pelajari warisan budaya kaya Sarawak dan komuniti orang asli. MEMERLUKAN: Asas (101)",
+      "zh": "学习砂州丰富的文化遗产和土著社区。需要：基础（101）"
+    },
+    "thumbnail": "https://images.pexels.com/photos/2398220/pexels-photo-2398220.jpeg?auto=compress&cs=tinysrgb&w=600",
+    "is_published": true,
+    "prerequisites": ["park-guide-101"],
+    "chapters": [
+      {
+        "title": {
+          "en": "Indigenous Cultures of Borneo",
+          "ms": "Budaya Orang Asli Borneo",
+          "zh": "婆罗洲土著文化"
+        },
+        "lessons": [
+          {
+            "title": {
+              "en": "Salako Community & Local Traditions",
+              "ms": "Komuniti Salako & Tradisi Tempatan",
+              "zh": "萨拉科社区与当地传统"
+            },
+            "content_text": {
+              "en": "Understanding the indigenous peoples living near Bako, their traditions, customs, and way of life. Learn to respect and appreciate local culture while providing educational experiences to visitors about sustainable living practices and traditional ecological knowledge.",
+              "ms": "Memahami orang asli yang tinggal berhampiran Bako, tradisi, adat istiadat, dan cara hidup mereka. Belajar menghormati dan menghargai budaya tempatan sambil memberikan pengalaman pendidikan kepada pelawat tentang amalan kehidupan berkelanjutan dan pengetahuan ekologi tradisional.",
+              "zh": "了解住在巴哥附近的土著人民、他们的传统、习俗和生活方式。学会在为游客提供关于可持续生活方式和传统生态知识的教育体验的同时尊重和欣赏当地文化。"
+            },
+            "content_images": [],
+            "content_videos": [],
+            "estimated_time": 18
+          },
+          {
+            "title": {
+              "en": "Traditional Ecological Knowledge",
+              "ms": "Pengetahuan Ekologi Tradisional",
+              "zh": "传统生态知识"
+            },
+            "content_text": {
+              "en": "Explore how indigenous communities have sustainably managed Borneo's resources for generations. Learn about traditional hunting and gathering practices, plant medicine knowledge, and seasonal cycles recognized by local peoples.",
+              "ms": "Jelajahi bagaimana komuniti orang asli telah menguruskan sumber daya Borneo secara mampan selama generasi. Pelajari tentang amalan tradisional berburu dan mengumpul, pengetahuan ubat tumbuhan, dan kitaran musiman yang dikenali oleh masyarakat tempatan.",
+              "zh": "探索土著社区如何在几代人中可持续地管理婆罗洲的资源。了解传统狩猎采集实践、植物医学知识和当地人民公认的季节周期。"
+            },
+            "content_images": [],
+            "content_videos": [],
+            "estimated_time": 17
+          }
+        ],
+        "exercises": [],
+        "quizzes": [
+          {
+            "title": {
+              "en": "Cultural Heritage Assessment",
+              "ms": "Penilaian Warisan Budaya",
+              "zh": "文化遗产评估"
+            },
+            "time_limit": 15,
+            "passing_score": 70,
+            "questions": [
+              {
+                "question_text": {
+                  "en": "What is the primary focus when engaging with indigenous communities?",
+                  "ms": "Apakah fokus utama ketika terlibat dengan komuniti orang asli?",
+                  "zh": "与土著社区互动时的主要重点是什么？"
+                },
+                "question_type": "multiple_choice",
+                "options": [
+                  {
+                    "text": {
+                      "en": "Respect, cultural appreciation, and sustainable practices",
+                      "ms": "Menghormati, penghargaan budaya, dan amalan berkelanjutan",
+                      "zh": "尊重、文化欣赏和可持续实践"
+                    },
+                    "is_correct": true
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "park-guide-501",
+    "title": {
+      "en": "Master Guide Certification",
+      "ms": "Pensijilan Panduan Induk",
+      "zh": "主导游认证"
+    },
+    "description": {
+      "en": "FINAL LEVEL: Requires ALL previous courses (101, 201, 301, 401) to be completed first! This is the comprehensive mastery exam.",
+      "ms": "TAHAP AKHIR: Memerlukan SEMUA kursus terdahulu (101, 201, 301, 401) untuk diselesaikan dahulu! Ini adalah peperiksaan penguasaan menyeluruh.",
+      "zh": "最终级别：需要先完成所有之前的课程（101、201、301、401）！这是综合精通考试。"
+    },
+    "thumbnail": "https://images.pexels.com/photos/1684876/pexels-photo-1684876.jpeg?auto=compress&cs=tinysrgb&w=600",
+    "is_published": true,
+    "prerequisites": ["park-guide-101", "park-guide-201", "park-guide-301", "park-guide-401"],
+    "chapters": [
+      {
+        "title": {
+          "en": "Final Comprehensive Assessment",
+          "ms": "Penilaian Menyeluruh Akhir",
+          "zh": "最终综合评估"
+        },
+        "lessons": [
+          {
+            "title": {
+              "en": "Comprehensive Mastery Review",
+              "ms": "Ulasan Penguasaan Menyeluruh",
+              "zh": "综合精通评论"
+            },
+            "content_text": {
+              "en": "This final module reviews all areas covered in Fundamentals, Advanced Techniques, Conservation, and Cultural Heritage. You will demonstrate mastery of park guiding excellence. Upon passing this exam, you will be certified as a professional Master Guide qualified to lead advanced tours and training.",
+              "ms": "Modul akhir ini menyemak semua bidang yang diliputi dalam Asas, Teknik Lanjutan, Pemuliharaan, dan Warisan Budaya. Anda akan menunjukkan penguasaan keunggulan panduan taman. Setelah lulus peperiksaan ini, anda akan disahkan sebagai Panduan Induk profesional yang berkelayakan untuk memimpin lawatan dan latihan lanjutan.",
+              "zh": "本期末模块回顾了基础、高级技巧、保护和文化遗产涵盖的所有领域。您将展示公园指导卓越的掌握。通过此考试后，您将被认证为合格的专业主导游，有资格领导高级旅游和培训。"
+            },
+            "content_images": [],
+            "content_videos": [],
+            "estimated_time": 30
+          }
+        ],
+        "exercises": [],
+        "quizzes": [
+          {
+            "title": {
+              "en": "Master Guide Comprehensive Exam",
+              "ms": "Peperiksaan Menyeluruh Panduan Induk",
+              "zh": "主导游综合考试"
+            },
+            "time_limit": 60,
+            "passing_score": 80,
+            "questions": [
+              {
+                "question_text": {
+                  "en": "What is the primary responsibility of a Master Guide?",
+                  "ms": "Apakah tanggungjawab utama Panduan Induk?",
+                  "zh": "主导游的主要责任是什么？"
+                },
+                "question_type": "multiple_choice",
+                "options": [
+                  {
+                    "text": {
+                      "en": "Excellence in all guiding areas and mentoring",
+                      "ms": "Keunggulan dalam semua bidang panduan dan bimbingan",
+                      "zh": "在所有导游领域中的卓越和指导"
+                    },
+                    "is_correct": true
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]

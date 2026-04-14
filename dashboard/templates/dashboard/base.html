@@ -742,6 +742,7 @@
             }
         }
     </style>
+    <link rel="stylesheet" href="{% static 'css/dashboard-enhancements.css' %}">
     {% block extra_css %}{% endblock %}
 </head>
 <body>
@@ -763,6 +764,9 @@
                 </a>
                 <a href="{% url 'dashboard:courses' %}" class="nav-link {% if request.resolver_match.url_name == 'courses' %}active{% endif %}">
                     <i class="bi bi-book"></i> Courses
+                </a>
+                <a href="{% url 'dashboard:enrollments' %}" class="nav-link {% if request.resolver_match.url_name == 'enrollments' %}active{% endif %}">
+                    <i class="bi bi-journal-check"></i> Enrollments
                 </a>
                 <a href="{% url 'dashboard:progress' %}" class="nav-link {% if request.resolver_match.url_name == 'progress' %}active{% endif %}">
                     <i class="bi bi-bar-chart"></i> Progress
@@ -1309,6 +1313,8 @@
             fetchHeaderNotifications();
         });
     </script>
+    <script src="{% static 'js/theme-manager.js' %}"></script>
+    <script src="{% static 'js/course-dashboard.js' %}"></script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>

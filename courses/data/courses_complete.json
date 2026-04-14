@@ -1,0 +1,410 @@
+[
+  {
+    "code": "park-guide-101",
+    "title": {
+      "en": "Park Guide Fundamentals",
+      "ms": "Asas Panduan Taman",
+      "zh": "公园导游基础"
+    },
+    "description": {
+      "en": "Learn the essential skills and responsibilities of a professional park guide. REQUIRED - Complete this first before any other courses!",
+      "ms": "Pelajari kemahiran penting panduan taman. DIPERLUKAN - Selesaikan ini dahulu!",
+      "zh": "学习公园导游的基本技能。必需的 - 先完成此课程！"
+    },
+    "thumbnail": "https://images.unsplash.com/photo-1488749807830-63789f68bb65?w=400",
+    "is_published": true,
+    "prerequisites": [],
+    "chapters": [
+      {
+        "title": {
+          "en": "Park Orientation",
+          "ms": "Orientasi Taman",
+          "zh": "公园导览"
+        },
+        "lessons": [
+          {
+            "title": {
+              "en": "Introduction to Bako",
+              "ms": "Pengenalan Bako",
+              "zh": "巴哥简介"
+            },
+            "content_text": {
+              "en": "Welcome to Bako National Park, established in 1957 covering 2,727 hectares of pristine rainforest. Learn the park's geography, main trails, emergency procedures and safety protocols.",
+              "ms": "Selamat datang ke Taman Negara Bako, ditubuhkan pada tahun 1957 dengan luas 2,727 hektar. Pelajari geografi, laluan utama, prosedur kecemasan dan protokol keselamatan taman.",
+              "zh": "欢迎来到1957年成立的巴哥国家公园，面积为2,727公顷的原始热带雨林。学习公园的地理、主要步道、应急程序和安全协议。"
+            },
+            "content_images": [],
+            "content_videos": [],
+            "estimated_time": 15
+          }
+        ],
+        "exercises": [],
+        "quizzes": [
+          {
+            "title": {
+              "en": "Park Fundamentals Quiz",
+              "ms": "Kuis Asas Taman",
+              "zh": "公园基础测验"
+            },
+            "time_limit": 10,
+            "questions": [
+              {
+                "question_text": {
+                  "en": "In what year was Bako National Park established?",
+                  "ms": "Pada tahun berapa Taman Negara Bako ditubuhkan?",
+                  "zh": "巴哥国家公园是在哪一年建立的？"
+                },
+                "question_type": "multiple_choice",
+                "options": [
+                  {
+                    "text": {
+                      "en": "1957",
+                      "ms": "1957",
+                      "zh": "1957"
+                    },
+                    "is_correct": true
+                  },
+                  {
+                    "text": {
+                      "en": "1967",
+                      "ms": "1967",
+                      "zh": "1967"
+                    },
+                    "is_correct": false
+                  },
+                  {
+                    "text": {
+                      "en": "1947",
+                      "ms": "1947",
+                      "zh": "1947"
+                    },
+                    "is_correct": false
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "park-guide-201",
+    "title": {
+      "en": "Advanced Guiding Techniques",
+      "ms": "Teknik-teknik Panduan Lanjutan",
+      "zh": "高级导游技巧"
+    },
+    "description": {
+      "en": "Master storytelling and group management. REQUIRES: Park Guide Fundamentals (101)",
+      "ms": "Kuasai bercerita dan pengurusan kumpulan. MEMERLUKAN: Asas (101)",
+      "zh": "掌握讲故事和小组管理。需要：基础（101）"
+    },
+    "thumbnail": "https://images.unsplash.com/photo-1552664730-d307ca884978?w=400",
+    "is_published": true,
+    "prerequisites": [
+      "park-guide-101"
+    ],
+    "chapters": [
+      {
+        "title": {
+          "en": "Storytelling Skills",
+          "ms": "Kemahiran Bercerita",
+          "zh": "讲故事技巧"
+        },
+        "lessons": [
+          {
+            "title": {
+              "en": "Engaging Storytelling",
+              "ms": "Bercerita yang Menarik",
+              "zh": "有趣的讲故事"
+            },
+            "content_text": {
+              "en": "Learn how to engage visitors through compelling stories about park wildlife, history, and ecology. Master the art of capturing attention and delivering educational content in an entertaining way.",
+              "ms": "Pelajari cara melibatkan pelawat melalui cerita menarik tentang hidupan liar, sejarah dan ekologi taman. Kuasai seni menarik perhatian dan menyampaikan kandungan pendidikan dengan cara yang menghiburkan.",
+              "zh": "学习如何通过引人入胜的故事吸引游客，这些故事涉及公园的野生动物、历史和生态。掌握吸引注意力和以娱乐方式传达教育内容的艺术。"
+            },
+            "content_images": [],
+            "content_videos": [],
+            "estimated_time": 20
+          }
+        ],
+        "exercises": [],
+        "quizzes": [
+          {
+            "title": {
+              "en": "Storytelling Quiz",
+              "ms": "Kuis Bercerita",
+              "zh": "讲故事测验"
+            },
+            "time_limit": 10,
+            "questions": [
+              {
+                "question_text": {
+                  "en": "What is the key to engaging storytelling?",
+                  "ms": "Apakah kunci untuk bercerita yang melibatkan?",
+                  "zh": "吸引人的讲故事的关键是什么？"
+                },
+                "question_type": "multiple_choice",
+                "options": [
+                  {
+                    "text": {
+                      "en": "Capturing attention and delivering educational content entertainingly",
+                      "ms": "Menarik perhatian dan menyampaikan kandungan pendidikan dengan menghiburkan",
+                      "zh": "吸引注意力并以娱乐方式传达教育内容"
+                    },
+                    "is_correct": true
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "park-guide-301",
+    "title": {
+      "en": "Conservation & Ecology",
+      "ms": "Pemuliharaan & Ekologi",
+      "zh": "保护与生态"
+    },
+    "description": {
+      "en": "Become an expert on wildlife conservation and ecosystem management. REQUIRES: Park Guide Fundamentals (101)",
+      "ms": "Menjadi pakar pemuliharaan hidupan liar dan pengurusan ekosistem. MEMERLUKAN: Asas (101)",
+      "zh": "成为野生动物保护和生态系统管理专家。需要：基础（101）"
+    },
+    "thumbnail": "https://images.unsplash.com/photo-1474511320723-9a56873867b5?w=400",
+    "is_published": true,
+    "prerequisites": [
+      "park-guide-101"
+    ],
+    "chapters": [
+      {
+        "title": {
+          "en": "Wildlife Protection",
+          "ms": "Perlindungan Hidupan Liar",
+          "zh": "野生动物保护"
+        },
+        "lessons": [
+          {
+            "title": {
+              "en": "Proboscis Monkeys & Endemic Species",
+              "ms": "Monyet Hidung Panjang & Spesies Endemik",
+              "zh": "长鼻猴和特有物种"
+            },
+            "content_text": {
+              "en": "Study Bako's unique wildlife, particularly the proboscis monkeys found only in Borneo. Learn about conservation challenges, habitat protection, and sustainable tourism practices that minimize human impact on the ecosystem.",
+              "ms": "Pelajari hidupan liar unik Bako, terutama monyet hidung panjang yang hanya terdapat di Borneo. Ketahui tentang cabaran pemuliharaan, perlindungan habitat, dan amalan pelancongan berkelanjutan yang meminimalkan kesan manusia terhadap ekosistem.",
+              "zh": "研究巴哥的独特野生动物，特别是仅在婆罗洲发现的长鼻猴。了解保护挑战、栖息地保护和可持续旅游实践，以最大程度地减少人类对生态系统的影响。"
+            },
+            "content_images": [],
+            "content_videos": [],
+            "estimated_time": 18
+          }
+        ],
+        "exercises": [],
+        "quizzes": [
+          {
+            "title": {
+              "en": "Conservation Quiz",
+              "ms": "Kuis Pemuliharaan",
+              "zh": "保护测验"
+            },
+            "time_limit": 10,
+            "questions": [
+              {
+                "question_text": {
+                  "en": "Where are proboscis monkeys found?",
+                  "ms": "Di mana monyet hidung panjang ditemui?",
+                  "zh": "长鼻猴在哪里发现？"
+                },
+                "question_type": "multiple_choice",
+                "options": [
+                  {
+                    "text": {
+                      "en": "Only in Borneo",
+                      "ms": "Hanya di Borneo",
+                      "zh": "仅在婆罗洲"
+                    },
+                    "is_correct": true
+                  },
+                  {
+                    "text": {
+                      "en": "Throughout Southeast Asia",
+                      "ms": "Di seluruh Asia Tenggara",
+                      "zh": "整个东南亚"
+                    },
+                    "is_correct": false
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "park-guide-401",
+    "title": {
+      "en": "Cultural Heritage & Community",
+      "ms": "Warisan Budaya & Komuniti",
+      "zh": "文化遗产与社区"
+    },
+    "description": {
+      "en": "Learn Sarawak's rich cultural heritage and indigenous communities. REQUIRES: Park Guide Fundamentals (101)",
+      "ms": "Pelajari warisan budaya kaya Sarawak dan komuniti orang asli. MEMERLUKAN: Asas (101)",
+      "zh": "学习砂州丰富的文化遗产和土著社区。需要：基础（101）"
+    },
+    "thumbnail": "https://images.unsplash.com/photo-1518156677180-95a2893f3e9f?w=400",
+    "is_published": true,
+    "prerequisites": [
+      "park-guide-101"
+    ],
+    "chapters": [
+      {
+        "title": {
+          "en": "Indigenous Culture",
+          "ms": "Budaya Orang Asli",
+          "zh": "土著文化"
+        },
+        "lessons": [
+          {
+            "title": {
+              "en": "Salako Community & Local Traditions",
+              "ms": "Komuniti Salako & Tradisi Tempatan",
+              "zh": "萨拉科社区与当地传统"
+            },
+            "content_text": {
+              "en": "Understanding the indigenous peoples living near Bako, their traditions, customs, and way of life. Learn to respect and appreciate local culture while providing educational experiences to visitors about sustainable living practices.",
+              "ms": "Memahami orang asli yang tinggal berhampiran Bako, tradisi, adat istiadat, dan cara hidup mereka. Belajar menghormati dan menghargai budaya tempatan sambil memberikan pengalaman pendidikan kepada pelawat tentang amalan kehidupan berkelanjutan.",
+              "zh": "了解住在巴哥附近的土著人民、他们的传统、习俗和生活方式。学会在为游客提供关于可持续生活方式的教育体验的同时尊重和欣赏当地文化。"
+            },
+            "content_images": [],
+            "content_videos": [],
+            "estimated_time": 16
+          }
+        ],
+        "exercises": [],
+        "quizzes": [
+          {
+            "title": {
+              "en": "Cultural Heritage Quiz",
+              "ms": "Kuis Warisan Budaya",
+              "zh": "文化遗产测验"
+            },
+            "time_limit": 10,
+            "questions": [
+              {
+                "question_text": {
+                  "en": "What should guides emphasize about local communities?",
+                  "ms": "Apa yang harus panduan tekankan tentang komuniti tempatan?",
+                  "zh": "导游应该强调关于当地社区的什么？"
+                },
+                "question_type": "multiple_choice",
+                "options": [
+                  {
+                    "text": {
+                      "en": "Respect, sustainability, and cultural appreciation",
+                      "ms": "Menghormati, keberlanjutan, dan penghargaan budaya",
+                      "zh": "尊重、可持续性和文化欣赏"
+                    },
+                    "is_correct": true
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "code": "park-guide-501",
+    "title": {
+      "en": "Master Guide Certification",
+      "ms": "Pensijilan Panduan Induk",
+      "zh": "主导游认证"
+    },
+    "description": {
+      "en": "FINAL LEVEL: Requires ALL previous courses (101, 201, 301, 401) to be completed first! This is the comprehensive mastery exam.",
+      "ms": "TAHAP AKHIR: Memerlukan SEMUA kursus terdahulu (101, 201, 301, 401) untuk diselesaikan dahulu! Ini adalah peperiksaan penguasaan menyeluruh.",
+      "zh": "最终级别：需要先完成所有之前的课程（101、201、301、401）！这是综合精通考试。"
+    },
+    "thumbnail": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400",
+    "is_published": true,
+    "prerequisites": [
+      "park-guide-101",
+      "park-guide-201",
+      "park-guide-301",
+      "park-guide-401"
+    ],
+    "chapters": [
+      {
+        "title": {
+          "en": "Final Assessment & Certification",
+          "ms": "Penilaian Akhir & Pensijilan",
+          "zh": "最终评估与认证"
+        },
+        "lessons": [
+          {
+            "title": {
+              "en": "Comprehensive Mastery Review",
+              "ms": "Ulasan Penguasaan Menyeluruh",
+              "zh": "综合精通评论"
+            },
+            "content_text": {
+              "en": "This final module reviews all areas covered in Fundamentals, Advanced Techniques, Conservation, and Cultural Heritage. You will demonstrate mastery of park guiding excellence. Upon passing this exam, you will be certified as a professional Master Guide qualified to lead advanced tours and training.",
+              "ms": "Modul akhir ini menyemak semua bidang yang diliputi dalam Asas, Teknik Lanjutan, Pemuliharaan, dan Warisan Budaya. Anda akan menunjukkan penguasaan keunggulan panduan taman. Setelah lulus peperiksaan ini, anda akan disahkan sebagai Panduan Induk profesional yang berkelayakan untuk memimpin lawatan dan latihan lanjutan.",
+              "zh": "本期末模块回顾了基础、高级技巧、保护和文化遗产涵盖的所有领域。您将展示公园指导卓越的掌握。通过此考试后，您将被认证为合格的专业主导游，有资格领导高级旅游和培训。"
+            },
+            "content_images": [],
+            "content_videos": [],
+            "estimated_time": 30
+          }
+        ],
+        "exercises": [],
+        "quizzes": [
+          {
+            "title": {
+              "en": "Master Guide Certification Exam",
+              "ms": "Peperiksaan Pensijilan Panduan Induk",
+              "zh": "主导游认证考试"
+            },
+            "time_limit": 60,
+            "questions": [
+              {
+                "question_text": {
+                  "en": "You have completed all required courses and demonstrated mastery across all competency areas. You are now certified as a Master Guide. What is your next step?",
+                  "ms": "Anda telah menyelesaikan semua kursus yang diperlukan dan menunjukkan penguasaan di semua bidang kompetensi. Anda kini disahkan sebagai Panduan Induk. Apakah langkah seterusnya anda?",
+                  "zh": "您已完成所有必需的课程并在所有能力领域展示了精通。您现在已被认证为主导游。你的下一步是什么？"
+                },
+                "question_type": "multiple_choice",
+                "options": [
+                  {
+                    "text": {
+                      "en": "Lead professional tours and mentor new guides",
+                      "ms": "Memimpin lawatan profesional dan membimbing panduan baru",
+                      "zh": "领导专业旅游并指导新导游"
+                    },
+                    "is_correct": true
+                  },
+                  {
+                    "text": {
+                      "en": "Retake basic courses",
+                      "ms": "Ambil semula kursus asas",
+                      "zh": "重新参加基础课程"
+                    },
+                    "is_correct": false
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]
