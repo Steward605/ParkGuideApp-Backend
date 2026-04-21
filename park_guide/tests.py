@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.test import RequestFactory, TestCase
+from django.urls import reverse
 
 from courses.models import Course, CourseProgress, Module, ModuleProgress
 from park_guide.admin_site import ParkGuideAdminSite
@@ -71,3 +72,18 @@ class AdminDashboardCompletionMetricsTests(TestCase):
         self.assertEqual(course_panel["percent"], 50)
         self.assertEqual(module_panel["subtitle"], "2 of 3 modules completed")
         self.assertEqual(module_panel["percent"], 67)
+
+
+class WellKnownAssetLinksTests(TestCase):
+    def test_assetlinks_json_endpoint_returns_android_credentials(self):
+        response = self.client.get(reverse("assetlinks_json"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "application/json")
+
+        payload = response.json()
+        self.assertEqual(len(payload), 1)
+        self.assertEqual(payload[0]["relation"], ["delegate_permission/common.get_login_creds"])
+        self.assertEqual(payload[0]["target"]["namespace"], "android_app")
+        self.assertTrue(payload[0]["target"]["package_name"])
+        self.assertEqual(len(payload[0]["target"]["sha256_cert_fingerprints"]), 1)

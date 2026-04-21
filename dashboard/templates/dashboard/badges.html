@@ -370,25 +370,49 @@
         </div>
     </div>
 
-    <div class="badge-grid">
-        {% for badge in badges %}
-        <div class="glass-card badge-card" data-badge-card="{{ badge.id }}" data-badge-id="{{ badge.id }}" role="button" tabindex="0" aria-label="View {{ badge.name }} details">
-            <div class="badge-art"><i class="bi bi-patch-check-fill"></i></div>
-            <h4 class="fw-bold badge-title">{{ badge.name }}</h4>
-            <p class="text-muted small badge-description">{{ badge.description }}</p>
-            <div class="row border-top pt-3 badge-stats">
-                <div class="col-6 border-end">
-                    <div class="small text-muted">GRANTED</div>
-                    <div class="fw-bold" data-granted-count>{{ badge.granted_badges }}</div>
+    <form method="post" id="bulkDeleteBadgesForm" onsubmit="return confirm('Delete selected badge(s)? This will remove them from all users.');">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="delete_badges_bulk">
+
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+            <div class="form-check m-0" onclick="event.stopPropagation();">
+                <input class="form-check-input" type="checkbox" id="selectAllBadges" onclick="event.stopPropagation();">
+                <label class="form-check-label" for="selectAllBadges">Select all badges</label>
+            </div>
+            <button type="submit" class="btn btn-outline-danger rounded-pill px-4" id="deleteSelectedBadgesBtn" disabled>
+                Delete selected
+            </button>
+        </div>
+
+        <div class="badge-grid">
+            {% for badge in badges %}
+            <div class="glass-card badge-card position-relative" data-badge-card="{{ badge.id }}" data-badge-id="{{ badge.id }}" role="button" tabindex="0" aria-label="View {{ badge.name }} details">
+                <div class="position-absolute top-0 end-0 p-2" onclick="event.stopPropagation();">
+                    <input
+                        class="form-check-input"
+                        type="checkbox"
+                        name="badge_ids"
+                        value="{{ badge.id }}"
+                        aria-label="Select {{ badge.name }}"
+                        onclick="event.stopPropagation();">
                 </div>
-                <div class="col-6">
-                    <div class="small text-muted">PENDING</div>
-                    <div class="fw-bold text-warning" data-pending-count>{{ badge.pending_approvals }}</div>
+                <div class="badge-art"><i class="bi bi-patch-check-fill"></i></div>
+                <h4 class="fw-bold badge-title">{{ badge.name }}</h4>
+                <p class="text-muted small badge-description">{{ badge.description }}</p>
+                <div class="row border-top pt-3 badge-stats">
+                    <div class="col-6 border-end">
+                        <div class="small text-muted">GRANTED</div>
+                        <div class="fw-bold" data-granted-count>{{ badge.granted_badges }}</div>
+                    </div>
+                    <div class="col-6">
+                        <div class="small text-muted">PENDING</div>
+                        <div class="fw-bold text-warning" data-pending-count>{{ badge.pending_approvals }}</div>
+                    </div>
                 </div>
             </div>
+            {% endfor %}
         </div>
-        {% endfor %}
-    </div>
+    </form>
 
     <div class="modal fade badge-detail-modal" id="badgeDetailModal" tabindex="-1" aria-labelledby="badgeDetailModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
@@ -420,6 +444,17 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="modal-footer">
+                    <form method="post" class="ms-auto" onsubmit="return confirm('Delete this badge? This will remove it from all users.');">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="delete_badge">
+                        <input type="hidden" name="badge_id" id="badgeDeleteId" value="">
+                        <button type="submit" class="btn btn-outline-danger rounded-pill px-4" id="deleteSingleBadgeBtn" disabled>
+                            Delete badge
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
@@ -427,6 +462,7 @@
     
 </div>
 
+<<<<<<< HEAD
 <div class="badge-grid">
     {% for badge in badges %}
     <div class="glass-card badge-card">
@@ -447,6 +483,18 @@
     </div>
     {% endfor %}
 </div>
+=======
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const tableBody = document.getElementById('pendingBadgeTableBody');
+        const pendingCountEl = document.getElementById('pendingRequestsCount');
+        const createBadgeCollapseEl = document.getElementById('createBadgeCollapse');
+        const createBadgeToggleText = document.getElementById('createBadgeToggleText');
+        const selectAllBadgesEl = document.getElementById('selectAllBadges');
+        const deleteSelectedBadgesBtn = document.getElementById('deleteSelectedBadgesBtn');
+        const badgeDeleteIdEl = document.getElementById('badgeDeleteId');
+        const deleteSingleBadgeBtn = document.getElementById('deleteSingleBadgeBtn');
+>>>>>>> 1c68695 (Fixes to various stuff)
 
         if (createBadgeCollapseEl && createBadgeToggleText) {
             createBadgeCollapseEl.addEventListener('show.bs.collapse', function () {
@@ -506,6 +554,8 @@
         async function openBadgeDetailModal(badgeId) {
             if (!badgeDetailModal || !badgeId || activeBadgeRequest) return;
             activeBadgeRequest = true;
+            if (badgeDeleteIdEl) badgeDeleteIdEl.value = badgeId;
+            if (deleteSingleBadgeBtn) deleteSingleBadgeBtn.disabled = false;
             if (typeof showPageLoader === 'function') {
                 showPageLoader();
             }
@@ -541,6 +591,31 @@
                 }
             }
         }
+
+        function getBadgeCheckboxes() {
+            return Array.from(document.querySelectorAll('input[name="badge_ids"]'));
+        }
+
+        function updateBulkBadgeDeleteState() {
+            const anyChecked = getBadgeCheckboxes().some((cb) => cb.checked);
+            if (deleteSelectedBadgesBtn) deleteSelectedBadgesBtn.disabled = !anyChecked;
+        }
+
+        if (selectAllBadgesEl) {
+            selectAllBadgesEl.addEventListener('change', function () {
+                const checked = !!selectAllBadgesEl.checked;
+                getBadgeCheckboxes().forEach((cb) => {
+                    cb.checked = checked;
+                });
+                updateBulkBadgeDeleteState();
+            });
+        }
+
+        getBadgeCheckboxes().forEach((cb) => {
+            cb.addEventListener('change', updateBulkBadgeDeleteState);
+        });
+
+        updateBulkBadgeDeleteState();
 
         badgeCards.forEach((card) => {
             card.addEventListener('click', function () {

@@ -1,9 +1,32 @@
 from django.urls import path
-from .views import RegisterView, CustomTokenObtainPairView
+from .views import (
+    AccountApplicationCreateView,
+    ChangePasswordView,
+    CustomTokenObtainPairView,
+    ForgotPasswordConfirmView,
+    ForgotPasswordRequestView,
+    PasskeyAuthenticationOptionsView,
+    PasskeyAuthenticationVerifyView,
+    PasskeyDisableView,
+    PasskeyRegisterOptionsView,
+    PasskeyRegisterVerifyView,
+    PasskeyStatusView,
+    RegisterView,
+)
 from rest_framework_simplejwt.views import TokenRefreshView
 
 urlpatterns = [
     path('register/', RegisterView.as_view(), name='register'),
+    path('applications/', AccountApplicationCreateView.as_view(), name='account_application_create'),
     path('login/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('change-password/', ChangePasswordView.as_view(), name='change_password'),
+    path('forgot-password/', ForgotPasswordRequestView.as_view(), name='forgot_password_request'),
+    path('forgot-password/confirm/', ForgotPasswordConfirmView.as_view(), name='forgot_password_confirm'),
+    path('passkeys/status/', PasskeyStatusView.as_view(), name='passkey_status'),
+    path('passkeys/register/options/', PasskeyRegisterOptionsView.as_view(), name='passkey_register_options'),
+    path('passkeys/register/verify/', PasskeyRegisterVerifyView.as_view(), name='passkey_register_verify'),
+    path('passkeys/login/options/', PasskeyAuthenticationOptionsView.as_view(), name='passkey_login_options'),
+    path('passkeys/login/verify/', PasskeyAuthenticationVerifyView.as_view(), name='passkey_login_verify'),
+    path('passkeys/disable/', PasskeyDisableView.as_view(), name='passkey_disable'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ]

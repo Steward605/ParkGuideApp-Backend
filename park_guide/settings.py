@@ -204,6 +204,29 @@ STATICFILES_DIRS = [
     BASE_DIR / 'static',
     BASE_DIR / 'images',
 ]
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'no-reply@parkguide.local')
+PASSKEY_RP_ID = os.getenv('PASSKEY_RP_ID', 'localhost')
+PASSKEY_RP_NAME = os.getenv('PASSKEY_RP_NAME', 'Park Guide App')
+PASSKEY_ORIGIN = os.getenv('PASSKEY_ORIGIN', 'http://localhost:3000')
+PASSKEY_ANDROID_PACKAGE_NAME = os.getenv('PASSKEY_ANDROID_PACKAGE_NAME', 'com.miyukivigil.parkguideapp')
+PASSKEY_ANDROID_SHA256 = os.getenv(
+    'PASSKEY_ANDROID_SHA256',
+    '42:41:D6:FD:23:A2:3B:FD:5A:B9:86:3F:99:D5:2E:54:A3:D2:CF:4D:5C:B7:0A:EA:CC:52:31:B1:A4:AA:B7:55',
+)
+
+# Email settings (SMTP)
+EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
+EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = _env_int('EMAIL_PORT', default=587)
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
+EMAIL_USE_TLS = _env_bool('EMAIL_USE_TLS', default=True)
+EMAIL_USE_SSL = _env_bool('EMAIL_USE_SSL', default=False)
+EMAIL_TIMEOUT = _env_int('EMAIL_TIMEOUT', default=30)
+SERVER_EMAIL = os.getenv('SERVER_EMAIL', DEFAULT_FROM_EMAIL)
 
 AUTH_USER_MODEL = 'accounts.CustomUser'
 

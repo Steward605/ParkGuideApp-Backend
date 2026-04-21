@@ -91,6 +91,73 @@
         </div>
     </div>
 
+    {% if pending_applications %}
+    <div class="border rounded-4 p-3 p-lg-4 mb-4 bg-body-tertiary">
+        <h5 class="fw-bold mb-3">Pending Account Applications</h5>
+        <div class="table-responsive">
+            <table class="table table-sm align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Birthdate</th>
+                        <th>CV</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for application in pending_applications %}
+                    <tr>
+                        <td>{{ application.full_name }}</td>
+                        <td>{{ application.email }}</td>
+                        <td>{{ application.phone_number }}</td>
+                        <td>{{ application.birthdate|date:"d M Y" }}</td>
+                        <td>
+                            {% if application.cv_storage_key %}
+                                <a href="{% url 'dashboard:request_cv' application.id %}" target="_blank" rel="noopener">
+                                    {{ application.cv_original_name|default:"View CV" }}
+                                </a>
+                            {% else %}
+                                <span class="text-muted">No CV</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <div class="d-inline-flex gap-2">
+                                <form method="post" class="d-inline-flex gap-2">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="approve_application">
+                                    <input type="hidden" name="application_id" value="{{ application.id }}">
+                                    <input type="hidden" name="next" value="{% url 'dashboard:users' %}">
+                                    <div class="form-check mt-2">
+                                        <input class="form-check-input" type="checkbox" name="keep_cv" checked id="keep-cv-approve-{{ application.id }}">
+                                        <label class="form-check-label small" for="keep-cv-approve-{{ application.id }}">Keep CV</label>
+                                    </div>
+                                    <input type="text" name="admin_notes" class="form-control form-control-sm" placeholder="Optional note">
+                                    <button type="submit" class="btn btn-sm btn-success">Approve</button>
+                                </form>
+                                <form method="post" class="d-inline-flex gap-2">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="deny_application">
+                                    <input type="hidden" name="application_id" value="{{ application.id }}">
+                                    <input type="hidden" name="next" value="{% url 'dashboard:users' %}">
+                                    <div class="form-check mt-2">
+                                        <input class="form-check-input" type="checkbox" name="keep_cv" checked id="keep-cv-deny-{{ application.id }}">
+                                        <label class="form-check-label small" for="keep-cv-deny-{{ application.id }}">Keep CV</label>
+                                    </div>
+                                    <input type="text" name="admin_notes" class="form-control form-control-sm" placeholder="Reason (optional)">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Deny</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
     <div class="table-responsive">
         <table class="table table-hover align-middle">
             <thead>

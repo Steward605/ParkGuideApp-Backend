@@ -26,6 +26,23 @@ Current configuration is environment-driven (see `park_guide/settings.py`):
 - `DB_CONN_MAX_AGE` (optional)
 - `DB_CONN_HEALTH_CHECKS` (optional)
 
+Email configuration (SMTP) is also environment-driven:
+- `EMAIL_BACKEND` (default: `django.core.mail.backends.smtp.EmailBackend`)
+- `EMAIL_HOST`
+- `EMAIL_PORT`
+- `EMAIL_HOST_USER`
+- `EMAIL_HOST_PASSWORD`
+- `EMAIL_USE_TLS`
+- `EMAIL_USE_SSL`
+- `DEFAULT_FROM_EMAIL`
+
+Passkey configuration is environment-driven:
+- `PASSKEY_RP_ID`
+- `PASSKEY_RP_NAME`
+- `PASSKEY_ORIGIN`
+- `PASSKEY_ANDROID_PACKAGE_NAME`
+- `PASSKEY_ANDROID_SHA256`
+
 ## Setup
 1. Create and activate a virtual environment:
 
@@ -51,6 +68,33 @@ pip install -r requirements.txt
 - `.env`
 - Firebase service account JSON (under `secrets/`)
 - Any additional project secrets used by your environment
+
+Example SMTP block in `.env`:
+
+```env
+EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_HOST_USER=your_email@gmail.com
+EMAIL_HOST_PASSWORD=your_app_password
+EMAIL_USE_TLS=True
+EMAIL_USE_SSL=False
+DEFAULT_FROM_EMAIL=your_email@gmail.com
+```
+
+Example passkey block in `.env`:
+
+```env
+PASSKEY_RP_ID=localhost
+PASSKEY_RP_NAME=Park Guide App
+PASSKEY_ORIGIN=http://localhost:3000
+PASSKEY_ANDROID_PACKAGE_NAME=com.miyukivigil.parkguideapp
+PASSKEY_ANDROID_SHA256=42:41:D6:FD:23:A2:3B:FD:5A:B9:86:3F:99:D5:2E:54:A3:D2:CF:4D:5C:B7:0A:EA:CC:52:31:B1:A4:AA:B7:55
+```
+
+Provider notes:
+- Gmail: enable 2FA and create an App Password, then use that as `EMAIL_HOST_PASSWORD`.
+- Outlook/Office365: `EMAIL_HOST=smtp.office365.com`, `EMAIL_PORT=587`, `EMAIL_USE_TLS=True`.
 
 4. Run migrations:
 For first time setup
@@ -127,6 +171,7 @@ python manage.py bootstrap_private_bucket
 
 ### Example `course-progress` response row
 
+<<<<<<< HEAD
 ```json
 {
   "id": 1,
@@ -139,6 +184,55 @@ python manage.py bootstrap_private_bucket
   "updated_at": "2026-03-16T12:00:00Z"
 }
 ```
+=======
+## API Overview
+Base routes:
+- `/api/`
+- `/api/accounts/`
+- `/api/notifications/`
+- `/api/user-progress/`
+- `/api/secure-files/`
+
+Authentication:
+- `POST /api/accounts/register/`
+- `POST /api/accounts/login/`
+- `POST /api/accounts/passkeys/login/options/`
+- `POST /api/accounts/passkeys/login/verify/`
+- `GET /api/accounts/passkeys/status/`
+- `POST /api/accounts/passkeys/register/options/`
+- `POST /api/accounts/passkeys/register/verify/`
+- `POST /api/accounts/passkeys/disable/`
+- `POST /api/accounts/token/refresh/`
+
+Training:
+- `GET /api/courses/`
+- `GET /api/modules/`
+- `GET /api/progress/`
+- `POST /api/progress/`
+- `GET /api/course-progress/`
+- `POST /api/course-progress/`
+- `POST /api/complete-module/`
+
+Badges:
+- `GET /api/user-progress/badges/`
+- `GET /api/user-progress/my-badges/`
+
+Notifications:
+- `GET /api/notifications/items/`
+- `POST /api/notifications/items/{id}/mark-read/`
+- `POST /api/notifications/items/mark-all-read/`
+- `POST /api/notifications/items/clear-read/`
+
+Secure files:
+- `GET /api/secure-files/files/`
+- `POST /api/secure-files/files/` with multipart field `file`
+- `GET /api/secure-files/files/{id}/`
+- `DELETE /api/secure-files/files/{id}/`
+- `GET /api/secure-files/files/{id}/download-url/`
+- `GET /api/secure-files/files/{id}/download/`
+
+All API endpoints require `Authorization: Bearer <access_token>` unless noted otherwise.
+>>>>>>> 1c68695 (Fixes to various stuff)
 
 ## Admin
 Open Django admin:

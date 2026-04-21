@@ -104,6 +104,11 @@
         background: radial-gradient(circle, rgba(82, 183, 136, 0.1), transparent);
         border-radius: 50%;
         transform: translate(30%, -30%);
+        pointer-events: none;
+    }
+
+    .course-select-checkbox {
+        z-index: 2;
     }
 
     .course-code {
@@ -502,13 +507,35 @@
     </button>
 </div>
 
-<!-- Course Grid -->
-<div class="row g-4 mb-4" id="courseGrid">
+<form method="post" id="bulkDeleteCoursesForm" onsubmit="return confirm('Delete selected course(s)? This will also delete related content (chapters, lessons, quizzes, enrollments).');">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="bulk_delete_courses">
+
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+        <div class="form-check m-0">
+            <input class="form-check-input" type="checkbox" id="selectAllCourses">
+            <label class="form-check-label" for="selectAllCourses">Select all courses</label>
+        </div>
+        <button type="submit" class="btn btn-outline-danger" id="deleteSelectedCoursesBtn" disabled>
+            <i class="bi bi-trash me-2"></i>Delete selected
+        </button>
+    </div>
+
+    <!-- Course Grid -->
+    <div class="row g-4 mb-4" id="courseGrid">
     {% for data in course_data %}
     <div class="col-md-6 col-lg-4" style="--index: {{ forloop.counter }}">
         <div class="course-card">
             <!-- Header -->
-            <div class="course-card-header">
+            <div class="course-card-header position-relative">
+                <div class="position-absolute top-0 end-0 p-2 course-select-checkbox">
+                    <input
+                        class="form-check-input"
+                        type="checkbox"
+                        name="course_ids"
+                        value="{{ data.course.id }}"
+                        aria-label="Select course {{ data.course.code }}">
+                </div>
                 <div class="course-code">{{ data.course.code }}</div>
                 <h6 class="course-title">{{ data.course.title.en|default:"Untitled Course" }}</h6>
                 {% if data.course.title.ms %}
@@ -630,7 +657,8 @@
         </div>
     </div>
     {% endfor %}
-</div>
+    </div>
+</form>
 
 <!-- Footer Info -->
 <div class="glass-card mt-4">
@@ -669,6 +697,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('courseSearch');
     const courseGrid = document.getElementById('courseGrid');
     const filterButtons = document.querySelectorAll('.filter-button');
+    const selectAllCoursesEl = document.getElementById('selectAllCourses');
+    const deleteSelectedCoursesBtn = document.getElementById('deleteSelectedCoursesBtn');
     
     // Search functionality
     if (searchInput) {
@@ -692,6 +722,31 @@ document.addEventListener('DOMContentLoaded', function() {
             // Filter logic here based on course attributes
         });
     });
+
+    function getCourseCheckboxes() {
+        return Array.from(document.querySelectorAll('input[name="course_ids"]'));
+    }
+
+    function updateBulkCourseDeleteState() {
+        const anyChecked = getCourseCheckboxes().some((cb) => cb.checked);
+        if (deleteSelectedCoursesBtn) deleteSelectedCoursesBtn.disabled = !anyChecked;
+    }
+
+    if (selectAllCoursesEl) {
+        selectAllCoursesEl.addEventListener('change', function () {
+            const checked = !!selectAllCoursesEl.checked;
+            getCourseCheckboxes().forEach((cb) => {
+                cb.checked = checked;
+            });
+            updateBulkCourseDeleteState();
+        });
+    }
+
+    getCourseCheckboxes().forEach((cb) => {
+        cb.addEventListener('change', updateBulkCourseDeleteState);
+    });
+
+    updateBulkCourseDeleteState();
 });
 </script>
 {% endblock %}

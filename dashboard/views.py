@@ -9,6 +9,8 @@ from django.http import JsonResponse, HttpResponse
 from django.db.models import Count, Q, Avg, Sum
 from django.utils import timezone
 from django.core.exceptions import ImproperlyConfigured
+from django.core.mail import send_mail
+from django.conf import settings
 from .forms import CourseForm, CourseImportForm, ChapterForm, LessonForm, QuizForm, PracticeExerciseForm
 from django.core.management import call_command
 from datetime import timedelta
@@ -16,6 +18,7 @@ from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404
+from django.http import HttpResponseRedirect
 from django.utils.timesince import timesince
 from io import StringIO, BytesIO
 import tempfile
@@ -30,8 +33,11 @@ from reportlab.lib.units import inch
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak
 from reportlab.lib import colors
 from datetime import datetime
+import secrets
+import string
 
-from accounts.models import CustomUser
+from accounts.models import CustomUser, AccountApplication
+from accounts.services import delete_application_cv, generate_application_cv_url
 from courses.models import (
     Course, Module, ModuleProgress, CourseProgress, Chapter, Lesson, Quiz, 
     ChapterProgress, CourseEnrollment, QuizAttempt, PracticeAttempt, LessonProgress
@@ -464,6 +470,22 @@ def is_staff_or_admin(user):
     """Check if user is staff or admin"""
     return user.is_staff or user.is_superuser
 
+
+def generate_temporary_password(length=12):
+    alphabet = string.ascii_letters + string.digits
+    return ''.join(secrets.choice(alphabet) for _ in range(length))
+
+
+def generate_unique_username_from_email(email):
+    base = (email.split('@')[0] or 'parkguide').lower().replace(' ', '')
+    base = ''.join(ch for ch in base if ch.isalnum() or ch in ('_', '.')) or 'parkguide'
+    candidate = base
+    index = 1
+    while CustomUser.objects.filter(username=candidate).exists():
+        candidate = f'{base}{index}'
+        index += 1
+    return candidate
+
 def get_guide_queryset():
     """Get queryset of guide users (not staff or superuser)"""
     return CustomUser.objects.filter(is_staff=False, is_superuser=False, is_active=True)
@@ -790,7 +812,131 @@ def dashboard_users(request):
             except Exception as exc:
                 messages.error(request, f'Could not delete user: {exc}')
             return redirect('dashboard:users')
+
+        if action == 'approve_application':
+            next_url = request.POST.get('next') or reverse('dashboard:users')
+            application_id = request.POST.get('application_id')
+            notes = (request.POST.get('admin_notes') or '').strip()
+            keep_cv = request.POST.get('keep_cv') == 'on'
+            application = AccountApplication.objects.filter(id=application_id).first()
+
+            if not application:
+                messages.error(request, 'Application not found.')
+                return redirect(next_url)
+
+            if application.status != AccountApplication.STATUS_PENDING:
+                messages.error(request, 'Only pending applications can be approved.')
+                return redirect(next_url)
+
+            if CustomUser.objects.filter(email=application.email).exists():
+                messages.error(request, 'A user with this email already exists.')
+                return redirect(next_url)
+
+            temp_password = generate_temporary_password()
+            username = generate_unique_username_from_email(application.email)
+            name_parts = application.full_name.split(' ', 1)
+            first_name = name_parts[0]
+            last_name = name_parts[1] if len(name_parts) > 1 else ''
+
+            new_user = CustomUser.objects.create_user(
+                username=username,
+                email=application.email,
+                password=temp_password,
+                first_name=first_name,
+                last_name=last_name,
+                phone_number=application.phone_number,
+                birthdate=application.birthdate,
+                is_staff=False,
+                must_change_password=True,
+            )
+
+            application.approved_user = new_user
+            application.mark_reviewed(
+                reviewer=request.user,
+                status=AccountApplication.STATUS_APPROVED,
+                notes=notes,
+            )
+            application.save(update_fields=['approved_user', 'updated_at'])
+
+            send_mail(
+                subject='Park Guide application approved',
+                message=(
+                    f'Hello {application.full_name},\n\n'
+                    'Your Park Guide application has been approved.\n\n'
+                    f'Temporary account details:\n'
+                    f'Email: {application.email}\n'
+                    f'Password: {temp_password}\n\n'
+                    'Please sign in and change your password on your first login.\n\n'
+                    'Regards,\nPark Guide Team'
+                ),
+                from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', None),
+                recipient_list=[application.email],
+                fail_silently=True,
+            )
+
+            if not keep_cv and application.cv_storage_key:
+                try:
+                    delete_application_cv(application.cv_storage_key)
+                except Exception:
+                    pass
+                application.cv_storage_key = ''
+                application.cv_original_name = ''
+                application.cv_content_type = ''
+                application.cv_size = 0
+                application.save(update_fields=['cv_storage_key', 'cv_original_name', 'cv_content_type', 'cv_size', 'updated_at'])
+
+            messages.success(request, f'Application approved and temporary account created for {application.email}.')
+            return redirect(next_url)
+
+        if action == 'deny_application':
+            next_url = request.POST.get('next') or reverse('dashboard:users')
+            application_id = request.POST.get('application_id')
+            notes = (request.POST.get('admin_notes') or '').strip()
+            keep_cv = request.POST.get('keep_cv') == 'on'
+            application = AccountApplication.objects.filter(id=application_id).first()
+
+            if not application:
+                messages.error(request, 'Application not found.')
+                return redirect(next_url)
+
+            if application.status != AccountApplication.STATUS_PENDING:
+                messages.error(request, 'Only pending applications can be denied.')
+                return redirect(next_url)
+
+            application.mark_reviewed(
+                reviewer=request.user,
+                status=AccountApplication.STATUS_DENIED,
+                notes=notes,
+            )
+
+            send_mail(
+                subject='Park Guide application update',
+                message=(
+                    f'Hello {application.full_name},\n\n'
+                    'We are sorry to deny your application at this time.\n\n'
+                    'You may apply again in the future with updated details.\n\n'
+                    'Regards,\nPark Guide Team'
+                ),
+                from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', None),
+                recipient_list=[application.email],
+                fail_silently=True,
+            )
+
+            if not keep_cv and application.cv_storage_key:
+                try:
+                    delete_application_cv(application.cv_storage_key)
+                except Exception:
+                    pass
+                application.cv_storage_key = ''
+                application.cv_original_name = ''
+                application.cv_content_type = ''
+                application.cv_size = 0
+                application.save(update_fields=['cv_storage_key', 'cv_original_name', 'cv_content_type', 'cv_size', 'updated_at'])
+
+            messages.success(request, f'Application denied for {application.email}.')
+            return redirect(next_url)
     users = CustomUser.objects.all().order_by('-date_joined')
+    pending_applications = AccountApplication.objects.filter(status=AccountApplication.STATUS_PENDING).order_by('-created_at')
     
     # Search functionality
     search_query = request.GET.get('search', '')
@@ -813,6 +959,7 @@ def dashboard_users(request):
     total_pages = (total_users + per_page - 1) // per_page
     context = {
         'users': users_paginated,
+        'pending_applications': pending_applications,
         'total_users': total_users,
         'current_page': int(page),
         'total_pages': total_pages,
@@ -827,6 +974,70 @@ def dashboard_users(request):
         }
     }
     return render(request, 'dashboard/users.html', context)
+
+
+@login_required
+@user_passes_test(is_staff_or_admin)
+def dashboard_requests(request):
+    """Preview account application requests in a dedicated page."""
+    search_query = request.GET.get('search', '').strip()
+    status_filter = request.GET.get('status', '').strip().lower()
+
+    applications = AccountApplication.objects.select_related('reviewed_by', 'approved_user').order_by('-created_at')
+
+    if search_query:
+        applications = applications.filter(
+            Q(full_name__icontains=search_query)
+            | Q(email__icontains=search_query)
+            | Q(phone_number__icontains=search_query)
+        )
+
+    if status_filter in {
+        AccountApplication.STATUS_PENDING,
+        AccountApplication.STATUS_APPROVED,
+        AccountApplication.STATUS_DENIED,
+    }:
+        applications = applications.filter(status=status_filter)
+
+    page = request.GET.get('page', 1)
+    per_page = 20
+    total_requests = applications.count()
+    start = (int(page) - 1) * per_page
+    end = start + per_page
+    requests_paginated = applications[start:end]
+    total_pages = (total_requests + per_page - 1) // per_page
+
+    context = {
+        'requests': requests_paginated,
+        'search_query': search_query,
+        'status_filter': status_filter,
+        'current_page': int(page),
+        'total_pages': total_pages,
+        'total_requests': total_requests,
+        'stats': {
+            'pending': AccountApplication.objects.filter(status=AccountApplication.STATUS_PENDING).count(),
+            'approved': AccountApplication.objects.filter(status=AccountApplication.STATUS_APPROVED).count(),
+            'denied': AccountApplication.objects.filter(status=AccountApplication.STATUS_DENIED).count(),
+        },
+    }
+    return render(request, 'dashboard/requests.html', context)
+
+
+@login_required
+@user_passes_test(is_staff_or_admin)
+def dashboard_request_cv(request, application_id):
+    application = get_object_or_404(AccountApplication, id=application_id)
+    if not application.cv_storage_key:
+        messages.error(request, 'CV is not available for this request.')
+        return redirect('dashboard:requests')
+
+    try:
+        signed_url = generate_application_cv_url(application.cv_storage_key)
+    except Exception:
+        messages.error(request, 'Unable to generate CV preview link right now.')
+        return redirect('dashboard:requests')
+
+    return HttpResponseRedirect(signed_url)
 
 
 def _reset_enrollment_progress(enrollment):
@@ -966,6 +1177,28 @@ def dashboard_enrollments(request):
 @user_passes_test(is_staff_or_admin)
 def dashboard_courses(request):
     """Course management page - NEW: integrated with 5-course hierarchy system"""
+
+    if request.method == 'POST':
+        action = (request.POST.get('action') or '').strip()
+
+        if action == 'bulk_delete_courses':
+            course_ids = [value for value in request.POST.getlist('course_ids') if value]
+            if not course_ids:
+                messages.error(request, 'Select at least one course to delete.')
+                return redirect('dashboard:courses')
+
+            qs = Course.objects.filter(id__in=course_ids)
+            selected_count = qs.count()
+            if selected_count == 0:
+                messages.error(request, 'No matching courses found to delete.')
+                return redirect('dashboard:courses')
+
+            qs.delete()
+            messages.success(request, f'Deleted {selected_count} course(s).')
+            return redirect('dashboard:courses')
+
+        messages.error(request, 'Unknown course action.')
+        return redirect('dashboard:courses')
     
     # Get all courses with their relationships
     courses = Course.objects.prefetch_related('chapters', 'prerequisites').all().order_by('code')
@@ -1922,6 +2155,38 @@ def dashboard_badges(request):
     if request.method == 'POST':
         action = request.POST.get('action')
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
+        if action == 'delete_badge':
+            badge_id = (request.POST.get('badge_id') or '').strip()
+            badge = Badge.objects.filter(id=badge_id).first()
+            if not badge:
+                if is_ajax:
+                    return JsonResponse({'ok': False, 'error': 'Badge not found.'}, status=404)
+                messages.error(request, 'Badge not found.')
+                return redirect('dashboard:badges')
+
+            badge_name = badge.name
+            badge.delete()
+            if is_ajax:
+                return JsonResponse({'ok': True, 'message': f'Badge deleted: {badge_name}'})
+            messages.success(request, f'Badge deleted: {badge_name}')
+            return redirect('dashboard:badges')
+
+        if action == 'delete_badges_bulk':
+            badge_ids = [value for value in request.POST.getlist('badge_ids') if value]
+            if not badge_ids:
+                messages.error(request, 'Select at least one badge to delete.')
+                return redirect('dashboard:badges')
+
+            qs = Badge.objects.filter(id__in=badge_ids)
+            selected_count = qs.count()
+            if selected_count == 0:
+                messages.error(request, 'No matching badges found to delete.')
+                return redirect('dashboard:badges')
+
+            qs.delete()
+            messages.success(request, f'Deleted {selected_count} badge(s).')
+            return redirect('dashboard:badges')
         
         if action == 'revoke_badge':
             user_badge_id = request.POST.get('user_badge_id')
