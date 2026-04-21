@@ -3,7 +3,7 @@ import json
 import logging
 import random
 import uuid
-from base64 import urlsafe_b64encode
+from base64 import urlsafe_b64decode, urlsafe_b64encode
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -181,6 +181,37 @@ def _get_expected_passkey_origins():
     if len(origins) == 1:
         return origins[0]
     return origins
+
+
+def _decode_base64url(value):
+    normalized = str(value or '').replace('-', '+').replace('_', '/')
+    padded = normalized + ('=' * ((4 - len(normalized) % 4) % 4))
+    return urlsafe_b64decode(padded.encode('ascii'))
+
+
+def _get_origin_from_credential_payload(payload):
+    try:
+        client_data_b64 = payload.get('response', {}).get('clientDataJSON')
+        if not client_data_b64:
+            return ''
+        client_data = json.loads(_decode_base64url(client_data_b64).decode('utf-8'))
+        return str(client_data.get('origin') or '').strip()
+    except (ValueError, TypeError, json.JSONDecodeError, UnicodeDecodeError, AttributeError):
+        return ''
+
+
+def _get_validated_expected_origin(payload):
+    allowed_origins = _get_expected_passkey_origins()
+    if isinstance(allowed_origins, str):
+        allowed_origin_list = [allowed_origins]
+    else:
+        allowed_origin_list = list(allowed_origins)
+
+    actual_origin = _get_origin_from_credential_payload(payload)
+    if actual_origin and actual_origin in allowed_origin_list:
+        return actual_origin
+
+    return allowed_origin_list[0] if allowed_origin_list else ''
 
 
 class RegisterView(generics.CreateAPIView):
@@ -472,11 +503,16 @@ class PasskeyRegisterVerifyView(generics.GenericAPIView):
         if not cached or cached.get('user_id') != request.user.id:
             return Response({'detail': 'Challenge expired or invalid.'}, status=status.HTTP_400_BAD_REQUEST)
 
+        credential_payload = request.data.get('credential') or request.data
+        expected_origin = _get_validated_expected_origin(credential_payload)
+        if not expected_origin:
+            return Response({'detail': 'Unable to determine a valid passkey origin.'}, status=status.HTTP_400_BAD_REQUEST)
+
         try:
             verification = primitives['verify_registration_response'](
-                credential=request.data.get('credential') or request.data,
+                credential=credential_payload,
                 expected_challenge=cached['challenge'],
-                expected_origin=_get_expected_passkey_origins(),
+                expected_origin=expected_origin,
                 expected_rp_id=settings.PASSKEY_RP_ID,
                 require_user_verification=True,
             )
@@ -489,7 +525,6 @@ class PasskeyRegisterVerifyView(generics.GenericAPIView):
             )
             return Response({'detail': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
-        credential_payload = request.data.get('credential') or request.data
         credential_id = _get_credential_id_from_payload(credential_payload)
         if not credential_id:
             return Response({'detail': 'Credential id is missing.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -606,12 +641,16 @@ class PasskeyAuthenticationVerifyView(generics.GenericAPIView):
         if cached.get('email') and credential.user.email.lower() != cached['email']:
             return Response({'detail': 'Passkey does not match this account.'}, status=status.HTTP_401_UNAUTHORIZED)
 
+        expected_origin = _get_validated_expected_origin(credential_payload)
+        if not expected_origin:
+            return Response({'detail': 'Unable to determine a valid passkey origin.'}, status=status.HTTP_400_BAD_REQUEST)
+
         try:
             verification = primitives['verify_authentication_response'](
                 credential=credential_payload,
                 expected_challenge=cached['challenge'],
                 expected_rp_id=settings.PASSKEY_RP_ID,
-                expected_origin=_get_expected_passkey_origins(),
+                expected_origin=expected_origin,
                 credential_public_key=bytes(credential.credential_public_key),
                 credential_current_sign_count=credential.sign_count,
                 require_user_verification=True,
