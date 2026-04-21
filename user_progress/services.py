@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.db.models import Count
 from django.utils import timezone
-from courses.models import ModuleProgress
+from courses.models import ModuleProgress, ChapterProgress
 from notifications.services import create_notification_for_staff, create_notification_for_user
 from .models import Badge, UserBadge
 
@@ -27,23 +27,46 @@ def notify_badge_granted_to_user(user_badge, admin_user=None):
 
 
 def get_user_completed_module_counts(user_ids=None):
-    queryset = ModuleProgress.objects.filter(completed=True)
+    module_queryset = ModuleProgress.objects.filter(completed=True)
+    chapter_queryset = ChapterProgress.objects.filter(is_complete=True)
     if user_ids is not None:
-        queryset = queryset.filter(user_id__in=user_ids)
+        module_queryset = module_queryset.filter(user_id__in=user_ids)
+        chapter_queryset = chapter_queryset.filter(user_id__in=user_ids)
 
-    rows = queryset.values('user_id').annotate(completed_modules=Count('id'))
-    return {row['user_id']: row['completed_modules'] for row in rows}
+    module_rows = module_queryset.values('user_id').annotate(completed_modules=Count('id'))
+    chapter_rows = chapter_queryset.values('user_id').annotate(completed_chapters=Count('id'))
+
+    module_counts = {row['user_id']: row['completed_modules'] for row in module_rows}
+    chapter_counts = {row['user_id']: row['completed_chapters'] for row in chapter_rows}
+
+    merged = {}
+    all_user_ids = set(module_counts.keys()) | set(chapter_counts.keys())
+    for user_id in all_user_ids:
+        merged[user_id] = max(module_counts.get(user_id, 0), chapter_counts.get(user_id, 0))
+    return merged
 
 
 def get_user_completed_module_counts_for_badge(badge, user_ids=None):
-    queryset = ModuleProgress.objects.filter(completed=True)
+    module_queryset = ModuleProgress.objects.filter(completed=True)
+    chapter_queryset = ChapterProgress.objects.filter(is_complete=True)
     if badge.course_id:
-        queryset = queryset.filter(module__course=badge.course)
+        module_queryset = module_queryset.filter(module__course=badge.course)
+        chapter_queryset = chapter_queryset.filter(chapter__course=badge.course)
     if user_ids is not None:
-        queryset = queryset.filter(user_id__in=user_ids)
+        module_queryset = module_queryset.filter(user_id__in=user_ids)
+        chapter_queryset = chapter_queryset.filter(user_id__in=user_ids)
 
-    rows = queryset.values('user_id').annotate(completed_modules=Count('id'))
-    return {row['user_id']: row['completed_modules'] for row in rows}
+    module_rows = module_queryset.values('user_id').annotate(completed_modules=Count('id'))
+    chapter_rows = chapter_queryset.values('user_id').annotate(completed_chapters=Count('id'))
+
+    module_counts = {row['user_id']: row['completed_modules'] for row in module_rows}
+    chapter_counts = {row['user_id']: row['completed_chapters'] for row in chapter_rows}
+
+    merged = {}
+    all_user_ids = set(module_counts.keys()) | set(chapter_counts.keys())
+    for user_id in all_user_ids:
+        merged[user_id] = max(module_counts.get(user_id, 0), chapter_counts.get(user_id, 0))
+    return merged
 
 
 def get_user_granted_regular_badge_counts(user_ids=None):
@@ -66,13 +89,20 @@ def get_user_requirement_progress_for_badge(badge, user):
         return granted_badges_count, badge.required_badges_count
 
     if badge.course_id:
-        completed_modules = user.moduleprogress_set.filter(
+        completed_modules_legacy = user.moduleprogress_set.filter(
             completed=True,
             module__course=badge.course,
         ).count()
+        completed_chapters = user.chapter_progress.filter(
+            is_complete=True,
+            chapter__course=badge.course,
+        ).count()
     else:
-        completed_modules = user.moduleprogress_set.filter(completed=True).count()
-    return completed_modules, badge.required_completed_modules
+        completed_modules_legacy = user.moduleprogress_set.filter(completed=True).count()
+        completed_chapters = user.chapter_progress.filter(is_complete=True).count()
+
+    completed_units = max(completed_modules_legacy, completed_chapters)
+    return completed_units, badge.required_completed_modules
 
 
 def ensure_badge_rows_for_user(user):

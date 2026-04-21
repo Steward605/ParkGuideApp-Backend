@@ -301,6 +301,39 @@ class LessonViewSet(viewsets.ModelViewSet):
                     'is_complete': is_complete
                 }
             )
+        
+        # After updating all chapter progress, update the course enrollment progress
+        LessonViewSet._update_course_enrollment_progress(chapter.course)
+
+    @staticmethod
+    def _update_course_enrollment_progress(course):
+        """Update CourseEnrollment progress based on completed chapters"""
+        # Get total chapters for this course
+        total_chapters = course.chapters.count()
+        
+        # For each user enrolled in this course
+        for enrollment in CourseEnrollment.objects.filter(course=course):
+            # Count completed chapters for this user
+            completed_chapters = ChapterProgress.objects.filter(
+                user=enrollment.user,
+                chapter__course=course,
+                is_complete=True
+            ).count()
+            
+            # Update enrollment progress
+            progress_percentage = (completed_chapters / total_chapters * 100) if total_chapters > 0 else 0
+            enrollment.completed_chapters = completed_chapters
+            enrollment.total_chapters = total_chapters
+            enrollment.progress_percentage = progress_percentage
+            
+            # Auto-update status based on progress
+            if progress_percentage >= 100 and completed_chapters == total_chapters:
+                enrollment.status = 'completed'
+            elif progress_percentage > 0:
+                enrollment.status = 'in_progress'
+            
+            enrollment.save()
+            print(f"[_update_course_enrollment_progress] {enrollment.user.username} - {course.code}: {completed_chapters}/{total_chapters} ({progress_percentage:.1f}%)")
 
 
 # ============================================================================

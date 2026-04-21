@@ -7,7 +7,7 @@ from courses.models import CourseProgress
 from park_guide.admin_mixins import DashboardStatsChangeListMixin
 from user_progress.models import UserBadge
 
-from .models import CustomUser
+from .models import CustomUser, PasskeyCredential
 
 
 @admin.register(CustomUser)
@@ -108,3 +108,18 @@ class CustomUserAdmin(DashboardStatsChangeListMixin, UserAdmin):
             {'label': 'Granted badges', 'value': granted_badges},
             {'label': 'Learners', 'value': learners.count()},
         ]
+
+
+@admin.register(PasskeyCredential)
+class PasskeyCredentialAdmin(admin.ModelAdmin):
+    list_display = (
+        'user',
+        'label',
+        'credential_device_type',
+        'credential_backed_up',
+        'last_used_at',
+        'created_at',
+    )
+    search_fields = ('user__email', 'user__username', 'label', 'credential_id')
+    list_filter = ('credential_backed_up', 'credential_device_type', 'created_at', 'last_used_at')
+    readonly_fields = ('created_at', 'updated_at', 'last_used_at')

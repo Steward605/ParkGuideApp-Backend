@@ -29,6 +29,21 @@ Current configuration is environment-driven (see `park_guide/settings.py`):
 - `DB_CONN_MAX_AGE` (optional)
 - `DB_CONN_HEALTH_CHECKS` (optional)
 
+Email configuration (SMTP) is also environment-driven:
+- `EMAIL_BACKEND` (default: `django.core.mail.backends.smtp.EmailBackend`)
+- `EMAIL_HOST`
+- `EMAIL_PORT`
+- `EMAIL_HOST_USER`
+- `EMAIL_HOST_PASSWORD`
+- `EMAIL_USE_TLS`
+- `EMAIL_USE_SSL`
+- `DEFAULT_FROM_EMAIL`
+
+Passkey configuration is environment-driven:
+- `PASSKEY_RP_ID`
+- `PASSKEY_RP_NAME`
+- `PASSKEY_ORIGIN`
+
 ## Setup
 1. Create and activate a virtual environment:
 
@@ -54,6 +69,31 @@ pip install -r requirements.txt
 - `.env`
 - Firebase service account JSON (under `secrets/`)
 - Any additional project secrets used by your environment
+
+Example SMTP block in `.env`:
+
+```env
+EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_HOST_USER=your_email@gmail.com
+EMAIL_HOST_PASSWORD=your_app_password
+EMAIL_USE_TLS=True
+EMAIL_USE_SSL=False
+DEFAULT_FROM_EMAIL=your_email@gmail.com
+```
+
+Example passkey block in `.env`:
+
+```env
+PASSKEY_RP_ID=localhost
+PASSKEY_RP_NAME=Park Guide App
+PASSKEY_ORIGIN=http://localhost:3000
+```
+
+Provider notes:
+- Gmail: enable 2FA and create an App Password, then use that as `EMAIL_HOST_PASSWORD`.
+- Outlook/Office365: `EMAIL_HOST=smtp.office365.com`, `EMAIL_PORT=587`, `EMAIL_USE_TLS=True`.
 
 4. Run migrations:
 For first time setup
@@ -149,6 +189,12 @@ Base routes:
 Authentication:
 - `POST /api/accounts/register/`
 - `POST /api/accounts/login/`
+- `POST /api/accounts/passkeys/login/options/`
+- `POST /api/accounts/passkeys/login/verify/`
+- `GET /api/accounts/passkeys/status/`
+- `POST /api/accounts/passkeys/register/options/`
+- `POST /api/accounts/passkeys/register/verify/`
+- `POST /api/accounts/passkeys/disable/`
 - `POST /api/accounts/token/refresh/`
 
 Training:

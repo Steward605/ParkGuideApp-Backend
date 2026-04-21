@@ -193,6 +193,24 @@ STATICFILES_DIRS = [
     BASE_DIR / 'static',
     BASE_DIR / 'images',
 ]
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'no-reply@parkguide.local')
+PASSKEY_RP_ID = os.getenv('PASSKEY_RP_ID', 'localhost')
+PASSKEY_RP_NAME = os.getenv('PASSKEY_RP_NAME', 'Park Guide App')
+PASSKEY_ORIGIN = os.getenv('PASSKEY_ORIGIN', 'http://localhost:3000')
+
+# Email settings (SMTP)
+EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
+EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = _env_int('EMAIL_PORT', default=587)
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
+EMAIL_USE_TLS = _env_bool('EMAIL_USE_TLS', default=True)
+EMAIL_USE_SSL = _env_bool('EMAIL_USE_SSL', default=False)
+EMAIL_TIMEOUT = _env_int('EMAIL_TIMEOUT', default=30)
+SERVER_EMAIL = os.getenv('SERVER_EMAIL', DEFAULT_FROM_EMAIL)
 
 AUTH_USER_MODEL = 'accounts.CustomUser'
 

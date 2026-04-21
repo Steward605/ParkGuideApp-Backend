@@ -1,0 +1,149 @@
+{% extends "dashboard/base.html" %}
+
+{% block page_title %}<i class="bi bi-file-earmark-text me-2"></i>Application Requests{% endblock %}
+
+{% block content %}
+<div class="glass-card mb-4">
+    <div class="row g-3 align-items-center">
+        <div class="col-lg-7">
+            <form method="get" class="row g-2">
+                <div class="col-md-7">
+                    <input
+                        type="text"
+                        class="form-control"
+                        name="search"
+                        placeholder="Search by applicant name, email, or phone"
+                        value="{{ search_query }}"
+                    >
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" name="status">
+                        <option value="" {% if not status_filter %}selected{% endif %}>All statuses</option>
+                        <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                        <option value="approved" {% if status_filter == 'approved' %}selected{% endif %}>Approved</option>
+                        <option value="denied" {% if status_filter == 'denied' %}selected{% endif %}>Denied</option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-grid">
+                    <button type="submit" class="btn btn-primary">Filter</button>
+                </div>
+            </form>
+        </div>
+        <div class="col-lg-5">
+            <div class="d-flex flex-wrap justify-content-lg-end gap-2">
+                <span class="badge text-bg-warning">Pending: {{ stats.pending }}</span>
+                <span class="badge text-bg-success">Approved: {{ stats.approved }}</span>
+                <span class="badge text-bg-danger">Denied: {{ stats.denied }}</span>
+            </div>
+            <div class="small text-muted mt-2 text-lg-end">Total requests: {{ total_requests }}</div>
+        </div>
+    </div>
+</div>
+
+<div class="glass-card">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold mb-0">Request Preview</h5>
+        <a href="{% url 'dashboard:users' %}" class="btn btn-sm btn-outline-primary">Manage in Users</a>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>Applicant</th>
+                    <th>Contact</th>
+                    <th>Birthdate</th>
+                    <th>CV</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                    <th>Reviewed</th>
+                    <th>Submitted</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for request in requests %}
+                <tr>
+                    <td>{{ request.full_name }}</td>
+                    <td>
+                        <div>{{ request.email }}</div>
+                        <small class="text-muted">{{ request.phone_number }}</small>
+                    </td>
+                    <td>{{ request.birthdate|date:"d M Y" }}</td>
+                    <td>
+                        {% if request.cv_storage_key %}
+                            <a href="{% url 'dashboard:request_cv' request.id %}" target="_blank" rel="noopener">
+                                {{ request.cv_original_name|default:"View CV" }}
+                            </a>
+                        {% else %}
+                            <span class="text-muted">No file</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if request.status == 'pending' %}
+                            <span class="badge text-bg-warning">Pending</span>
+                        {% elif request.status == 'approved' %}
+                            <span class="badge text-bg-success">Approved</span>
+                        {% else %}
+                            <span class="badge text-bg-danger">Denied</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if request.status == 'pending' %}
+                            <div class="d-flex flex-column gap-2">
+                                <form method="post" action="{% url 'dashboard:users' %}" class="d-flex gap-2 align-items-center">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="approve_application">
+                                    <input type="hidden" name="application_id" value="{{ request.id }}">
+                                    <input type="hidden" name="next" value="{% url 'dashboard:requests' %}">
+                                    <input class="form-check-input" type="checkbox" name="keep_cv" checked title="Keep CV in Firebase">
+                                    <button type="submit" class="btn btn-sm btn-success">Approve</button>
+                                </form>
+                                <form method="post" action="{% url 'dashboard:users' %}" class="d-flex gap-2 align-items-center">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="deny_application">
+                                    <input type="hidden" name="application_id" value="{{ request.id }}">
+                                    <input type="hidden" name="next" value="{% url 'dashboard:requests' %}">
+                                    <input class="form-check-input" type="checkbox" name="keep_cv" checked title="Keep CV in Firebase">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Deny</button>
+                                </form>
+                            </div>
+                        {% else %}
+                            <span class="text-muted">Handled</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if request.reviewed_by %}
+                            <div>{{ request.reviewed_by.username }}</div>
+                            <small class="text-muted">{{ request.reviewed_at|date:"d M Y H:i" }}</small>
+                        {% else %}
+                            <span class="text-muted">-</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ request.created_at|date:"d M Y H:i" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="text-center text-muted py-4">No requests found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if total_pages > 1 %}
+    <div class="d-flex justify-content-end mt-3">
+        <nav aria-label="Request page navigation">
+            <ul class="pagination pagination-sm mb-0">
+                {% for p in "x"|rjust:total_pages %}
+                    {% with idx=forloop.counter %}
+                    <li class="page-item {% if idx == current_page %}active{% endif %}">
+                        <a class="page-link" href="?page={{ idx }}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">{{ idx }}</a>
+                    </li>
+                    {% endwith %}
+                {% endfor %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

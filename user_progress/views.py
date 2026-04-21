@@ -2,7 +2,7 @@ from rest_framework import permissions, viewsets
 
 from .models import Badge, UserBadge
 from .serializers import BadgeStatusSerializer, UserBadgeSerializer
-from .services import ensure_badge_rows_for_user, sync_user_badges
+from .services import ensure_badge_rows_for_user, sync_user_badges, get_user_requirement_progress_for_badge
 
 
 class BadgeViewSet(viewsets.ReadOnlyModelViewSet):
@@ -25,7 +25,6 @@ class BadgeViewSet(viewsets.ReadOnlyModelViewSet):
         ).values_list('badge_id', 'status')
         status_map = {badge_id: status for badge_id, status in status_rows}
 
-        global_completed = user.moduleprogress_set.filter(completed=True).count() if hasattr(user, 'moduleprogress_set') else 0
         granted_regular_badges = user.badge_progress.filter(
             status=UserBadge.STATUS_GRANTED,
             badge__is_major_badge=False,
@@ -38,13 +37,7 @@ class BadgeViewSet(viewsets.ReadOnlyModelViewSet):
                 completed_count_map[badge.id] = 0
                 completed_badge_count_map[badge.id] = granted_regular_badges
                 continue
-            if badge.course_id:
-                completed_count = user.moduleprogress_set.filter(
-                    completed=True,
-                    module__course=badge.course,
-                ).count()
-            else:
-                completed_count = global_completed
+            completed_count, _ = get_user_requirement_progress_for_badge(badge, user)
             completed_count_map[badge.id] = completed_count
             completed_badge_count_map[badge.id] = 0
 
