@@ -531,37 +531,56 @@ class PasskeyRegisterVerifyView(generics.GenericAPIView):
                 request_id,
                 expected_origin,
             )
+            print(
+                f"Unexpected passkey registration verification error "
+                f"user_id={request.user.id} request_id={request_id} origin={expected_origin}: {exc}"
+            )
             return Response(
                 {'detail': f'Unexpected passkey registration verification error: {exc}'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-        credential_id = _get_credential_id_from_payload(credential_payload)
-        if not credential_id:
-            return Response({'detail': 'Credential id is missing.'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            credential_id = _get_credential_id_from_payload(credential_payload)
+            if not credential_id:
+                return Response({'detail': 'Credential id is missing.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        PasskeyCredential.objects.update_or_create(
-            credential_id=credential_id,
-            defaults={
-                'user': request.user,
-                'credential_public_key': verification.credential_public_key,
-                'sign_count': verification.sign_count,
-                'transports': credential_payload.get('response', {}).get('transports', []),
-                'credential_device_type': str(getattr(verification, 'credential_device_type', '') or ''),
-                'credential_backed_up': bool(getattr(verification, 'credential_backed_up', False)),
-                'label': cached.get('label', ''),
-            },
-        )
+            PasskeyCredential.objects.update_or_create(
+                credential_id=credential_id,
+                defaults={
+                    'user': request.user,
+                    'credential_public_key': verification.credential_public_key,
+                    'sign_count': verification.sign_count,
+                    'transports': credential_payload.get('response', {}).get('transports', []),
+                    'credential_device_type': str(getattr(verification, 'credential_device_type', '') or ''),
+                    'credential_backed_up': bool(getattr(verification, 'credential_backed_up', False)),
+                    'label': cached.get('label', ''),
+                },
+            )
 
-        cache.delete(_cache_key(PASSKEY_REGISTER_CACHE_PREFIX, request_id))
-        return Response(
-            {
-                'detail': 'Passkey registered successfully.',
-                'has_passkey': True,
-                'passkey_count': request.user.passkey_credentials.count(),
-            },
-            status=status.HTTP_201_CREATED,
-        )
+            cache.delete(_cache_key(PASSKEY_REGISTER_CACHE_PREFIX, request_id))
+            return Response(
+                {
+                    'detail': 'Passkey registered successfully.',
+                    'has_passkey': True,
+                    'passkey_count': request.user.passkey_credentials.count(),
+                },
+                status=status.HTTP_201_CREATED,
+            )
+        except Exception as exc:
+            logger.exception(
+                "Unexpected passkey registration persistence error for user_id=%s request_id=%s",
+                request.user.id,
+                request_id,
+            )
+            print(
+                f"Unexpected passkey registration persistence error "
+                f"user_id={request.user.id} request_id={request_id}: {exc}"
+            )
+            return Response(
+                {'detail': f'Unexpected passkey registration persistence error: {exc}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
 
 class PasskeyAuthenticationOptionsView(generics.GenericAPIView):
@@ -675,27 +694,46 @@ class PasskeyAuthenticationVerifyView(generics.GenericAPIView):
                 credential.user_id,
                 expected_origin,
             )
+            print(
+                f"Unexpected passkey authentication verification error "
+                f"request_id={request_id} user_id={credential.user_id} origin={expected_origin}: {exc}"
+            )
             return Response(
                 {'detail': f'Unexpected passkey authentication verification error: {exc}'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-        credential.sign_count = verification.new_sign_count
-        credential.credential_device_type = str(getattr(verification, 'credential_device_type', '') or '')
-        credential.credential_backed_up = bool(getattr(verification, 'credential_backed_up', False))
-        credential.last_used_at = timezone.now()
-        credential.save(
-            update_fields=[
-                'sign_count',
-                'credential_device_type',
-                'credential_backed_up',
-                'last_used_at',
-                'updated_at',
-            ]
-        )
-        cache.delete(_cache_key(PASSKEY_AUTH_CACHE_PREFIX, request_id))
+        try:
+            credential.sign_count = verification.new_sign_count
+            credential.credential_device_type = str(getattr(verification, 'credential_device_type', '') or '')
+            credential.credential_backed_up = bool(getattr(verification, 'credential_backed_up', False))
+            credential.last_used_at = timezone.now()
+            credential.save(
+                update_fields=[
+                    'sign_count',
+                    'credential_device_type',
+                    'credential_backed_up',
+                    'last_used_at',
+                    'updated_at',
+                ]
+            )
+            cache.delete(_cache_key(PASSKEY_AUTH_CACHE_PREFIX, request_id))
 
-        return Response(_build_auth_response(credential.user), status=status.HTTP_200_OK)
+            return Response(_build_auth_response(credential.user), status=status.HTTP_200_OK)
+        except Exception as exc:
+            logger.exception(
+                "Unexpected passkey authentication persistence error for request_id=%s user_id=%s",
+                request_id,
+                credential.user_id,
+            )
+            print(
+                f"Unexpected passkey authentication persistence error "
+                f"request_id={request_id} user_id={credential.user_id}: {exc}"
+            )
+            return Response(
+                {'detail': f'Unexpected passkey authentication persistence error: {exc}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
 
 class PasskeyDisableView(generics.GenericAPIView):
