@@ -1994,88 +1994,6 @@ def dashboard_reset_student_progress(request, user_id):
 @login_required
 @user_passes_test(is_staff_or_admin)
 def dashboard_badges(request):
-<<<<<<< HEAD
-    """Badge management and approval page"""
-    if request.method == 'POST':
-        action = request.POST.get('action')
-
-        if action == 'create_badge':
-            name = request.POST.get('name', '').strip()
-            description = request.POST.get('description', '').strip()
-            course_id = request.POST.get('course_id')
-            required_modules = request.POST.get('required_completed_modules') or '1'
-            auto_approve = request.POST.get('auto_approve_when_eligible') == 'on'
-
-            if not name:
-                messages.error(request, 'Badge name is required.')
-                return redirect('dashboard:badges')
-            if Badge.objects.filter(name=name).exists():
-                messages.error(request, 'A badge with this name already exists.')
-                return redirect('dashboard:badges')
-
-            course = None
-            if course_id:
-                course = Course.objects.filter(id=course_id).first()
-
-            try:
-                required_modules_int = max(1, int(required_modules))
-            except ValueError:
-                required_modules_int = 1
-
-            Badge.objects.create(
-                name=name,
-                description=description,
-                course=course,
-                required_completed_modules=required_modules_int,
-                auto_approve_when_eligible=auto_approve,
-                is_active=True,
-            )
-            messages.success(request, f'Badge "{name}" created successfully.')
-            return redirect('dashboard:badges')
-        if action == 'approve_all_badges':
-            with transaction.atomic():
-                pending_requests = list(
-                    UserBadge.objects
-                    .select_for_update()
-                    .select_related('user', 'badge')
-                    .filter(status='pending')
-                )
-                pending_count = len(pending_requests)
-                if pending_count == 0:
-                    messages.info(request, 'There are no pending badge requests to approve.')
-                    return redirect('dashboard:badges')
-                for user_badge in pending_requests:
-                    user_badge.status = 'granted'
-                    user_badge.is_awarded = True
-                    user_badge.awarded_by = request.user
-                    user_badge.save(update_fields=['status', 'is_awarded', 'awarded_by'])
-            messages.success(
-                request,
-                f'Approved {pending_count} badge request{"s" if pending_count != 1 else ""}.'
-            )
-            return redirect('dashboard:badges')
-        if action in ('approve_badge', 'reject_badge'):
-            user_badge_id = request.POST.get('user_badge_id')
-            user_badge = UserBadge.objects.filter(id=user_badge_id).select_related('user', 'badge').first()
-            if not user_badge:
-                messages.error(request, 'Badge request not found.')
-                return redirect('dashboard:badges')
-
-            if action == 'approve_badge':
-                user_badge.status = UserBadge.STATUS_GRANTED
-                user_badge.is_awarded = True
-                user_badge.awarded_by = request.user
-                user_badge.save(update_fields=['status', 'is_awarded', 'awarded_by'])
-                messages.success(request, f'Approved {user_badge.badge.name} for {user_badge.user.username}.')
-            else:
-                user_badge.status = UserBadge.STATUS_REJECTED
-                user_badge.is_awarded = False
-                user_badge.save(update_fields=['status', 'is_awarded'])
-                messages.success(request, f'Rejected {user_badge.badge.name} for {user_badge.user.username}.')
-            return redirect('dashboard:badges')
-
-    # Get badges
-=======
     """Badge management, tracking, and admin approval page"""
     from user_progress.services import (
         revoke_badge, re_grant_badge, grant_course_completion_badge,
@@ -2155,6 +2073,63 @@ def dashboard_badges(request):
     if request.method == 'POST':
         action = request.POST.get('action')
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
+        if action == 'create_badge':
+            name = request.POST.get('name', '').strip()
+            description = request.POST.get('description', '').strip()
+            course_id = request.POST.get('course_id')
+            required_modules = request.POST.get('required_completed_modules') or '1'
+            auto_approve = request.POST.get('auto_approve_when_eligible') == 'on'
+
+            if not name:
+                messages.error(request, 'Badge name is required.')
+                return redirect('dashboard:badges')
+            if Badge.objects.filter(name=name).exists():
+                messages.error(request, 'A badge with this name already exists.')
+                return redirect('dashboard:badges')
+
+            course = None
+            if course_id:
+                course = Course.objects.filter(id=course_id).first()
+
+            try:
+                required_modules_int = max(1, int(required_modules))
+            except ValueError:
+                required_modules_int = 1
+
+            Badge.objects.create(
+                name=name,
+                description=description,
+                course=course,
+                required_completed_modules=required_modules_int,
+                auto_approve_when_eligible=auto_approve,
+                is_active=True,
+            )
+            messages.success(request, f'Badge "{name}" created successfully.')
+            return redirect('dashboard:badges')
+
+        if action == 'approve_all_badges':
+            with transaction.atomic():
+                pending_requests = list(
+                    UserBadge.objects
+                    .select_for_update()
+                    .select_related('user', 'badge')
+                    .filter(status='pending')
+                )
+                pending_count = len(pending_requests)
+                if pending_count == 0:
+                    messages.info(request, 'There are no pending badge requests to approve.')
+                    return redirect('dashboard:badges')
+                for user_badge in pending_requests:
+                    user_badge.status = UserBadge.STATUS_GRANTED
+                    user_badge.is_awarded = True
+                    user_badge.awarded_by = request.user
+                    user_badge.save(update_fields=['status', 'is_awarded', 'awarded_by'])
+            messages.success(
+                request,
+                f'Approved {pending_count} badge request{"s" if pending_count != 1 else ""}.'
+            )
+            return redirect('dashboard:badges')
 
         if action == 'delete_badge':
             badge_id = (request.POST.get('badge_id') or '').strip()
@@ -2315,43 +2290,16 @@ def dashboard_badges(request):
                 messages.error(request, 'Badge not found.')
                 return redirect('dashboard:badges')
 
-    # Get all badges with stats
->>>>>>> 612c397 (DevBuild 1.1.0 Backend Server updates)
     badges = Badge.objects.annotate(
-        total_granted=Count('user_badges', filter=Q(user_badges__status='granted', user_badges__is_awarded=True)),
+        granted_badges=Count('user_badges', filter=Q(user_badges__status='granted', user_badges__is_awarded=True)),
         total_revoked=Count('user_badges', filter=Q(user_badges__revoked_at__isnull=False)),
         pending_approvals=Count('user_badges', filter=Q(user_badges__status='pending')),
-    ).order_by('-total_granted')
+    ).order_by('-granted_badges')
     
     # Separate course badges and achievement badges
     course_badges = badges.filter(is_major_badge=False).filter(course__isnull=False)
     achievement_badges = badges.filter(is_major_badge=True)
     
-<<<<<<< HEAD
-    # Pagination
-    page = request.GET.get('page', 1)
-    per_page = 20
-    total = pending_badges.count()
-    start = (int(page) - 1) * per_page
-    end = start + per_page
-    
-    pending_paginated = pending_badges[start:end]
-    total_pages = (total + per_page - 1) // per_page
-    
-    context = {
-        'badges': badges,
-        'pending_badges': pending_paginated,
-        'total_pending': total,
-        'current_page': int(page),
-        'total_pages': total_pages,
-        'stats': {
-            'total_badges': Badge.objects.count(),
-            'active_badges': Badge.objects.filter(is_active=True).count(),
-            'pending_approvals': UserBadge.objects.filter(status='pending').count(),
-            'total_granted': UserBadge.objects.filter(status='granted').count(),
-        },
-        'courses': Course.objects.all().order_by('id'),
-=======
     # Get badge stats
     all_user_badges = UserBadge.objects.all()
     stats = {
@@ -2361,7 +2309,6 @@ def dashboard_badges(request):
         'total_granted': all_user_badges.filter(status='granted', is_awarded=True).count(),
         'total_revoked': all_user_badges.filter(revoked_at__isnull=False).count(),
         'pending_approvals': all_user_badges.filter(status='pending').count(),
->>>>>>> 612c397 (DevBuild 1.1.0 Backend Server updates)
     }
     
     # Get pending badges for admin approval

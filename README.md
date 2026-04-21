@@ -171,7 +171,6 @@ python manage.py bootstrap_private_bucket
 
 ### Example `course-progress` response row
 
-<<<<<<< HEAD
 ```json
 {
   "id": 1,
@@ -184,55 +183,6 @@ python manage.py bootstrap_private_bucket
   "updated_at": "2026-03-16T12:00:00Z"
 }
 ```
-=======
-## API Overview
-Base routes:
-- `/api/`
-- `/api/accounts/`
-- `/api/notifications/`
-- `/api/user-progress/`
-- `/api/secure-files/`
-
-Authentication:
-- `POST /api/accounts/register/`
-- `POST /api/accounts/login/`
-- `POST /api/accounts/passkeys/login/options/`
-- `POST /api/accounts/passkeys/login/verify/`
-- `GET /api/accounts/passkeys/status/`
-- `POST /api/accounts/passkeys/register/options/`
-- `POST /api/accounts/passkeys/register/verify/`
-- `POST /api/accounts/passkeys/disable/`
-- `POST /api/accounts/token/refresh/`
-
-Training:
-- `GET /api/courses/`
-- `GET /api/modules/`
-- `GET /api/progress/`
-- `POST /api/progress/`
-- `GET /api/course-progress/`
-- `POST /api/course-progress/`
-- `POST /api/complete-module/`
-
-Badges:
-- `GET /api/user-progress/badges/`
-- `GET /api/user-progress/my-badges/`
-
-Notifications:
-- `GET /api/notifications/items/`
-- `POST /api/notifications/items/{id}/mark-read/`
-- `POST /api/notifications/items/mark-all-read/`
-- `POST /api/notifications/items/clear-read/`
-
-Secure files:
-- `GET /api/secure-files/files/`
-- `POST /api/secure-files/files/` with multipart field `file`
-- `GET /api/secure-files/files/{id}/`
-- `DELETE /api/secure-files/files/{id}/`
-- `GET /api/secure-files/files/{id}/download-url/`
-- `GET /api/secure-files/files/{id}/download/`
-
-All API endpoints require `Authorization: Bearer <access_token>` unless noted otherwise.
->>>>>>> 1c68695 (Fixes to various stuff)
 
 ## Admin
 Open Django admin:
