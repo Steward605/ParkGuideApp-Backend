@@ -9,6 +9,7 @@ import struct
 import time
 import uuid
 from base64 import b32decode, b32encode
+from base64 import urlsafe_b64decode
 from urllib.parse import quote
 
 from django.conf import settings
@@ -245,6 +246,40 @@ def _serialize_options(options, options_to_json):
 
 def _get_credential_id_from_payload(payload):
     return str(payload.get('id') or payload.get('rawId') or '').strip()
+
+
+def _compact_credential_device_type(value):
+    return str(value or '').strip()[:32]
+
+
+def _get_validated_expected_origin(credential_payload):
+    response_payload = credential_payload.get('response') or {}
+    client_data_json = response_payload.get('clientDataJSON')
+    if not client_data_json:
+        return ''
+
+    try:
+        padding = '=' * ((4 - len(client_data_json) % 4) % 4)
+        decoded = urlsafe_b64decode(f'{client_data_json}{padding}'.encode('utf-8'))
+        client_data = json.loads(decoded.decode('utf-8'))
+    except Exception:
+        logger.warning('Unable to decode passkey clientDataJSON payload')
+        return ''
+
+    origin = str(client_data.get('origin') or '').strip()
+    if not origin:
+        return ''
+
+    expected_origin = str(settings.PASSKEY_ORIGIN or '').strip()
+    if expected_origin and origin != expected_origin:
+        logger.warning(
+            'Passkey origin mismatch: expected=%s received=%s',
+            expected_origin,
+            origin,
+        )
+        return ''
+
+    return origin
 
 
 def _compact_credential_device_type(value):
@@ -831,6 +866,16 @@ class PasskeyRegisterVerifyView(generics.GenericAPIView):
             credential_id = _get_credential_id_from_payload(credential_payload)
             if not credential_id:
                 return Response({'detail': 'Credential id is missing.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            logger.info(
+                "Passkey registration persistence attempt user_id=%s request_id=%s credential_id=%s device_type=%s backed_up=%s transports=%s",
+                request.user.id,
+                request_id,
+                credential_id,
+                _compact_credential_device_type(getattr(verification, 'credential_device_type', '')),
+                bool(getattr(verification, 'credential_backed_up', False)),
+                credential_payload.get('response', {}).get('transports', []),
+            )
 
             PasskeyCredential.objects.update_or_create(
                 credential_id=credential_id,
