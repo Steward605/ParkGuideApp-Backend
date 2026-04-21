@@ -3,6 +3,7 @@ import json
 import logging
 import random
 import uuid
+from base64 import urlsafe_b64encode
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -150,6 +151,36 @@ def _serialize_options(options, options_to_json):
 
 def _get_credential_id_from_payload(payload):
     return str(payload.get('id') or payload.get('rawId') or '').strip()
+
+
+def _build_android_passkey_origin():
+    fingerprint = str(getattr(settings, 'PASSKEY_ANDROID_SHA256', '') or '').strip()
+    if not fingerprint:
+        return ''
+
+    try:
+        fingerprint_bytes = bytes.fromhex(fingerprint.replace(':', ''))
+    except ValueError:
+        logger.warning("Invalid PASSKEY_ANDROID_SHA256 fingerprint format for Android passkey origin.")
+        return ''
+
+    encoded = urlsafe_b64encode(fingerprint_bytes).decode('ascii').rstrip('=')
+    return f'android:apk-key-hash:{encoded}'
+
+
+def _get_expected_passkey_origins():
+    origins = []
+    web_origin = str(getattr(settings, 'PASSKEY_ORIGIN', '') or '').strip()
+    android_origin = _build_android_passkey_origin()
+
+    if web_origin:
+        origins.append(web_origin)
+    if android_origin and android_origin not in origins:
+        origins.append(android_origin)
+
+    if len(origins) == 1:
+        return origins[0]
+    return origins
 
 
 class RegisterView(generics.CreateAPIView):
@@ -445,7 +476,7 @@ class PasskeyRegisterVerifyView(generics.GenericAPIView):
             verification = primitives['verify_registration_response'](
                 credential=request.data.get('credential') or request.data,
                 expected_challenge=cached['challenge'],
-                expected_origin=settings.PASSKEY_ORIGIN,
+                expected_origin=_get_expected_passkey_origins(),
                 expected_rp_id=settings.PASSKEY_RP_ID,
                 require_user_verification=True,
             )
@@ -580,7 +611,7 @@ class PasskeyAuthenticationVerifyView(generics.GenericAPIView):
                 credential=credential_payload,
                 expected_challenge=cached['challenge'],
                 expected_rp_id=settings.PASSKEY_RP_ID,
-                expected_origin=settings.PASSKEY_ORIGIN,
+                expected_origin=_get_expected_passkey_origins(),
                 credential_public_key=bytes(credential.credential_public_key),
                 credential_current_sign_count=credential.sign_count,
                 require_user_verification=True,
