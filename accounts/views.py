@@ -1,5 +1,6 @@
 # accounts/views.py
 import json
+import logging
 import random
 import uuid
 
@@ -25,6 +26,7 @@ from .serializers import (
 )
 
 User = get_user_model()
+logger = logging.getLogger(__name__)
 
 PASSKEY_REGISTER_CACHE_PREFIX = 'passkey_register'
 PASSKEY_AUTH_CACHE_PREFIX = 'passkey_auth'
@@ -448,6 +450,12 @@ class PasskeyRegisterVerifyView(generics.GenericAPIView):
                 require_user_verification=True,
             )
         except primitives['InvalidRegistrationResponse'] as exc:
+            logger.warning(
+                "Passkey registration verification failed for user_id=%s request_id=%s detail=%s",
+                request.user.id,
+                request_id,
+                str(exc),
+            )
             return Response({'detail': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
         credential_payload = request.data.get('credential') or request.data
