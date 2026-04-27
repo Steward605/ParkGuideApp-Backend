@@ -255,6 +255,7 @@ class GuideLocationSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(source='user.id', read_only=True)
     name = serializers.SerializerMethodField(read_only=True)
     email = serializers.EmailField(source='user.email', read_only=True)
+    profile_image_url = serializers.SerializerMethodField(read_only=True)
     last_seen = serializers.DateTimeField(source='updated_at', read_only=True)
 
     class Meta:
@@ -263,6 +264,7 @@ class GuideLocationSerializer(serializers.ModelSerializer):
             'id',
             'name',
             'email',
+            'profile_image_url',
             'latitude',
             'longitude',
             'accuracy',
@@ -275,6 +277,9 @@ class GuideLocationSerializer(serializers.ModelSerializer):
     def get_name(self, obj):
         full_name = f'{obj.user.first_name} {obj.user.last_name}'.strip()
         return full_name or obj.user.username or obj.user.email
+
+    def get_profile_image_url(self, obj):
+        return generate_profile_image_url(getattr(obj.user, 'profile_image_path', ''))
 
     def validate_latitude(self, value):
         if value < -90 or value > 90:

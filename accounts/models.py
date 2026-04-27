@@ -165,8 +165,8 @@ class GuideLocation(models.Model):
         on_delete=models.CASCADE,
         related_name='guide_location',
     )
-    latitude = models.DecimalField(max_digits=9, decimal_places=6)
-    longitude = models.DecimalField(max_digits=9, decimal_places=6)
+    latitude = models.FloatField()
+    longitude = models.FloatField()
     accuracy = models.FloatField(null=True, blank=True)
     heading = models.FloatField(null=True, blank=True)
     speed = models.FloatField(null=True, blank=True)
