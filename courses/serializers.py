@@ -1,5 +1,8 @@
 # Comprehensive serializers for new registration-based course system
 
+from urllib.parse import unquote, urlparse
+
+from django.conf import settings
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from .models import (
@@ -10,6 +13,50 @@ from .models import (
 )
 
 User = get_user_model()
+
+
+def _firebase_storage_path(value):
+    if not value or not isinstance(value, str):
+        return ""
+
+    value = value.strip()
+    if value.startswith("gs://"):
+        parts = value.split("/", 3)
+        return parts[3] if len(parts) > 3 else ""
+
+    parsed = urlparse(value)
+    bucket_name = getattr(settings, "FIREBASE_STORAGE_BUCKET", "").strip()
+    if parsed.netloc == "firebasestorage.googleapis.com":
+        path_parts = parsed.path.split("/o/", 1)
+        if len(path_parts) == 2:
+            return unquote(path_parts[1])
+
+    if bucket_name and parsed.netloc == bucket_name and "/o/" in parsed.path:
+        return unquote(parsed.path.split("/o/", 1)[1])
+
+    if value.startswith(("assests/", "assets/", "uploads/")):
+        return value
+
+    return ""
+
+
+def get_firebase_access_url(value):
+    storage_path = _firebase_storage_path(value)
+    if not storage_path:
+        return value
+
+    try:
+        from secure_files.services.firebase_storage import generate_download_url
+
+        return generate_download_url(storage_path)
+    except Exception:
+        return value
+
+
+def get_firebase_access_urls(values):
+    if not isinstance(values, list):
+        return []
+    return [get_firebase_access_url(value) for value in values]
 
 # ============================================================================
 # MULTI-LANGUAGE SUPPORT
@@ -38,10 +85,14 @@ class MultiLanguageField(serializers.Field):
 class LessonSerializer(serializers.ModelSerializer):
     title = MultiLanguageField()
     content_text = MultiLanguageField(required=False, allow_null=True)
+    content_images = serializers.SerializerMethodField()
     
     class Meta:
         model = Lesson
         fields = ['id', 'chapter', 'title', 'content_text', 'content_images', 'content_videos', 'order', 'estimated_time']
+
+    def get_content_images(self, obj):
+        return get_firebase_access_urls(obj.content_images)
 
 
 class LessonCreateSerializer(serializers.ModelSerializer):
@@ -122,10 +173,14 @@ class LessonDetailSerializer(serializers.ModelSerializer):
     """Detailed lesson view with progress info"""
     progress = serializers.SerializerMethodField()
     is_completed = serializers.SerializerMethodField()
+    content_images = serializers.SerializerMethodField()
     
     class Meta:
         model = Lesson
         fields = ['id', 'title', 'content_text', 'content_images', 'content_videos', 'estimated_time', 'order', 'progress', 'is_completed']
+
+    def get_content_images(self, obj):
+        return get_firebase_access_urls(obj.content_images)
     
     def get_progress(self, obj):
         user = self.context.get('request').user
@@ -503,6 +558,7 @@ class CourseSerializer(serializers.ModelSerializer):
     """Course catalog listing"""
     title = MultiLanguageField()
     description = MultiLanguageField(required=False, allow_null=True)
+    thumbnail = serializers.SerializerMethodField()
     chapters = serializers.SerializerMethodField()
     enrollment_status = serializers.SerializerMethodField()
     prerequisites_info = serializers.SerializerMethodField()
@@ -510,6 +566,9 @@ class CourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
         fields = ['id', 'code', 'title', 'description', 'thumbnail', 'is_published', 'chapters', 'enrollment_status', 'prerequisites_info']
+
+    def get_thumbnail(self, obj):
+        return get_firebase_access_url(obj.thumbnail)
     
     def get_chapters(self, obj):
         chapters = Chapter.objects.filter(course=obj).order_by('order')

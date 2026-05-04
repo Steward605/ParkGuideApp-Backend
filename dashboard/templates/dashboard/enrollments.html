@@ -749,6 +749,27 @@
         </div>
     </div>
 </div>
+                                +        </div>
+                                        {% if ar_stats %}
+                                        <div class="col">
+                                            <div class="enrollment-stat-card" style="border: 1px solid rgba(82, 183, 136, 0.3); background: rgba(82, 183, 136, 0.05);">
+                                                <div class="enrollment-stat-label">AR Scenarios</div>
+                                                <div class="enrollment-stat-value" style="color: #52b788;">{{ ar_stats.total_scenarios }}</div>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                
+                                {% if guide.ar_stats %}
+                                    <div class="guide-summary-stat-box" style="border: 1px solid rgba(82, 183, 136, 0.3); background: rgba(82, 183, 136, 0.08);">
+                                        <div class="guide-summary-stat-label">AR Scenarios</div>
+                                        <div class="guide-summary-stat-value">{{ guide.ar_stats.completed_scenarios }}/{{ guide.ar_stats.total_scenarios }}</div>
+                                    </div>
+
+                                    <div class="guide-summary-stat-box" style="border: 1px solid rgba(82, 183, 136, 0.3); background: rgba(82, 183, 136, 0.08);">
+                                        <div class="guide-summary-stat-label">AR Quiz Avg</div>
+                                        <div class="guide-summary-stat-value">{{ guide.ar_stats.avg_quiz_score }}%</div>
+                                    </div>
+                                {% endif %}
 
 {% for enrollment in enrollments %}
     <div class="modal fade" id="enrollmentModal{{ enrollment.id }}" tabindex="-1" aria-hidden="true">

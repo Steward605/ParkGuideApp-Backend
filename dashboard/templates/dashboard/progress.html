@@ -697,6 +697,82 @@ function loadStudentProgress(userId, username, preserveMessage = false) {
                             <div>
                                 <strong>${enrollment.course_code}</strong>
                                 <span class="badge bg-${statusColor}" style="margin-left: 0.5rem;">${enrollment.status.replace('_', ' ').toUpperCase()}</span>
+    
+                                        // AR Training section
+                                        if (data.ar_training && data.ar_training.progress && data.ar_training.progress.length > 0) {
+                                            html += `
+                                                <h6 class="fw-bold mb-3 mt-4 pt-3 border-top">AR Training Progress</h6>
+                                            `;
+                
+                                            data.ar_training.progress.forEach(ar => {
+                                                html += `
+                                                    <div class="enrollment-item" style="background: rgba(82, 183, 136, 0.05); border: 1px solid rgba(82, 183, 136, 0.15);">
+                                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                                            <div>
+                                                                <strong><i class="bi bi-vr"></i> ${ar.scenario_code}</strong>
+                                                                <span class="badge ${ar.is_completed ? 'bg-success' : 'bg-info'}" style="margin-left: 0.5rem;">${ar.is_completed ? 'COMPLETED' : 'IN PROGRESS'}</span>
+                                                            </div>
+                                                            <small style="color: var(--text-muted);">${ar.completion_percentage.toFixed(0)}%</small>
+                                                        </div>
+                                                        <small class="d-block mb-2" style="font-weight: 600;">${ar.scenario_title}</small>
+                                                        <small class="d-block mb-2" style="color: var(--text-muted);">Type: ${ar.scenario_type}</small>
+                                                        <div style="height: 6px; background: rgba(82, 183, 136, 0.1); border-radius: 3px; overflow: hidden; margin-bottom: 0.5rem;">
+                                                            <div style="height: 100%; background: linear-gradient(90deg, #2d6a4f, #52b788); width: ${ar.completion_percentage}%;"></div>
+                                                        </div>
+                                                        <div style="font-size: 0.8rem; color: var(--text-muted);">
+                                                            <i class="bi bi-cursor"></i> ${ar.visited_hotspots_count} hotspots visited
+                                                            <span style="margin-left: 1rem;"><i class="bi bi-clock"></i> ${ar.time_spent_minutes} min</span>
+                                                        </div>
+                                                    </div>
+                                                `;
+                                            });
+                                        }
+            
+                                        // AR Quiz Results section
+                                        if (data.ar_training && data.ar_training.quiz_results && data.ar_training.quiz_results.length > 0) {
+                                            html += `
+                                                <h6 class="fw-bold mb-3 mt-3">AR Quiz Attempts</h6>
+                                            `;
+                
+                                            data.ar_training.quiz_results.forEach(quiz => {
+                                                const passed = quiz.passed ? '✓' : '✗';
+                                                html += `
+                                                    <div class="enrollment-item" style="background: rgba(45, 106, 79, 0.03); border: 1px solid rgba(45, 106, 79, 0.12);">
+                                                        <div class="d-flex justify-content-between align-items-start mb-1">
+                                                            <small style="font-weight: 700;">${quiz.scenario_title}</small>
+                                                            <span class="badge ${quiz.passed ? 'bg-success' : 'bg-warning'}">${passed} ${quiz.percentage.toFixed(1)}%</span>
+                                                        </div>
+                                                        <small style="color: var(--text-muted); display: block; margin-bottom: 4px;">
+                                                            ${quiz.score}/${quiz.total_questions} correct • ${quiz.time_spent_minutes} min
+                                                        </small>
+                                                    </div>
+                                                `;
+                                            });
+                                        }
+            
+                                        // AR Achievements section
+                                        if (data.ar_training && data.ar_training.achievements && data.ar_training.achievements.length > 0) {
+                                            html += `
+                                                <h6 class="fw-bold mb-3 mt-3">AR Badges Earned</h6>
+                                                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; margin-bottom: 1rem;">
+                                            `;
+                
+                                            data.ar_training.achievements.forEach(badge => {
+                                                html += `
+                                                    <div style="text-align: center; padding: 12px; background: rgba(82, 183, 136, 0.1); border-radius: 8px; border: 1px solid rgba(82, 183, 136, 0.2);">
+                                                        <div style="font-size: 24px; margin-bottom: 4px;"><i class="bi bi-${badge.badge_icon}"></i></div>
+                                                        <small style="font-weight: 700; display: block; color: var(--primary-color);">${badge.badge_name}</small>
+                                                        <small style="font-size: 0.7rem; color: var(--text-muted); display: block;">${new Date(badge.unlocked_at).toLocaleDateString()}</small>
+                                                    </div>
+                                                `;
+                                            });
+                
+                                            html += `
+                                                </div>
+                                            `;
+                                        }
+            
+                                            `;
                             </div>
                             <div class="text-end d-flex align-items-center gap-2">
                                 <strong>${enrollment.progress_percentage}%</strong>

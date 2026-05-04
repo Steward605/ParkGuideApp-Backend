@@ -42,6 +42,9 @@ from courses.models import (
     Course, Module, ModuleProgress, CourseProgress, Chapter, Lesson, Quiz, 
     ChapterProgress, CourseEnrollment, QuizAttempt, PracticeAttempt, LessonProgress
 )
+from ar_training.models import (
+    ARTrainingProgress, ARQuizResult, ARBadge, ARUserAchievement
+)
 from user_progress.models import Badge, UserBadge
 from notifications.models import Notification, UserNotification
 from notifications.services import send_push_to_users
@@ -1123,6 +1126,21 @@ def build_guide_progress_context(request):
             'latest_enrollment': latest_enrollment,
             'latest_activity': latest_activity,
         })
+        
+        # Add AR training stats
+        ar_progress_qs = ARTrainingProgress.objects.filter(user=guide)
+        ar_total_scenarios = ar_progress_qs.count()
+        ar_completed_scenarios = ar_progress_qs.filter(is_completed=True).count()
+        ar_quiz_results = ARQuizResult.objects.filter(user=guide)
+        ar_avg_quiz_score = round(ar_quiz_results.aggregate(avg=Avg('percentage'))['avg'] or 0, 1) if ar_quiz_results.exists() else 0
+        ar_badges = ARUserAchievement.objects.filter(user=guide).count()
+
+        guide_cards[-1]['ar_stats'] = {
+            'total_scenarios': ar_total_scenarios,
+            'completed_scenarios': ar_completed_scenarios,
+            'avg_quiz_score': ar_avg_quiz_score,
+            'badges_earned': ar_badges,
+        }
 
     if guide_sort_by == 'alphabetical':
         guide_cards.sort(key=lambda item: (item['user'].get_full_name() or item['user'].username or '').lower())
@@ -1220,6 +1238,14 @@ def dashboard_enrollments(request):
         'enrolled': stats_qs.filter(status='enrolled').count(),
         'avg_progress': round(stats_qs.aggregate(avg=Avg('progress_percentage'))['avg'] or 0, 1),
     }
+    
+    # Calculate AR training statistics
+    ar_stats = {
+        'total_scenarios': ARTrainingProgress.objects.filter(is_completed=True).values('scenario_id').distinct().count(),
+        'active_users': ARTrainingProgress.objects.values('user_id').distinct().count(),
+        'avg_quiz_score': round(ARQuizResult.objects.aggregate(avg=Avg('percentage'))['avg'] or 0, 1),
+        'badges_earned': ARUserAchievement.objects.values('user_id').distinct().count(),
+    }
     context = {
         'page_obj': page_obj,
         'enrollments': page_obj.object_list,
@@ -1229,6 +1255,7 @@ def dashboard_enrollments(request):
         'status_choices': CourseEnrollment.STATUS_CHOICES,
         'course_options': Course.objects.order_by('code'),
         'stats': stats,
+        'ar_stats': ar_stats,
     }
     active_tab = request.GET.get('tab', '').strip()
     if not active_tab:
@@ -1960,6 +1987,45 @@ def dashboard_student_progress(request, user_id):
             'quiz_avg': round(avg_quiz_score, 1) if avg_quiz_score else None,
         })
     
+    # Prepare AR training data
+    ar_progress = ARTrainingProgress.objects.filter(user=user).select_related('scenario').order_by('-last_updated')
+    ar_quiz_results = ARQuizResult.objects.filter(user=user).select_related('scenario').order_by('-completed_at')
+    ar_achievements = ARUserAchievement.objects.filter(user=user).select_related('badge').order_by('-unlocked_at')
+
+    ar_progress_details = []
+    for progress in ar_progress:
+        ar_progress_details.append({
+            'scenario_code': progress.scenario.code,
+            'scenario_title': get_title_text(progress.scenario.title, 'en', 'Untitled'),
+            'scenario_type': progress.scenario.get_scenario_type_display(),
+            'visited_hotspots_count': len(progress.visited_hotspots),
+            'completion_percentage': progress.completion_percentage,
+            'is_completed': progress.is_completed,
+            'time_spent_minutes': round(progress.time_spent_seconds / 60, 1),
+            'started_at': progress.started_at.isoformat() if progress.started_at else None,
+            'completed_at': progress.completed_at.isoformat() if progress.completed_at else None,
+        })
+
+    ar_quiz_details = []
+    for result in ar_quiz_results[:5]:
+        ar_quiz_details.append({
+            'scenario_code': result.scenario.code,
+            'scenario_title': get_title_text(result.scenario.title, 'en', 'Untitled'),
+            'score': result.score,
+            'total_questions': result.total_questions,
+            'percentage': result.percentage,
+            'passed': result.passed,
+            'time_spent_minutes': round(result.time_spent_seconds / 60, 1),
+            'completed_at': result.completed_at.isoformat() if result.completed_at else None,
+        })
+
+    ar_achievements_details = [{
+        'badge_id': ach.badge.badge_id,
+        'badge_name': ach.badge.name,
+        'badge_icon': ach.badge.icon,
+        'unlocked_at': ach.unlocked_at.isoformat() if ach.unlocked_at else None,
+    } for ach in ar_achievements]
+
     return JsonResponse({
         'user': {
             'id': user.id,
@@ -1969,6 +2035,18 @@ def dashboard_student_progress(request, user_id):
             'last_login': user.last_login.isoformat() if user.last_login else None,
         },
         'enrollments': enrollment_details,
+        'ar_training': {
+            'progress': ar_progress_details,
+            'quiz_results': ar_quiz_details,
+            'achievements': ar_achievements_details,
+            'summary': {
+                'total_scenarios': ar_progress.count(),
+                'completed_scenarios': ar_progress.filter(is_completed=True).count(),
+                'total_quiz_attempts': ar_quiz_results.count(),
+                'avg_quiz_score': round(ar_quiz_results.aggregate(avg=Avg('percentage'))['avg'] or 0, 1) if ar_quiz_results.exists() else 0,
+                'badges_earned': ar_achievements.count(),
+            }
+        },
         'summary': {
             'total_courses': len(enrollments),
             'completed': len([e for e in enrollments if e.status == 'completed']),
@@ -1977,6 +2055,7 @@ def dashboard_student_progress(request, user_id):
             'avg_progress': round(enrollments.aggregate(avg=Avg('progress_percentage'))['avg'] or 0, 1),
         }
     })
+        
 
 
 @login_required

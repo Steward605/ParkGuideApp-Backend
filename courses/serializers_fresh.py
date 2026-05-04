@@ -2,8 +2,9 @@
 Fresh, clean serializers for the course API
 Simplified multi-language handling and proper validation
 """
+from django.conf import settings
 from rest_framework import serializers
-from urllib.parse import urlparse
+from urllib.parse import unquote, urlparse
 from courses.models import (
     Course, Chapter, Lesson, PracticeExercise, Quiz,
     LessonProgress, PracticeAttempt, QuizAttempt, CourseEnrollment
@@ -124,6 +125,50 @@ def _normalize_quiz_questions(questions):
     return normalized
 
 
+def _firebase_storage_path(value):
+    if not value or not isinstance(value, str):
+        return ""
+
+    value = value.strip()
+    if value.startswith("gs://"):
+        parts = value.split("/", 3)
+        return parts[3] if len(parts) > 3 else ""
+
+    parsed = urlparse(value)
+    bucket_name = getattr(settings, "FIREBASE_STORAGE_BUCKET", "").strip()
+    if parsed.netloc == "firebasestorage.googleapis.com":
+        path_parts = parsed.path.split("/o/", 1)
+        if len(path_parts) == 2:
+            return unquote(path_parts[1])
+
+    if bucket_name and parsed.netloc == bucket_name and "/o/" in parsed.path:
+        return unquote(parsed.path.split("/o/", 1)[1])
+
+    if value.startswith(("assests/", "assets/", "uploads/")):
+        return value
+
+    return ""
+
+
+def get_firebase_access_url(value):
+    storage_path = _firebase_storage_path(value)
+    if not storage_path:
+        return value
+
+    try:
+        from secure_files.services.firebase_storage import generate_download_url
+
+        return generate_download_url(storage_path)
+    except Exception:
+        return value
+
+
+def get_firebase_access_urls(values):
+    if not isinstance(values, list):
+        return []
+    return [get_firebase_access_url(value) for value in values]
+
+
 class CourseThumbnailMixin:
     def _get_thumbnail_url(self, obj):
         """Return a safe thumbnail URL or a local fallback."""
@@ -131,6 +176,10 @@ class CourseThumbnailMixin:
         fallback_path = '/static/images/icon.png'
 
         if thumbnail:
+            firebase_url = get_firebase_access_url(thumbnail)
+            if firebase_url != thumbnail:
+                return firebase_url
+
             parsed = urlparse(thumbnail)
             if parsed.netloc != 'images.unsplash.com':
                 return thumbnail
@@ -159,6 +208,7 @@ class CourseEnrollmentSerializer(serializers.ModelSerializer):
 class LessonSerializer(serializers.ModelSerializer):
     """Basic lesson data"""
     progress = serializers.SerializerMethodField()
+    content_images = serializers.SerializerMethodField()
 
     class Meta:
         model = Lesson
@@ -181,6 +231,9 @@ class LessonSerializer(serializers.ModelSerializer):
             except LessonProgress.DoesNotExist:
                 return None
         return None
+
+    def get_content_images(self, obj):
+        return get_firebase_access_urls(obj.content_images)
 
 
 class PracticeExerciseSerializer(serializers.ModelSerializer):
