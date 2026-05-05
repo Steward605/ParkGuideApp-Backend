@@ -12,7 +12,7 @@ urlpatterns = [
     # Fresh API routes MUST come FIRST to avoid conflicts with dashboard api/* patterns
     path('api/guides/locations/', GuideLocationsView.as_view(), name='guide_locations'),
     path('api/', include('courses.urls_fresh')),  # Fresh API - complete rewrite
-    path('api/ar-training/', include('ar_training.urls')),  # AR Training API
+    path('api/monitor/', include('monitoring.urls')),
     path('api/notifications/', include('notifications.urls')),
     path('api/user-progress/', include('user_progress.urls')),
     path('api/secure-files/', include('secure_files.urls')),

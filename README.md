@@ -38,6 +38,7 @@ All secure-file endpoints require `Authorization: Bearer <access_token>`.
 Base routes:
 - `/api/`
 - `/api/accounts/`
+- `/api/monitor/`
 - `/api/notifications/`
 - `/api/user-progress/`
 - `/api/secure-files/`
@@ -71,6 +72,16 @@ Notifications:
 - `POST /api/notifications/items/{id}/mark-read/`
 - `POST /api/notifications/items/mark-all-read/`
 - `POST /api/notifications/items/clear-read/`
+
+Monitor and AI evidence:
+- `GET /api/monitor/status/`
+- `POST /api/monitor/session/start/`
+- `POST /api/monitor/session/stop/`
+- `POST /api/monitor/evidence/` with multipart field `file`
+- `GET /api/monitor/alerts/`
+
+Monitor evidence uploads are stored in Firebase Storage and then analyzed when the AI model is available.
+If the local model is not configured, the backend still stores the clip and creates a review item so the app flow stays usable.
 
 Secure files:
 - `GET /api/secure-files/files/`
