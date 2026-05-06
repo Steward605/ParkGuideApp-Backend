@@ -7,7 +7,9 @@ from notifications.services import create_notification_for_staff, create_notific
 from secure_files.services.firebase_storage import generate_download_url
 from .models import Badge, UserBadge
 
-DEFAULT_BADGE_STORAGE_PATH = 'assests/badges'
+DEFAULT_BADGE_STORAGE_PATH = 'assets/badges'
+LEGACY_BADGE_STORAGE_PATH = 'assests/badges'
+
 DEFAULT_BADGE_FILENAMES = {
     'park-guide-101': 'park-guide-101.jpg',
     'park-guide-201': 'park-guide-201.jpg',
@@ -16,20 +18,17 @@ DEFAULT_BADGE_FILENAMES = {
     'park-guide-501': 'park-guide-501.jpg',
 }
 
-
 def get_course_badge_requirement_count(course):
     """Use the fuller of legacy modules or chapter-based content as the completion requirement."""
     module_count = course.modules.count() if hasattr(course, 'modules') else 0
     chapter_count = course.chapters.count() if hasattr(course, 'chapters') else 0
     return max(module_count, chapter_count, 1)
 
-
 def get_default_badge_blob_path(course):
     filename = DEFAULT_BADGE_FILENAMES.get(course.code)
     if not filename:
         return ''
     return f'{DEFAULT_BADGE_STORAGE_PATH}/{filename}'
-
 
 def build_firebase_media_url(blob_path):
     if not blob_path:
@@ -39,7 +38,6 @@ def build_firebase_media_url(blob_path):
         return ''
     encoded_path = blob_path.replace('/', '%2F')
     return f'https://firebasestorage.googleapis.com/v0/b/{bucket_name}/o/{encoded_path}?alt=media'
-
 
 def get_badge_storage_path(value):
     if not value:
@@ -57,21 +55,25 @@ def get_badge_storage_path(value):
         encoded_part = value[len(firebase_prefix):].split('?', 1)[0]
         return encoded_part.replace('%2F', '/')
 
-    if value.startswith(f'{DEFAULT_BADGE_STORAGE_PATH}/'):
-        return value
+    for prefix in (DEFAULT_BADGE_STORAGE_PATH, LEGACY_BADGE_STORAGE_PATH):
+        if value.startswith(f'{prefix}/'):
+            return value
 
     return ''
 
-
 def get_badge_image_access_url(raw_value):
     storage_path = get_badge_storage_path(raw_value)
+
     if storage_path:
+        if storage_path.startswith(f'{LEGACY_BADGE_STORAGE_PATH}/'):
+            storage_path = storage_path.replace(LEGACY_BADGE_STORAGE_PATH, DEFAULT_BADGE_STORAGE_PATH, 1)
+
         try:
             return generate_download_url(storage_path)
         except Exception:
             return raw_value
-    return raw_value
 
+    return raw_value
 
 def build_course_badge_metadata(course):
     course_title = course.title.get('en', f'Course {course.id}')
@@ -107,7 +109,6 @@ def build_course_badge_metadata(course):
         'auto_approve_when_eligible': False,
     }
 
-
 def create_or_update_course_badge(course):
     badge_defaults = build_course_badge_metadata(course)
     badge = Badge.objects.filter(course=course, is_major_badge=False).order_by('id').first()
@@ -137,7 +138,6 @@ def create_or_update_course_badge(course):
     badge = Badge.objects.create(**badge_defaults)
     return badge
 
-
 def notify_badge_pending_for_admins(user_badge, admin_user=None):
     create_notification_for_staff(
         title=f'Badge approval needed: {user_badge.badge.name}',
@@ -149,7 +149,6 @@ def notify_badge_pending_for_admins(user_badge, admin_user=None):
         created_by=admin_user,
         related_user=user_badge.user,
     )
-
 
 def notify_badge_granted_to_user(user_badge, admin_user=None):
     create_notification_for_user(
@@ -163,7 +162,6 @@ def notify_badge_granted_to_user(user_badge, admin_user=None):
         created_by=admin_user,
         related_user=user_badge.user,
     )
-
 
 def get_user_completed_module_counts(user_ids=None):
     module_queryset = ModuleProgress.objects.filter(completed=True)
@@ -183,7 +181,6 @@ def get_user_completed_module_counts(user_ids=None):
     for user_id in all_user_ids:
         merged[user_id] = max(module_counts.get(user_id, 0), chapter_counts.get(user_id, 0))
     return merged
-
 
 def get_user_completed_module_counts_for_badge(badge, user_ids=None):
     module_queryset = ModuleProgress.objects.filter(completed=True)
@@ -207,7 +204,6 @@ def get_user_completed_module_counts_for_badge(badge, user_ids=None):
         merged[user_id] = max(module_counts.get(user_id, 0), chapter_counts.get(user_id, 0))
     return merged
 
-
 def get_user_granted_regular_badge_counts(user_ids=None):
     queryset = UserBadge.objects.filter(
         status=UserBadge.STATUS_GRANTED,
@@ -217,7 +213,6 @@ def get_user_granted_regular_badge_counts(user_ids=None):
         queryset = queryset.filter(user_id__in=user_ids)
     rows = queryset.values('user_id').annotate(granted_badges=Count('id'))
     return {row['user_id']: row['granted_badges'] for row in rows}
-
 
 def get_user_requirement_progress_for_badge(badge, user):
     if badge.is_major_badge:
@@ -243,7 +238,6 @@ def get_user_requirement_progress_for_badge(badge, user):
     completed_units = max(completed_modules_legacy, completed_chapters)
     return completed_units, badge.required_completed_modules
 
-
 def ensure_badge_rows_for_user(user):
     badges = Badge.objects.filter(is_active=True)
     created_count = 0
@@ -260,7 +254,6 @@ def ensure_badge_rows_for_user(user):
             created_count += 1
     return created_count
 
-
 def ensure_badge_rows_for_all_users():
     users = get_user_model().objects.all()
     created_count = 0
@@ -268,10 +261,7 @@ def ensure_badge_rows_for_all_users():
         created_count += ensure_badge_rows_for_user(user)
     return created_count
 
-
-# ============================================================================
-# NEW BADGE SYSTEM FUNCTIONS - Auto-grant on course completion
-# ============================================================================
+# Auto-grant on course completion
 
 def grant_course_completion_badge(user, course):
     """
@@ -319,7 +309,6 @@ def grant_course_completion_badge(user, course):
         return True
     
     return False
-
 
 def check_and_grant_achievement_badges(user):
     """

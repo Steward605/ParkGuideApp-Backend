@@ -602,6 +602,17 @@
 
 <script nonce="{{ request.csp_nonce }}">
     document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('error', function (event) {
+            const target = event.target;
+            if (!target || !target.matches('.badge-art img')) {
+                return;
+            }
+            const badgeArt = target.closest('.badge-art');
+            if (badgeArt) {
+                badgeArt.innerHTML = '<i class="bi bi-patch-check-fill"></i>';
+            }
+        }, true);
+        
         const tableBody = document.getElementById('pendingBadgeTableBody');
         const pendingCountEl = document.getElementById('pendingRequestsCount');
         const createBadgeCollapseEl = document.getElementById('createBadgeCollapse');

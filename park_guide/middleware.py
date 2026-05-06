@@ -25,7 +25,7 @@ class SecurityHeadersMiddleware:
             f"style-src 'self' 'nonce-{nonce}' https://cdn.jsdelivr.net https://fonts.googleapis.com",
             "style-src-attr 'none'",
             "font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com data:",
-            "img-src 'self' data: blob:",
+            "img-src 'self' data: blob: https://firebasestorage.googleapis.com https://storage.googleapis.com",
             "connect-src 'self'",
             "object-src 'none'",
             "base-uri 'self'",
