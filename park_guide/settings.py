@@ -70,6 +70,7 @@ INSTALLED_APPS = [
     'notifications.apps.NotificationsConfig',
     'accounts',
     'dashboard.apps.DashboardConfig',
+    'monitoring.apps.MonitoringConfig',
     'rest_framework.authtoken',
     'corsheaders',
     'ranger_eye',
