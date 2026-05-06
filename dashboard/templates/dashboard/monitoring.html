@@ -4,7 +4,7 @@
 {% block page_title %}<i class="bi bi-eye-fill me-2"></i>Monitoring{% endblock %}
 
 {% block extra_css %}
-<style>
+<style nonce="{{ request.csp_nonce }}">
     .monitoring-summary-grid {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
