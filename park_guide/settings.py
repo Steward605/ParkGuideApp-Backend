@@ -71,12 +71,13 @@ INSTALLED_APPS = [
     'courses',
     'user_progress.apps.UserProgressConfig',
     'secure_files.apps.SecureFilesConfig',
-    'monitoring.apps.MonitoringConfig',
     'notifications.apps.NotificationsConfig',
     'accounts',
     'dashboard.apps.DashboardConfig',
     'ar_training.apps.ArTrainingConfig',
     'rest_framework.authtoken',
+    'corsheaders',
+    'ranger_eye',
 ]
 
 
@@ -116,6 +117,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'park_guide.middleware.SecurityHeadersMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -188,11 +190,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/6.0/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = 'UTC'
-
-USE_I18N = True
+TIME_ZONE = "Asia/Kuching"
 
 USE_TZ = True
 
@@ -292,3 +292,8 @@ FIREBASE_SERVICE_ACCOUNT_PATH = os.path.join(
         'secrets/parkguideapp-c8517-firebase-adminsdk-fbsvc-b9b06c918e.json'
     )
 )
+
+
+ALLOWED_HOSTS = ["*"]
+
+CORS_ALLOW_ALL_ORIGINS = True
