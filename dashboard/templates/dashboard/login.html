@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Sarawak Forestry Dashboard</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" integrity="sha384-QuGBSgV5Im3DzL2z+8Ko9/hqNy/N0O7zwvXAtfd1MvPKWa/UbeLV65cfm4BV5Wgq" crossorigin="anonymous">
     <script>
         (function() {
             const html = document.documentElement;
@@ -291,8 +291,8 @@
                 {% csrf_token %}
 
                 <div class="form-group">
-                    <label for="id_{{ form.username_field }}">Email / Username</label>
-                    {{ form.username }}
+                    <label for="{{ form.username.id_for_label }}">Email / Username</label>
+                    <input type="text" name="{{ form.username.html_name }}" autofocus autocapitalize="none" autocomplete="username" maxlength="254" required id="{{ form.username.id_for_label }}">
                     {% if form.username.errors %}
                         <div style="color: #d62828; font-size: 0.85rem; font-weight: 500;">
                             {{ form.username.errors.0 }}
@@ -341,4 +341,3 @@
     </script>
 </body>
 </html>
-
