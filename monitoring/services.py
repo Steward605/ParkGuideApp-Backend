@@ -1,4 +1,5 @@
 import os
+import subprocess
 import tempfile
 from pathlib import Path
 
@@ -9,6 +10,11 @@ try:
     from ultralytics import YOLO
 except Exception:  # pragma: no cover - optional dependency during local setup
     YOLO = None
+
+try:
+    import cv2
+except Exception:  # pragma: no cover - optional dependency during local setup
+    cv2 = None
 
 from .models import MonitorSession, ViolationAlert
 
@@ -81,8 +87,8 @@ def _class_names_from_model(model):
     return []
 
 
-def _best_detection_for_frame(result, class_names):
-    best = None
+def _detections_for_frame(result, class_names):
+    detections = []
 
     for box in getattr(result, "boxes", []):
         class_id = int(box.cls[0])
@@ -100,22 +106,184 @@ def _best_detection_for_frame(result, class_names):
             "severity": severity,
             "confidence_score": confidence,
         }
+        if getattr(box, "xyxy", None) is not None:
+            detection["bbox"] = [float(value) for value in box.xyxy[0]]
+        detections.append(detection)
+
+    return detections
+
+
+def _best_detection_from_list(detections):
+    best = None
+
+    for detection in detections:
+        candidate = {key: value for key, value in detection.items() if key != "bbox"}
 
         if best is None:
-            best = detection
+            best = candidate
             continue
 
-        if detection["severity"] == "High" and best["severity"] != "High":
-            best = detection
+        if candidate["severity"] == "High" and best["severity"] != "High":
+            best = candidate
             continue
 
-        if detection["confidence_score"] > best["confidence_score"]:
-            best = detection
+        if candidate["confidence_score"] > best["confidence_score"]:
+            best = candidate
 
     return best
 
 
-def analyze_uploaded_evidence(file_path, *, camera_source="phone-camera", source_mode="phone", guide_name="", location="", clip_duration="", clip_interval_minutes=None):
+def _best_detection_for_frame(result, class_names):
+    return _best_detection_from_list(_detections_for_frame(result, class_names))
+
+
+def _draw_detection_boxes(frame, detections):
+    if cv2 is None:
+        return frame
+
+    annotated = frame.copy()
+    for detection in detections:
+        bbox = detection.get("bbox")
+        if not bbox:
+            continue
+
+        x1, y1, x2, y2 = [int(value) for value in bbox]
+        color = (35, 35, 220) if detection["severity"] == "High" else (0, 180, 255)
+        label = f'{detection["detected_activity"]} {detection["confidence_score"]:.0%}'
+        cv2.rectangle(annotated, (x1, y1), (x2, y2), color, 3)
+
+        label_size, baseline = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.65, 2)
+        label_y = max(y1, label_size[1] + 10)
+        cv2.rectangle(
+            annotated,
+            (x1, label_y - label_size[1] - baseline - 8),
+            (x1 + label_size[0] + 10, label_y + baseline - 2),
+            color,
+            -1,
+        )
+        cv2.putText(
+            annotated,
+            label,
+            (x1 + 5, label_y - 6),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.65,
+            (255, 255, 255),
+            2,
+            cv2.LINE_AA,
+        )
+    return annotated
+
+
+def _make_browser_playable_mp4(video_path):
+    output_path = video_path.with_name(f"{video_path.stem}_browser.mp4")
+    command = [
+        "ffmpeg",
+        "-y",
+        "-i",
+        str(video_path),
+        "-c:v",
+        "libx264",
+        "-pix_fmt",
+        "yuv420p",
+        "-movflags",
+        "+faststart",
+        "-an",
+        str(output_path),
+    ]
+
+    try:
+        subprocess.run(command, check=True, capture_output=True)
+    except (FileNotFoundError, subprocess.CalledProcessError):
+        return video_path
+
+    try:
+        video_path.unlink()
+    except OSError:
+        pass
+    return output_path
+
+
+def _analyze_video_with_annotations(model, file_path, class_names):
+    if cv2 is None:
+        return None, None
+
+    capture = cv2.VideoCapture(str(file_path))
+    if not capture.isOpened():
+        return None, None
+
+    fps = capture.get(cv2.CAP_PROP_FPS) or 20
+    width = int(capture.get(cv2.CAP_PROP_FRAME_WIDTH) or 0)
+    height = int(capture.get(cv2.CAP_PROP_FRAME_HEIGHT) or 0)
+    if width <= 0 or height <= 0:
+        capture.release()
+        return None, None
+
+    output_file = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4")
+    output_path = Path(output_file.name)
+    output_file.close()
+
+    writer = cv2.VideoWriter(
+        str(output_path),
+        cv2.VideoWriter_fourcc(*"mp4v"),
+        fps,
+        (width, height),
+    )
+    if not writer.isOpened():
+        capture.release()
+        try:
+            output_path.unlink()
+        except OSError:
+            pass
+        return None, None
+
+    best_detection = None
+    detection_counts = {}
+    annotated_frames = 0
+
+    try:
+        while True:
+            ok, frame = capture.read()
+            if not ok:
+                break
+
+            results = model.predict(source=frame, conf=0.25, verbose=False, save=False)
+            result = results[0] if results else None
+            detections = _detections_for_frame(result, class_names) if result is not None else []
+            if detections:
+                annotated_frames += 1
+                for detection in detections:
+                    detected_class = detection["detected_class"]
+                    detection_counts[detected_class] = detection_counts.get(detected_class, 0) + 1
+                current = _best_detection_from_list(detections)
+                if best_detection is None:
+                    best_detection = current
+                elif current["severity"] == "High" and best_detection["severity"] != "High":
+                    best_detection = current
+                elif current["confidence_score"] > best_detection["confidence_score"]:
+                    best_detection = current
+
+            writer.write(_draw_detection_boxes(frame, detections))
+    finally:
+        capture.release()
+        writer.release()
+
+    if best_detection is None:
+        try:
+            output_path.unlink()
+        except OSError:
+            pass
+        return None, None
+
+    output_path = _make_browser_playable_mp4(output_path)
+
+    return best_detection, {
+        "path": output_path,
+        "annotated_frames": annotated_frames,
+        "detection_counts": detection_counts,
+    }
+
+
+def analyze_uploaded_evidence(file_path, *, camera_source="phone-camera", source_mode="phone", guide_name="", location="", clip_duration="", clip_interval_minutes=None, annotate=False):
     model = load_detection_model()
     if model is None:
         return {
@@ -140,20 +308,24 @@ def analyze_uploaded_evidence(file_path, *, camera_source="phone-camera", source
     if not class_names:
         return None
 
-    predictions = model.predict(source=str(file_path), conf=0.25, stream=True, verbose=False, save=False)
-    best_detection = None
-    for result in predictions:
-        current = _best_detection_for_frame(result, class_names)
-        if current is None:
-            continue
-        if best_detection is None:
-            best_detection = current
-            continue
-        if current["severity"] == "High" and best_detection["severity"] != "High":
-            best_detection = current
-            continue
-        if current["confidence_score"] > best_detection["confidence_score"]:
-            best_detection = current
+    annotation = None
+    if annotate:
+        best_detection, annotation = _analyze_video_with_annotations(model, file_path, class_names)
+    if not annotate or (annotate and best_detection is None and annotation is None):
+        predictions = model.predict(source=str(file_path), conf=0.25, stream=True, verbose=False, save=False)
+        best_detection = None
+        for result in predictions:
+            current = _best_detection_for_frame(result, class_names)
+            if current is None:
+                continue
+            if best_detection is None:
+                best_detection = current
+                continue
+            if current["severity"] == "High" and best_detection["severity"] != "High":
+                best_detection = current
+                continue
+            if current["confidence_score"] > best_detection["confidence_score"]:
+                best_detection = current
 
     if best_detection is None:
         return None
@@ -177,7 +349,7 @@ def analyze_uploaded_evidence(file_path, *, camera_source="phone-camera", source
         "guide_name": guide_name,
         "location": location,
         "video_duration": clip_duration,
-        "evidence_status": "AI analysis completed",
+        "evidence_status": "AI analysis completed with bounding boxes" if annotation else "AI analysis completed",
         "recommended_action": recommended_action,
         "details": f"Detected class: {class_name}. Source mode: {source_mode}.",
         "raw_payload": {
@@ -185,7 +357,10 @@ def analyze_uploaded_evidence(file_path, *, camera_source="phone-camera", source
             "source_mode": source_mode,
             "camera_source": camera_source,
             "clip_interval_minutes": clip_interval_minutes,
+            "annotated_frames": annotation.get("annotated_frames") if annotation else None,
+            "detection_counts": annotation.get("detection_counts") if annotation else {},
         },
+        "annotated_video_path": str(annotation["path"]) if annotation else "",
     }
 
 

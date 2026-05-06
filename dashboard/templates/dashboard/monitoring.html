@@ -67,14 +67,57 @@
         word-break: break-word;
     }
 
+    .monitoring-evidence-preview {
+        width: min(260px, 100%);
+        aspect-ratio: 16 / 9;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: #111;
+        display: block;
+        object-fit: contain;
+    }
+
+    .monitoring-upload-card {
+        border-radius: 20px;
+        border: 1px solid rgba(45, 106, 79, 0.16);
+        background:
+            linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(45, 106, 79, 0.05));
+    }
+
+    [data-theme="dark"] .monitoring-upload-card {
+        background: linear-gradient(180deg, rgba(22, 27, 24, 0.96), rgba(82, 183, 136, 0.06));
+        border-color: rgba(82, 183, 136, 0.18);
+    }
+
+    .monitoring-upload-grid {
+        display: grid;
+        grid-template-columns: minmax(220px, 1.2fr) repeat(3, minmax(150px, 1fr));
+        gap: 1rem;
+        align-items: end;
+    }
+
+    .monitoring-upload-help {
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        line-height: 1.45;
+    }
+
     @media (max-width: 991.98px) {
         .monitoring-summary-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .monitoring-upload-grid {
             grid-template-columns: repeat(2, minmax(0, 1fr));
         }
     }
 
     @media (max-width: 575.98px) {
         .monitoring-summary-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .monitoring-upload-grid {
             grid-template-columns: 1fr;
         }
     }
@@ -103,6 +146,59 @@
         <div class="monitoring-summary-value text-success">{{ stats.stored_evidence }}</div>
         <div class="monitoring-summary-note">Evidence remains until an admin deletes it.</div>
     </div>
+</div>
+
+<div class="glass-card monitoring-upload-card mb-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+        <div>
+            <h5 class="fw-bold mb-1">AI Video Test</h5>
+            <div class="monitoring-upload-help">Upload a short clip to run the same AI evidence pipeline used by phone and ESP32 monitoring uploads.</div>
+        </div>
+        <span class="monitoring-pill">
+            <i class="bi bi-cpu text-primary"></i>
+            Creates an alert only when AI detects a watched class
+        </span>
+    </div>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="upload_test_video">
+        <div class="monitoring-upload-grid">
+            <div>
+                <label for="test-video" class="form-label fw-semibold">Test Video</label>
+                <input id="test-video" class="form-control" type="file" name="test_video" accept="video/*,.mp4,.mov,.avi,.mkv,.webm" required>
+            </div>
+            <div>
+                <label for="source-mode" class="form-label fw-semibold">Source</label>
+                <select id="source-mode" class="form-select" name="source_mode">
+                    <option value="phone">Phone camera</option>
+                    <option value="esp32">ESP32 camera</option>
+                </select>
+            </div>
+            <div>
+                <label for="camera-source" class="form-label fw-semibold">Camera ID</label>
+                <input id="camera-source" class="form-control" type="text" name="camera_source" value="dashboard-test" placeholder="dashboard-test">
+            </div>
+            <div>
+                <label for="clip-duration" class="form-label fw-semibold">Duration</label>
+                <input id="clip-duration" class="form-control" type="text" name="clip_duration" placeholder="e.g. 00:15">
+            </div>
+            <div>
+                <label for="clip-interval" class="form-label fw-semibold">Interval Min</label>
+                <input id="clip-interval" class="form-control" type="number" name="clip_interval_minutes" value="5" min="1">
+            </div>
+            <div>
+                <label for="guide-name" class="form-label fw-semibold">Guide</label>
+                <input id="guide-name" class="form-control" type="text" name="guide_name" value="{{ request.user.get_full_name }}" placeholder="{{ request.user.username }}">
+            </div>
+            <div>
+                <label for="upload-location" class="form-label fw-semibold">Location</label>
+                <input id="upload-location" class="form-control" type="text" name="location" value="Dashboard AI test upload">
+            </div>
+            <button class="btn btn-primary fw-semibold" type="submit">
+                <i class="bi bi-cloud-upload me-2"></i>Run AI Test
+            </button>
+        </div>
+    </form>
 </div>
 
 <div class="glass-card mb-4">
@@ -152,10 +248,14 @@
                     </td>
                     <td>
                         {% if alert.evidence_file %}
+                            <video class="monitoring-evidence-preview mb-2" controls preload="metadata">
+                                <source src="/api/secure-files/files/{{ alert.evidence_file.id }}/download/" type="{{ alert.evidence_file.content_type|default:'video/mp4' }}">
+                            </video>
                             <a class="btn btn-sm btn-outline-primary monitoring-file-link" href="/api/secure-files/files/{{ alert.evidence_file.id }}/download/" target="_blank" rel="noopener noreferrer">
-                                Open clip
+                                Open evidence clip
                             </a>
                             <div class="small text-muted mt-1">{{ alert.evidence_file.original_name }}</div>
+                            <div class="small text-muted">{{ alert.evidence_status }}</div>
                         {% else %}
                             <span class="text-muted">No stored file</span>
                         {% endif %}
