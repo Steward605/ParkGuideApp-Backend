@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token }}">
     <title>{% block title %}SFC Dashboard{% endblock %}</title>
-    <script>
+    <script nonce="{{ request.csp_nonce }}">
         (function() {
             const html = document.documentElement;
             let savedTheme = 'light';
@@ -24,7 +24,30 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" integrity="sha384-QuGBSgV5Im3DzL2z+8Ko9/hqNy/N0O7zwvXAtfd1MvPKWa/UbeLV65cfm4BV5Wgq" crossorigin="anonymous">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
 
-    <style>
+    <style nonce="{{ request.csp_nonce }}">
+        .is-hidden,
+        .js-hidden {
+            display: none !important;
+        }
+        
+        .admin-user-role {
+            font-size: 0.7rem;
+        }
+        
+        .admin-avatar {
+            width: 40px;
+            height: 40px;
+        }
+        
+        .admin-avatar-mobile {
+            width: 34px !important;
+            height: 34px !important;
+        }
+        
+        .modal-prewrap {
+            white-space: pre-wrap;
+        }
+        
         :root {
             --primary: #2d6a4f;
             --primary-light: #52b788;
@@ -705,7 +728,7 @@
         <aside class="sidebar">
             <a href="{% url 'dashboard:home' %}" class="brand">
                 <span class="brand-logo">
-                    <img src="{% static 'images/icon.png' %}" width="40" height="40" alt="SFC" onerror="this.style.display='none'">
+                    <img src="{% static 'images/icon.png' %}" width="40" height="40" alt="SFC" data-hide-on-error>
                 </span>
                 <span>SARAWAK<br>FORESTRY</span>
             </a>
@@ -749,12 +772,12 @@
                 </form>
             </div>
         </aside>
-        <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="closeSidebar()"></div>
+        <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
 
         <main class="main-content">
             <header class="top-bar">
                 <div class="d-flex align-items-center gap-2">
-                    <button class="mobile-menu-btn" type="button" onclick="toggleSidebar()" aria-label="Open menu">
+                    <button class="mobile-menu-btn" type="button" id="sidebar-toggle-btn" aria-label="Open menu">
                         <i class="bi bi-list"></i>
                     </button>
                     <h1 class="h4 fw-bold mb-0">{% block page_title %}{% endblock %}</h1>
@@ -763,7 +786,7 @@
                     <div class="dropdown">
                         <button class="theme-toggle-btn position-relative" type="button" id="admin-notification-toggle" data-bs-toggle="dropdown" data-bs-auto-close="false" aria-expanded="false" aria-label="Open notifications">
                             <i class="bi bi-bell"></i>
-                            <span id="admin-notification-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger notification-bell-badge" style="display: none;">0</span>
+                            <span id="admin-notification-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger notification-bell-badge js-hidden">0</span>
                         </button>
 
                         <div class="dropdown-menu dropdown-menu-end notification-center-menu" aria-labelledby="admin-notification-toggle">
@@ -777,7 +800,7 @@
                                     <button type="button" class="btn btn-sm btn-outline-primary" id="mark-all-read-btn">
                                         Mark All As Read
                                     </button>
-                                    <button type="button" class="btn btn-sm btn-outline-danger" id="clear-all-read-btn" style="display: none;">
+                                    <button type="button" class="btn btn-sm btn-outline-danger js-hidden" id="clear-all-read-btn">
                                         Clear All Read
                                     </button>
                                 </div>
@@ -788,15 +811,15 @@
                             </div>
                         </div>
                     </div>
-                    <button class="theme-toggle-btn" type="button" onclick="toggleTheme()" id="theme-btn" aria-label="Toggle theme">
+                    <button class="theme-toggle-btn" type="button" id="theme-btn" aria-label="Toggle theme">
                         <i class="bi bi-moon"></i>
                     </button>
                     <div class="d-flex align-items-center gap-2 ps-3 border-start">
                         <div class="text-end d-none d-sm-block">
                             <div class="fw-bold small">{{ request.user.username }}</div>
-                            <div class="text-muted" style="font-size: 0.7rem;">Administrator</div>
+                            <div class="text-muted admin-user-role">Administrator</div>
                         </div>
-                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 40px; height: 40px;">
+                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold admin-avatar">
                             {{ request.user.username|first|upper }}
                         </div>
                     </div>
@@ -835,7 +858,7 @@
                 </div>
 
                 <div class="modal-body">
-                    <p class="text-muted mb-3" id="adminNotificationModalDescription" style="display: none;"></p>
+                    <p class="text-muted mb-3 js-hidden" id="adminNotificationModalDescription"></p>
 
                     <div class="row g-3 mb-4">
                         <div class="col-md-4">
@@ -852,13 +875,13 @@
                         </div>
                     </div>
 
-                    <div class="mb-4" id="adminNotificationModalRegardingWrap" style="display: none;">
+                    <div class="mb-4 js-hidden" id="adminNotificationModalRegardingWrap">
                         <div class="small text-muted text-uppercase fw-semibold mb-2">Regarding</div>
                         <div class="fw-semibold" id="adminNotificationModalRegarding"></div>
                     </div>
 
                     <div class="small text-muted text-uppercase fw-semibold mb-2">Full Message</div>
-                    <div class="border rounded-3 p-3 bg-body-tertiary" style="white-space: pre-wrap;" id="adminNotificationModalFullText"></div>
+                    <div class="border rounded-3 p-3 bg-body-tertiary modal-prewrap" id="adminNotificationModalFullText"></div>
 
                     <div class="mt-4 small text-muted" id="adminNotificationModalFooterMeta"></div>
                 </div>
@@ -876,7 +899,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
-    <script>
+    <script nonce="{{ request.csp_nonce }}">
         function getSavedTheme() {
             try {
                 return localStorage.getItem('theme') || 'light';
@@ -980,6 +1003,14 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             hidePageLoader();
+            document.querySelectorAll('[data-hide-on-error]').forEach((img) => {
+                img.addEventListener('error', () => {
+                    img.classList.add('is-hidden');
+                });
+            });
+            document.getElementById('sidebar-backdrop')?.addEventListener('click', closeSidebar);
+            document.getElementById('sidebar-toggle-btn')?.addEventListener('click', toggleSidebar);
+            document.getElementById('theme-btn')?.addEventListener('click', toggleTheme);
             document.querySelectorAll('.sidebar .nav-link').forEach((link) => {
                 link.addEventListener('click', (event) => {
                     if (window.innerWidth < 1200) {
@@ -1039,9 +1070,9 @@
                 if (!badgeEl) return;
                 if (unreadCount > 0) {
                     badgeEl.textContent = unreadCount > 99 ? '99+' : unreadCount;
-                    badgeEl.style.display = 'inline-flex';
+                    badgeEl.classList.remove('js-hidden');
                 } else {
-                    badgeEl.style.display = 'none';
+                    badgeEl.classList.add('js-hidden');
                 }
             }
 
@@ -1059,10 +1090,10 @@
                 updateBellBadge(summary.unread_count);
                 updateSummaryText(summary.total_count, summary.unread_count);
                 if (markAllBtn) {
-                    markAllBtn.style.display = summary.unread_count > 0 ? '' : 'none';
+                    markAllBtn.classList.toggle('js-hidden', summary.unread_count <= 0);
                 }
                 if (clearAllBtn) {
-                    clearAllBtn.style.display = summary.all_read ? '' : 'none';
+                    clearAllBtn.classList.toggle('js-hidden', !summary.all_read);
                 }
                 if (!listEl) return;
                 if (!currentNotifications.length) {
@@ -1130,17 +1161,17 @@
                 modalFooterMetaEl.textContent = `Sent ${item.sent_full} by ${item.created_by}`;
                 if (item.description && item.description.trim()) {
                     modalDescriptionEl.textContent = item.description;
-                    modalDescriptionEl.style.display = '';
+                    modalDescriptionEl.classList.remove('js-hidden');
                 } else {
                     modalDescriptionEl.textContent = '';
-                    modalDescriptionEl.style.display = 'none';
+                    modalDescriptionEl.classList.add('js-hidden');
                 }
                 if (item.display_regarding) {
                     modalRegardingEl.textContent = item.display_regarding;
-                    modalRegardingWrapEl.style.display = '';
+                    modalRegardingWrapEl.classList.remove('js-hidden');
                 } else {
                     modalRegardingEl.textContent = '';
-                    modalRegardingWrapEl.style.display = 'none';
+                    modalRegardingWrapEl.classList.add('js-hidden');
                 }
                 modal.show();
                 if (!item.admin_read) {
