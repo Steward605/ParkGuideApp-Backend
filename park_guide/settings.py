@@ -74,7 +74,7 @@ INSTALLED_APPS = [
     'notifications.apps.NotificationsConfig',
     'accounts',
     'dashboard.apps.DashboardConfig',
-    'ar_training.apps.ArTrainingConfig',
+    'monitoring.apps.MonitoringConfig',
     'rest_framework.authtoken',
     'corsheaders',
     'ranger_eye',
