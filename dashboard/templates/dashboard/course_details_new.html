@@ -3,7 +3,7 @@
 
 {% block content %}
 <div class="container-fluid py-4">
-    <style>
+    <style nonce="{{ request.csp_nonce }}">
         [data-theme="dark"] { --bs-body-bg: #1e1e1e; --bs-body-color: #e0e0e0; }
         .stat-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 8px; margin-bottom: 15px; }
         .stat-card h6 { font-size: 0.9rem; opacity: 0.9; margin: 0; }
@@ -136,7 +136,7 @@
     </div>
 </div>
 
-<script>
+<script nonce="{{ request.csp_nonce }}">
 const courseId = {{ course.id }};
 let chapters = [], lessons = [], quizzes = [], exercises = [];
 

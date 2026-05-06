@@ -4,7 +4,7 @@
 {% block page_title %}<i class="bi bi-book-fill me-2"></i>{{ course.title.en|default:"Course" }} - Content Management{% endblock %}
 
 {% block extra_css %}
-<style>
+<style nonce="{{ request.csp_nonce }}">
     :root {
         --primary-color: #2d6a4f;
         --secondary-color: #52b788;
@@ -808,7 +808,7 @@
     </div>
 </div>
 
-<style>
+<style nonce="{{ request.csp_nonce }}">
 .glass-card {
     background: rgba(255, 255, 255, 0.08);
     border: 1px solid rgba(255, 255, 255, 0.15);
@@ -823,7 +823,7 @@
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
 </style>
-<script>
+<script nonce="{{ request.csp_nonce }}">
 const courseId = {{ course.id }};
 let currentChapterId = null;
 let currentEditId = null;

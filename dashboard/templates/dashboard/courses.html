@@ -4,7 +4,7 @@
 {% block page_title %}<i class="bi bi-journal-bookmark-fill me-2"></i>Course Management{% endblock %}
 
 {% block extra_css %}
-<style>
+<style nonce="{{ request.csp_nonce }}">
     /* Modern Dashboard Styling */
     
     /* Stats Cards - Glassmorphism Effect */
@@ -507,7 +507,7 @@
     </button>
 </div>
 
-<form method="post" id="bulkDeleteCoursesForm" onsubmit="return confirm('Delete selected course(s)? This will also delete related content (chapters, lessons, quizzes, enrollments).');">
+<form method="post" id="bulkDeleteCoursesForm" data-confirm-message="Delete selected course(s)? This will also delete related content (chapters, lessons, quizzes, enrollments).">
     {% csrf_token %}
     <input type="hidden" name="action" value="bulk_delete_courses">
 
@@ -692,13 +692,23 @@
 </div>
 
 <!-- JavaScript for Interactivity -->
-<script>
+<script nonce="{{ request.csp_nonce }}">
 document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('courseSearch');
     const courseGrid = document.getElementById('courseGrid');
     const filterButtons = document.querySelectorAll('.filter-button');
     const selectAllCoursesEl = document.getElementById('selectAllCourses');
     const deleteSelectedCoursesBtn = document.getElementById('deleteSelectedCoursesBtn');
+    const bulkDeleteCoursesForm = document.getElementById('bulkDeleteCoursesForm');
+
+    if (bulkDeleteCoursesForm) {
+        bulkDeleteCoursesForm.addEventListener('submit', function(event) {
+            const message = bulkDeleteCoursesForm.getAttribute('data-confirm-message') || 'Continue?';
+            if (!window.confirm(message)) {
+                event.preventDefault();
+            }
+        });
+    }
     
     // Search functionality
     if (searchInput) {

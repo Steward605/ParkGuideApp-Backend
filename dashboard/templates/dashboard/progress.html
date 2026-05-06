@@ -4,7 +4,7 @@
 {% block page_title %}<i class="bi bi-graph-up-arrow me-2"></i>Student Progress Tracking{% endblock %}
 
 {% block extra_css %}
-<style>
+<style nonce="{{ request.csp_nonce }}">
     :root {
         --primary-color: #2d6a4f;
         --secondary-color: #52b788;
@@ -620,7 +620,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
+<script nonce="{{ request.csp_nonce }}">
 const progressModalEl = document.getElementById('studentProgressModal');
 const progressModal = new bootstrap.Modal(progressModalEl);
 const progressContentEl = document.getElementById('progressContent');
@@ -776,7 +776,7 @@ function loadStudentProgress(userId, username, preserveMessage = false) {
                             </div>
                             <div class="text-end d-flex align-items-center gap-2">
                                 <strong>${enrollment.progress_percentage}%</strong>
-                                <button class="btn btn-sm btn-outline-danger progress-reset-inline" onclick="resetStudentProgress(${userId}, ${enrollment.id}, '${enrollment.course_code}')">
+                                <button type="button" class="btn btn-sm btn-outline-danger progress-reset-inline" data-user-id="${userId}" data-enrollment-id="${enrollment.id}" data-course-code="${enrollment.course_code}">
                                     Reset
                                 </button>
                             </div>
@@ -794,6 +794,14 @@ function loadStudentProgress(userId, username, preserveMessage = false) {
             });
 
             progressContentEl.innerHTML = html;
+            progressContentEl.querySelectorAll('.progress-reset-inline').forEach((button) => {
+                button.addEventListener('click', () => {
+                    const targetUserId = button.getAttribute('data-user-id');
+                    const targetEnrollmentId = button.getAttribute('data-enrollment-id');
+                    const targetCourseCode = button.getAttribute('data-course-code') || '';
+                    resetStudentProgress(targetUserId, targetEnrollmentId, targetCourseCode);
+                });
+            });
         })
         .catch(error => {
             progressContentEl.innerHTML = '<div class="alert alert-danger">Failed to load student progress</div>';

@@ -5,7 +5,7 @@
 {% block page_title %}<i class="bi bi-book-fill me-2"></i>{{ course.title.en|default:"Course" }} Management{% endblock %}
 
 {% block extra_css %}
-<style>
+<style nonce="{{ request.csp_nonce }}">
     :root {
         --primary-color: #2d6a4f;
         --secondary-color: #52b788;
@@ -803,7 +803,7 @@
     </div>
 </div>
 
-<script>
+<script nonce="{{ request.csp_nonce }}">
     const courseId = {{ course.id }};
     const apiBase = '/api';
     

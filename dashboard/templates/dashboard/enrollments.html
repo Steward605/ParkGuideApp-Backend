@@ -4,7 +4,7 @@
 {% block page_title %}<i class="bi bi-journal-check me-2"></i>Park Guide Progress{% endblock %}
 
 {% block extra_css %}
-<style>
+<style nonce="{{ request.csp_nonce }}">
     .enrollment-stat-card {
         background: var(--bg-card);
         border: 1px solid var(--border);
@@ -906,7 +906,7 @@
         </div>
     </div>
 </div>
-<script>
+<script nonce="{{ request.csp_nonce }}">
 document.addEventListener('DOMContentLoaded', function () {
     const guideProgressModalEl = document.getElementById('guideProgressModal');
     if (!guideProgressModalEl) return;
