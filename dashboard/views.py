@@ -43,9 +43,7 @@ from courses.models import (
     Course, Module, ModuleProgress, CourseProgress, Chapter, Lesson, Quiz, 
     ChapterProgress, CourseEnrollment, QuizAttempt, PracticeAttempt, LessonProgress
 )
-from ar_training.models import (
-    ARTrainingProgress, ARQuizAttempt, ARBadge, ARUserAchievement
-)
+from ar_training.models import ARTrainingProgress
 from user_progress.models import Badge, UserBadge
 from notifications.models import Notification, UserNotification
 from notifications.services import send_push_to_users
@@ -64,6 +62,29 @@ def get_title_text(title_obj, lang='en', default='Untitled'):
     elif isinstance(title_obj, str):
         return title_obj or default
     return default
+
+
+def get_ar_quiz_attempt_items(progress_records):
+    attempts = []
+    for progress in progress_records:
+        for item in progress.quizzes_completed or []:
+            if not isinstance(item, dict):
+                continue
+            attempts.append((progress, item))
+    return attempts
+
+
+def get_ar_quiz_average(progress_records):
+    attempts = [item for _progress, item in get_ar_quiz_attempt_items(progress_records)]
+    if not attempts:
+        return 0
+    scores = [float(item.get('score') or (100 if item.get('correct') else 0)) for item in attempts]
+    return round(sum(scores) / len(scores), 1)
+
+
+def get_ar_badge_count(progress_records):
+    completed_count = sum(1 for progress in progress_records if progress.is_completed)
+    return 1 if completed_count >= 3 else 0
 
 
 @require_http_methods(["GET"])
@@ -1246,12 +1267,11 @@ def build_guide_progress_context(request):
         })
         
         # Add AR training stats
-        ar_progress_qs = ARTrainingProgress.objects.filter(user=guide)
-        ar_total_scenarios = ar_progress_qs.count()
-        ar_completed_scenarios = ar_progress_qs.filter(is_completed=True).count()
-        ar_quiz_results = ARQuizAttempt.objects.filter(user=guide)
-        ar_avg_quiz_score = round((ar_quiz_results.filter(is_correct=True).count() / ar_quiz_results.count()) * 100, 1) if ar_quiz_results.exists() else 0
-        ar_badges = ARUserAchievement.objects.filter(user=guide).count()
+        ar_progress_records = list(ARTrainingProgress.objects.filter(user=guide))
+        ar_total_scenarios = len(ar_progress_records)
+        ar_completed_scenarios = sum(1 for progress in ar_progress_records if progress.is_completed)
+        ar_avg_quiz_score = get_ar_quiz_average(ar_progress_records)
+        ar_badges = get_ar_badge_count(ar_progress_records)
 
         guide_cards[-1]['ar_stats'] = {
             'total_scenarios': ar_total_scenarios,
@@ -1358,11 +1378,19 @@ def dashboard_enrollments(request):
     }
     
     # Calculate AR training statistics
+    ar_progress_records = list(ARTrainingProgress.objects.all())
+    completed_by_user = (
+        ARTrainingProgress.objects.filter(is_completed=True)
+        .values('user_id')
+        .annotate(completed_count=Count('id'))
+        .filter(completed_count__gte=3)
+        .count()
+    )
     ar_stats = {
         'total_scenarios': ARTrainingProgress.objects.filter(is_completed=True).values('scenario_id').distinct().count(),
         'active_users': ARTrainingProgress.objects.values('user_id').distinct().count(),
-        'avg_quiz_score': round((ARQuizAttempt.objects.filter(is_correct=True).count() / ARQuizAttempt.objects.count()) * 100, 1) if ARQuizAttempt.objects.exists() else 0,
-        'badges_earned': ARUserAchievement.objects.values('user_id').distinct().count(),
+        'avg_quiz_score': get_ar_quiz_average(ar_progress_records),
+        'badges_earned': completed_by_user,
     }
     context = {
         'page_obj': page_obj,
@@ -2106,9 +2134,9 @@ def dashboard_student_progress(request, user_id):
         })
     
     # Prepare AR training data
-    ar_progress = ARTrainingProgress.objects.filter(user=user).select_related('scenario').order_by('-last_updated')
-    ar_quiz_results = ARQuizAttempt.objects.filter(user=user).select_related('quiz', 'quiz__scenario').order_by('-completed_at')
-    ar_achievements = ARUserAchievement.objects.filter(user=user).select_related('badge').order_by('-unlocked_at')
+    ar_progress = ARTrainingProgress.objects.filter(user=user).select_related('scenario').order_by('-updated_at')
+    ar_progress_records = list(ar_progress)
+    ar_quiz_attempts = get_ar_quiz_attempt_items(ar_progress_records)
 
     ar_progress_details = []
     for progress in ar_progress:
@@ -2125,24 +2153,27 @@ def dashboard_student_progress(request, user_id):
         })
 
     ar_quiz_details = []
-    for result in ar_quiz_results[:5]:
+    for progress, result in ar_quiz_attempts[:5]:
+        score = float(result.get('score') or (100 if result.get('correct') else 0))
         ar_quiz_details.append({
-            'scenario_code': result.quiz.scenario.code,
-            'scenario_title': get_title_text(result.quiz.scenario.title, 'en', 'Untitled'),
-            'score': 1 if result.is_correct else 0,
+            'scenario_code': progress.scenario.code,
+            'scenario_title': get_title_text(progress.scenario.title, 'en', 'Untitled'),
+            'score': score,
             'total_questions': 1,
-            'percentage': 100 if result.is_correct else 0,
-            'passed': result.is_correct,
-            'time_spent_minutes': round(result.time_taken_seconds / 60, 1),
-            'completed_at': result.completed_at.isoformat() if result.completed_at else None,
+            'percentage': score,
+            'passed': bool(result.get('correct')),
+            'time_spent_minutes': round(float(result.get('time_taken_seconds') or 0) / 60, 1),
+            'completed_at': result.get('answered_at'),
         })
 
-    ar_achievements_details = [{
-        'badge_id': ach.badge.badge_id,
-        'badge_name': ach.badge.name,
-        'badge_icon': ach.badge.icon_url,
-        'unlocked_at': ach.unlocked_at.isoformat() if ach.unlocked_at else None,
-    } for ach in ar_achievements]
+    ar_achievements_details = []
+    if get_ar_badge_count(ar_progress_records):
+        ar_achievements_details.append({
+            'badge_id': 'ar-scenario-finisher',
+            'badge_name': {'en': 'AR Scenario Finisher'},
+            'badge_icon': '',
+            'unlocked_at': None,
+        })
 
     return JsonResponse({
         'user': {
@@ -2160,9 +2191,9 @@ def dashboard_student_progress(request, user_id):
             'summary': {
                 'total_scenarios': ar_progress.count(),
                 'completed_scenarios': ar_progress.filter(is_completed=True).count(),
-                'total_quiz_attempts': ar_quiz_results.count(),
-                'avg_quiz_score': round((ar_quiz_results.filter(is_correct=True).count() / ar_quiz_results.count()) * 100, 1) if ar_quiz_results.exists() else 0,
-                'badges_earned': ar_achievements.count(),
+                'total_quiz_attempts': len(ar_quiz_attempts),
+                'avg_quiz_score': get_ar_quiz_average(ar_progress_records),
+                'badges_earned': len(ar_achievements_details),
             }
         },
         'summary': {
