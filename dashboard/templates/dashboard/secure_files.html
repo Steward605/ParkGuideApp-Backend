@@ -69,7 +69,7 @@
                             <td>
                                 <div class="d-flex gap-2">
                                     <a class="btn btn-sm btn-outline-primary" href="/api/secure-files/files/{{ file.id }}/download/" target="_blank" rel="noopener noreferrer">Open</a>
-                                    <form method="post" onsubmit="return confirm('Delete this file?');">
+                                    <form method="post" data-confirm-message="Delete this file?">
                                         {% csrf_token %}
                                         <input type="hidden" name="action" value="delete_file">
                                         <input type="hidden" name="file_id" value="{{ file.id }}">

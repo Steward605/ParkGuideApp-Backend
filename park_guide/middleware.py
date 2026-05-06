@@ -1,7 +1,6 @@
 from secrets import token_urlsafe
 from django.conf import settings
 
-
 class SecurityHeadersMiddleware:
     """
     Add security headers not covered by Django's built-in middleware.

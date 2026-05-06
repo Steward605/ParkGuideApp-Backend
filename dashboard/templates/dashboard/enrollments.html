@@ -514,7 +514,7 @@
                                             </div>
                                         </div>
                                         <div class="enrollment-progress-bar mt-3">
-                                            <div class="enrollment-progress-fill" style="width: {{ enrollment.progress_percentage }}%;"></div>
+                                            <div class="enrollment-progress-fill w-pct-{{ enrollment.progress_percentage|floatformat:0 }}"></div>
                                         </div>
                                     </div>
 
@@ -548,13 +548,13 @@
                                         {% csrf_token %}
                                         <input type="hidden" name="action" value="update_status">
                                         <input type="hidden" name="enrollment_id" value="{{ enrollment.id }}">
-                                        <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+                                        <select name="status" class="form-select form-select-sm" data-submit-on-change>
                                             {% for value, label in status_choices %}
                                                 <option value="{{ value }}" {% if enrollment.status == value %}selected{% endif %}>{{ label }}</option>
                                             {% endfor %}
                                         </select>
                                     </form>
-                                    <form method="post" onsubmit="return confirm('Reset progress for {{ enrollment.user.username }} in {{ enrollment.course.code }}?');">
+                                    <form method="post" data-confirm-message="Reset progress for {{ enrollment.user.username }} in {{ enrollment.course.code }}?">
                                         {% csrf_token %}
                                         <input type="hidden" name="action" value="reset_progress">
                                         <input type="hidden" name="enrollment_id" value="{{ enrollment.id }}">
@@ -562,7 +562,7 @@
                                             <i class="bi bi-arrow-counterclockwise"></i>
                                         </button>
                                     </form>
-                                    <form method="post" onsubmit="return confirm('Unenroll {{ enrollment.user.username }} from {{ enrollment.course.code }}?');">
+                                    <form method="post" data-confirm-message="Unenroll {{ enrollment.user.username }} from {{ enrollment.course.code }}?">
                                         {% csrf_token %}
                                         <input type="hidden" name="action" value="delete_enrollment">
                                         <input type="hidden" name="enrollment_id" value="{{ enrollment.id }}">
@@ -691,7 +691,7 @@
                                     </div>
 
                                     <div class="enrollment-progress-bar">
-                                        <div class="enrollment-progress-fill" style="width: {{ guide.latest_enrollment.progress_percentage }}%;"></div>
+                                        <div class="enrollment-progress-fill w-pct-{{ guide.latest_enrollment.progress_percentage|floatformat:0 }}"></div>
                                     </div>
 
                                     <div class="text-end mt-1">
@@ -749,27 +749,6 @@
         </div>
     </div>
 </div>
-                                +        </div>
-                                        {% if ar_stats %}
-                                        <div class="col">
-                                            <div class="enrollment-stat-card" style="border: 1px solid rgba(82, 183, 136, 0.3); background: rgba(82, 183, 136, 0.05);">
-                                                <div class="enrollment-stat-label">AR Scenarios</div>
-                                                <div class="enrollment-stat-value" style="color: #52b788;">{{ ar_stats.total_scenarios }}</div>
-                                            </div>
-                                        </div>
-                                        {% endif %}
-                                
-                                {% if guide.ar_stats %}
-                                    <div class="guide-summary-stat-box" style="border: 1px solid rgba(82, 183, 136, 0.3); background: rgba(82, 183, 136, 0.08);">
-                                        <div class="guide-summary-stat-label">AR Scenarios</div>
-                                        <div class="guide-summary-stat-value">{{ guide.ar_stats.completed_scenarios }}/{{ guide.ar_stats.total_scenarios }}</div>
-                                    </div>
-
-                                    <div class="guide-summary-stat-box" style="border: 1px solid rgba(82, 183, 136, 0.3); background: rgba(82, 183, 136, 0.08);">
-                                        <div class="guide-summary-stat-label">AR Quiz Avg</div>
-                                        <div class="guide-summary-stat-value">{{ guide.ar_stats.avg_quiz_score }}%</div>
-                                    </div>
-                                {% endif %}
 
 {% for enrollment in enrollments %}
     <div class="modal fade" id="enrollmentModal{{ enrollment.id }}" tabindex="-1" aria-hidden="true">
@@ -814,7 +793,7 @@
                         <div class="fw-semibold mb-1">{{ enrollment.course.title.en|default:"Untitled Course" }}</div>
                         <div class="enrollment-meta mb-3">Chapters completed: {{ enrollment.completed_chapters }}/{{ enrollment.total_chapters }}</div>
                         <div class="enrollment-progress-bar">
-                            <div class="enrollment-progress-fill" style="width: {{ enrollment.progress_percentage }}%;"></div>
+                            <div class="enrollment-progress-fill w-pct-{{ enrollment.progress_percentage|floatformat:0 }}"></div>
                         </div>
                     </div>
 
@@ -850,19 +829,19 @@
                     </div>
                 </div>
                 <div class="modal-footer enrollment-modal-footer">
-                    <form method="post" class="me-auto">
+                    <form method="post" class="me-auto" data-confirm-message="Reset progress for {{ enrollment.user.username }} in {{ enrollment.course.code }}?">
                         {% csrf_token %}
                         <input type="hidden" name="action" value="reset_progress">
                         <input type="hidden" name="enrollment_id" value="{{ enrollment.id }}">
-                        <button type="submit" class="btn btn-outline-warning" onclick="return confirm('Reset progress for {{ enrollment.user.username }} in {{ enrollment.course.code }}?');">
+                        <button type="submit" class="btn btn-outline-warning">
                             <i class="bi bi-arrow-counterclockwise me-2"></i>Reset Progress
                         </button>
                     </form>
-                    <form method="post">
+                    <form method="post" data-confirm-message="Unenroll {{ enrollment.user.username }} from {{ enrollment.course.code }}?">
                         {% csrf_token %}
                         <input type="hidden" name="action" value="delete_enrollment">
                         <input type="hidden" name="enrollment_id" value="{{ enrollment.id }}">
-                        <button type="submit" class="btn btn-outline-danger" onclick="return confirm('Unenroll {{ enrollment.user.username }} from {{ enrollment.course.code }}?');">
+                        <button type="submit" class="btn btn-outline-danger">
                             <i class="bi bi-person-dash me-2"></i>Unenroll
                         </button>
                     </form>
@@ -994,8 +973,11 @@ document.addEventListener('DOMContentLoaded', function () {
                                 <div class="text-end d-flex align-items-center gap-2">
                                     <strong>${enrollment.progress_percentage}%</strong>
                                     <button
-                                        class="btn btn-sm btn-outline-danger"
-                                        onclick="resetGuideProgress(${guideId}, ${enrollment.id}, '${enrollment.course_code}')">
+                                        type="button"
+                                        class="btn btn-sm btn-outline-danger guide-progress-reset-inline"
+                                        data-guide-id="${guideId}"
+                                        data-enrollment-id="${enrollment.id}"
+                                        data-course-code="${enrollment.course_code}">
                                         Reset
                                     </button>
                                 </div>
@@ -1004,7 +986,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             <small class="d-block mb-2">${enrollment.course_title}</small>
 
                             <div class="enrollment-progress-bar mb-2">
-                                <div class="enrollment-progress-fill" style="width: ${enrollment.progress_percentage}%;"></div>
+                                <div class="enrollment-progress-fill w-pct-${toPct(enrollment.progress_percentage)}"></div>
                             </div>
 
                             <div class="small text-muted">
@@ -1016,6 +998,14 @@ document.addEventListener('DOMContentLoaded', function () {
                     `;
                 });
                 guideProgressContentEl.innerHTML = html;
+                guideProgressContentEl.querySelectorAll('.guide-progress-reset-inline').forEach((button) => {
+                    button.addEventListener('click', () => {
+                        const guideId = button.getAttribute('data-guide-id');
+                        const enrollmentId = button.getAttribute('data-enrollment-id');
+                        const courseCode = button.getAttribute('data-course-code') || '';
+                        resetGuideProgress(guideId, enrollmentId, courseCode);
+                    });
+                });
             })
             .catch(error => {
                 guideProgressContentEl.innerHTML = `

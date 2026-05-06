@@ -328,6 +328,82 @@
         border-radius: 8px;
     }
 
+    .progress-modal-kpi-value {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: #2d6a4f;
+    }
+
+    .progress-modal-kpi-label {
+        color: var(--text-muted);
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    .progress-badge-spaced {
+        margin-left: 0.5rem;
+    }
+
+    .progress-ar-item {
+        background: rgba(82, 183, 136, 0.05);
+        border: 1px solid rgba(82, 183, 136, 0.15);
+    }
+
+    .progress-quiz-item {
+        background: rgba(45, 106, 79, 0.03);
+        border: 1px solid rgba(45, 106, 79, 0.12);
+    }
+
+    .progress-track-small {
+        height: 6px;
+        background: rgba(82, 183, 136, 0.1);
+        border-radius: 3px;
+        overflow: hidden;
+        margin-bottom: 0.5rem;
+    }
+
+    .progress-track-fill-small {
+        height: 100%;
+        background: linear-gradient(90deg, #2d6a4f, #52b788);
+    }
+
+    .progress-small-muted {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+    }
+
+    .progress-badge-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 8px;
+        margin-bottom: 1rem;
+    }
+
+    .progress-badge-tile {
+        text-align: center;
+        padding: 12px;
+        background: rgba(82, 183, 136, 0.1);
+        border-radius: 8px;
+        border: 1px solid rgba(82, 183, 136, 0.2);
+    }
+
+    .progress-badge-icon {
+        font-size: 24px;
+        margin-bottom: 4px;
+    }
+
+    .progress-badge-name {
+        font-weight: 700;
+        display: block;
+        color: var(--primary-color);
+    }
+
+    .progress-badge-date {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        display: block;
+    }
+
     .modal-message {
         display: none;
         border-radius: 10px;
@@ -529,11 +605,11 @@
                             <span class="course-code">
                                 <i class="bi bi-bookmark me-1"></i>{{ student.latest_enrollment.course.code }}
                             </span>
-                            <small class="d-block mb-2 fw-bold" style="color: var(--text-main);">
+                            <small class="d-block mb-2 fw-bold u-text-main">
                                 {{ student.latest_enrollment.course.title.en|truncatewords:4 }}
                             </small>
                             <div class="course-progress">
-                                <div class="course-progress-fill" style="width: {{ student.latest_enrollment.progress_percentage }}%"></div>
+                                <div class="course-progress-fill w-pct-{{ student.latest_enrollment.progress_percentage|floatformat:0 }}"></div>
                             </div>
                             <div class="text-end">
                                 <small class="text-muted d-block mt-1">
@@ -667,18 +743,18 @@ function loadStudentProgress(userId, username, preserveMessage = false) {
                 <div class="row g-3 mb-4">
                     <div class="col-6">
                         <div class="progress-summary-card">
-                            <div style="font-size: 1.5rem; font-weight: 800; color: #2d6a4f;">
+                            <div class="csp-u-90eaba3823">
                                 ${data.summary.completed}/${data.summary.total_courses}
                             </div>
-                            <small style="color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Completed</small>
+                            <small class="csp-u-3d2964f8b6">Completed</small>
                         </div>
                     </div>
                     <div class="col-6">
                         <div class="progress-summary-card">
-                            <div style="font-size: 1.5rem; font-weight: 800; color: #2d6a4f;">
+                            <div class="csp-u-90eaba3823">
                                 ${data.summary.avg_progress}%
                             </div>
-                            <small style="color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Avg Progress</small>
+                            <small class="csp-u-3d2964f8b6">Avg Progress</small>
                         </div>
                     </div>
                 </div>
@@ -696,7 +772,7 @@ function loadStudentProgress(userId, username, preserveMessage = false) {
                         <div class="d-flex justify-content-between align-items-start mb-2">
                             <div>
                                 <strong>${enrollment.course_code}</strong>
-                                <span class="badge bg-${statusColor}" style="margin-left: 0.5rem;">${enrollment.status.replace('_', ' ').toUpperCase()}</span>
+                                <span class="badge bg-${statusColor} progress-badge-spaced">${enrollment.status.replace('_', ' ').toUpperCase()}</span>
     
                                         // AR Training section
                                         if (data.ar_training && data.ar_training.progress && data.ar_training.progress.length > 0) {
@@ -706,22 +782,22 @@ function loadStudentProgress(userId, username, preserveMessage = false) {
                 
                                             data.ar_training.progress.forEach(ar => {
                                                 html += `
-                                                    <div class="enrollment-item" style="background: rgba(82, 183, 136, 0.05); border: 1px solid rgba(82, 183, 136, 0.15);">
+                                                    <div class="enrollment-item progress-ar-item">
                                                         <div class="d-flex justify-content-between align-items-start mb-2">
                                                             <div>
                                                                 <strong><i class="bi bi-vr"></i> ${ar.scenario_code}</strong>
-                                                                <span class="badge ${ar.is_completed ? 'bg-success' : 'bg-info'}" style="margin-left: 0.5rem;">${ar.is_completed ? 'COMPLETED' : 'IN PROGRESS'}</span>
+                                                                <span class="badge ${ar.is_completed ? 'bg-success' : 'bg-info'} progress-badge-spaced">${ar.is_completed ? 'COMPLETED' : 'IN PROGRESS'}</span>
                                                             </div>
-                                                            <small style="color: var(--text-muted);">${ar.completion_percentage.toFixed(0)}%</small>
+                                                            <small class="csp-u-bf4b678785">${ar.completion_percentage.toFixed(0)}%</small>
                                                         </div>
-                                                        <small class="d-block mb-2" style="font-weight: 600;">${ar.scenario_title}</small>
-                                                        <small class="d-block mb-2" style="color: var(--text-muted);">Type: ${ar.scenario_type}</small>
-                                                        <div style="height: 6px; background: rgba(82, 183, 136, 0.1); border-radius: 3px; overflow: hidden; margin-bottom: 0.5rem;">
-                                                            <div style="height: 100%; background: linear-gradient(90deg, #2d6a4f, #52b788); width: ${ar.completion_percentage}%;"></div>
+                                                        <small class="d-block mb-2 csp-u-5c05f4afaf">${ar.scenario_title}</small>
+                                                        <small class="d-block mb-2 csp-u-bf4b678785">Type: ${ar.scenario_type}</small>
+                                                        <div class="progress-track-small">
+                                                            <div class="progress-track-fill-small w-pct-${toPct(ar.completion_percentage)}"></div>
                                                         </div>
-                                                        <div style="font-size: 0.8rem; color: var(--text-muted);">
+                                                        <div class="csp-u-d3695c9363">
                                                             <i class="bi bi-cursor"></i> ${ar.visited_hotspots_count} hotspots visited
-                                                            <span style="margin-left: 1rem;"><i class="bi bi-clock"></i> ${ar.time_spent_minutes} min</span>
+                                                            <span class="ms-3"><i class="bi bi-clock"></i> ${ar.time_spent_minutes} min</span>
                                                         </div>
                                                     </div>
                                                 `;
@@ -737,12 +813,12 @@ function loadStudentProgress(userId, username, preserveMessage = false) {
                                             data.ar_training.quiz_results.forEach(quiz => {
                                                 const passed = quiz.passed ? '✓' : '✗';
                                                 html += `
-                                                    <div class="enrollment-item" style="background: rgba(45, 106, 79, 0.03); border: 1px solid rgba(45, 106, 79, 0.12);">
+                                                    <div class="enrollment-item progress-quiz-item">
                                                         <div class="d-flex justify-content-between align-items-start mb-1">
-                                                            <small style="font-weight: 700;">${quiz.scenario_title}</small>
+                                                            <small class="csp-u-42acb60ee2">${quiz.scenario_title}</small>
                                                             <span class="badge ${quiz.passed ? 'bg-success' : 'bg-warning'}">${passed} ${quiz.percentage.toFixed(1)}%</span>
                                                         </div>
-                                                        <small style="color: var(--text-muted); display: block; margin-bottom: 4px;">
+                                                        <small class="csp-u-a90eadd9e4">
                                                             ${quiz.score}/${quiz.total_questions} correct • ${quiz.time_spent_minutes} min
                                                         </small>
                                                     </div>
@@ -754,15 +830,15 @@ function loadStudentProgress(userId, username, preserveMessage = false) {
                                         if (data.ar_training && data.ar_training.achievements && data.ar_training.achievements.length > 0) {
                                             html += `
                                                 <h6 class="fw-bold mb-3 mt-3">AR Badges Earned</h6>
-                                                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; margin-bottom: 1rem;">
+                                                <div class="progress-badge-grid">
                                             `;
                 
                                             data.ar_training.achievements.forEach(badge => {
                                                 html += `
-                                                    <div style="text-align: center; padding: 12px; background: rgba(82, 183, 136, 0.1); border-radius: 8px; border: 1px solid rgba(82, 183, 136, 0.2);">
-                                                        <div style="font-size: 24px; margin-bottom: 4px;"><i class="bi bi-${badge.badge_icon}"></i></div>
-                                                        <small style="font-weight: 700; display: block; color: var(--primary-color);">${badge.badge_name}</small>
-                                                        <small style="font-size: 0.7rem; color: var(--text-muted); display: block;">${new Date(badge.unlocked_at).toLocaleDateString()}</small>
+                                                    <div class="progress-badge-tile">
+                                                        <div class="progress-badge-icon"><i class="bi bi-${badge.badge_icon}"></i></div>
+                                                        <small class="progress-badge-name">${badge.badge_name}</small>
+                                                        <small class="progress-badge-date">${new Date(badge.unlocked_at).toLocaleDateString()}</small>
                                                     </div>
                                                 `;
                                             });
@@ -782,12 +858,12 @@ function loadStudentProgress(userId, username, preserveMessage = false) {
                             </div>
                         </div>
                         <small class="d-block mb-2">${enrollment.course_title}</small>
-                        <div style="height: 6px; background: rgba(45, 106, 79, 0.1); border-radius: 3px; overflow: hidden; margin-bottom: 0.5rem;">
-                            <div style="height: 100%; background: linear-gradient(90deg, #2d6a4f, #52b788); width: ${enrollment.progress_percentage}%;"></div>
+                        <div class="progress-track-small">
+                            <div class="progress-track-fill-small w-pct-${toPct(enrollment.progress_percentage)}"></div>
                         </div>
-                        <div style="font-size: 0.8rem; color: var(--text-muted);">
+                        <div class="csp-u-d3695c9363">
                             <i class="bi bi-bookmark"></i> ${item.chapters.completed}/${item.chapters.total} chapters
-                            ${item.quiz_avg ? `<span style="margin-left: 1rem;"><i class="bi bi-pencil-square"></i> Quiz Avg: ${item.quiz_avg}%</span>` : ''}
+                            ${item.quiz_avg ? `<span class="ms-3"><i class="bi bi-pencil-square"></i> Quiz Avg: ${item.quiz_avg}%</span>` : ''}
                         </div>
                     </div>
                 `;

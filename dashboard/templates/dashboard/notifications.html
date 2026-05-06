@@ -145,7 +145,7 @@
                 </select>
             </div>
 
-            <div class="col-12" id="selectedGuidesWrap" style="display: none;">
+            <div class="col-12 js-hidden" id="selectedGuidesWrap">
                 <label class="form-label">Selected Guides</label>
                 <select name="selected_users" class="form-select" multiple size="6">
                     {% for user in guide_users %}
@@ -280,8 +280,7 @@
                                         <i class="bi bi-eye"></i>
                                     </button>
 
-                                    <form method="post" class="d-inline"
-                                        onsubmit="return confirm('Delete this notification? This will remove it for all recipients.');">
+                                    <form method="post" class="d-inline" data-confirm-message="Delete this notification? This will remove it for all recipients.">
                                         {% csrf_token %}
                                         <input type="hidden" name="action" value="delete_notification">
                                         <input type="hidden" name="notification_id" value="{{ item.id }}">
@@ -365,8 +364,7 @@
                             <i class="bi bi-eye me-1"></i> View
                         </button>
 
-                        <form method="post" class="flex-fill"
-                            onsubmit="return confirm('Delete this notification? This will remove it for all recipients.');">
+                        <form method="post" class="flex-fill" data-confirm-message="Delete this notification? This will remove it for all recipients.">
                             {% csrf_token %}
                             <input type="hidden" name="action" value="delete_notification">
                             <input type="hidden" name="notification_id" value="{{ item.id }}">
@@ -427,7 +425,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <p class="text-muted mb-3" id="notificationModalDescription" style="display: none;"></p>
+                <p class="text-muted mb-3 js-hidden" id="notificationModalDescription"></p>
                 <div class="row g-3 mb-4">
                     <div class="col-md-4">
                         <div class="small text-muted text-uppercase fw-semibold">Audience</div>
@@ -442,12 +440,12 @@
                         <div class="fw-semibold" id="notificationModalSent"></div>
                     </div>
                 </div>
-                <div class="mb-4" id="notificationModalSelectedGuidesWrap" style="display: none;">
+                <div class="mb-4 js-hidden" id="notificationModalSelectedGuidesWrap">
                     <div class="small text-muted text-uppercase fw-semibold mb-2">Selected Guides</div>
                     <div class="d-flex flex-wrap gap-2" id="notificationModalSelectedGuides"></div>
                 </div>
                 <div class="small text-muted text-uppercase fw-semibold mb-2">Full Message</div>
-                <div class="border rounded-3 p-3 bg-body-tertiary" style="white-space: pre-wrap;" id="notificationModalFullText"></div>
+                <div class="border rounded-3 p-3 bg-body-tertiary u-prewrap" id="notificationModalFullText"></div>
                 <div class="mt-4 small text-muted" id="notificationModalFooterMeta"></div>
             </div>
             <div class="modal-footer">
@@ -466,7 +464,7 @@
         function syncNotificationForm() {
             if (!audienceSelect || !trackingSelect || !selectedGuidesWrap) return;
             const audience = audienceSelect.value;
-            selectedGuidesWrap.style.display = audience === 'selected_guides' ? '' : 'none';
+            selectedGuidesWrap.classList.toggle('js-hidden', audience !== 'selected_guides');
             if (audience === 'admins') {
                 trackingSelect.value = 'admin_shared';
             } else if (trackingSelect.value === 'admin_shared') {
@@ -512,10 +510,10 @@
             footerMetaEl.textContent = `Sent ${sent} by ${createdBy}`;
             if (description.trim()) {
                 descriptionEl.textContent = description;
-                descriptionEl.style.display = '';
+                descriptionEl.classList.remove('js-hidden');
             } else {
                 descriptionEl.textContent = '';
-                descriptionEl.style.display = 'none';
+                descriptionEl.classList.add('js-hidden');
             }
             selectedGuidesEl.innerHTML = '';
             if (recipientUsernames.trim() && audience.toLowerCase().includes('selected')) {
@@ -525,9 +523,9 @@
                     span.textContent = username;
                     selectedGuidesEl.appendChild(span);
                 });
-                selectedGuidesWrapEl.style.display = '';
+                selectedGuidesWrapEl.classList.remove('js-hidden');
             } else {
-                selectedGuidesWrapEl.style.display = 'none';
+                selectedGuidesWrapEl.classList.add('js-hidden');
             }
             fetch("{% url 'dashboard:notifications' %}", {
                 method: "POST",

@@ -4,111 +4,111 @@
 {% block title %}{{ course.title }} - Courses{% endblock %}
 
 {% block content %}
-<div style="flex: 1; display: flex; flex-direction: column; overflow-y: auto;">
+<div class="csp-u-34c2e3eaac">
     <!-- Page Content -->
-    <div style="padding: 2.5rem; max-width: 1400px; width: 100%; margin: 0 auto;">
+    <div class="csp-u-ab14985ed1">
         
         <!-- Header Section -->
-        <div class="glass-card" style="margin-bottom: 2rem; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); color: white; border: 1px solid rgba(255,255,255,0.2);">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <div class="glass-card csp-u-51837b284e">
+            <div class="csp-u-3353b9deb0">
                 <div>
-                    <h1 style="font-size: 2rem; margin: 0 0 0.5rem 0; font-weight: 800;">
-                        <i class="bi bi-book" style="margin-right: 0.75rem;"></i>{{ course_title_display }}
+                    <h1 class="csp-u-469d2f1126">
+                        <i class="bi bi-book csp-u-fef2373bef"></i>{{ course_title_display }}
                     </h1>
-                    <p style="margin: 0; opacity: 0.95; max-width: 600px;">{{ course.description|truncatewords:30 }}</p>
+                    <p class="csp-u-46482a845d">{{ course.description|truncatewords:30 }}</p>
                 </div>
 
             </div>
         </div>
 
         <!-- Statistics Grid -->
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 3rem;">
-            <div class="glass-card" style="border-left: 4px solid var(--primary);">
-                <div class="stat-icon" style="background: rgba(45, 106, 79, 0.1); color: var(--primary);">
+        <div class="csp-u-3ebd63aa4d">
+            <div class="glass-card csp-u-dfa0567c69">
+                <div class="stat-icon csp-u-b4b8e83470">
                     <i class="bi bi-diagram-2"></i>
                 </div>
-                <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0 0 0.5rem 0; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Total Chapters</p>
-                <p style="font-size: 2.5rem; margin: 0; font-weight: 800; color: var(--text-main);" id="chapCount">0</p>
+                <p class="csp-u-264793263f">Total Chapters</p>
+                <p class="csp-u-1763d7c72b" id="chapCount">0</p>
             </div>
 
-            <div class="glass-card" style="border-left: 4px solid var(--accent);">
-                <div class="stat-icon" style="background: rgba(255, 159, 28, 0.1); color: var(--accent);">
+            <div class="glass-card csp-u-9cd1a73fd2">
+                <div class="stat-icon csp-u-b44a3e2de1">
                     <i class="bi bi-file-text"></i>
                 </div>
-                <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0 0 0.5rem 0; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Total Lessons</p>
-                <p style="font-size: 2.5rem; margin: 0; font-weight: 800; color: var(--text-main);" id="lessonCount">0</p>
+                <p class="csp-u-264793263f">Total Lessons</p>
+                <p class="csp-u-1763d7c72b" id="lessonCount">0</p>
             </div>
 
-            <div class="glass-card" style="border-left: 4px solid #52b788;">
-                <div class="stat-icon" style="background: rgba(82, 183, 136, 0.1); color: #52b788;">
+            <div class="glass-card csp-u-b665f9db70">
+                <div class="stat-icon csp-u-e8de187a8b">
                     <i class="bi bi-question-circle"></i>
                 </div>
-                <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0 0 0.5rem 0; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Total Quizzes</p>
-                <p style="font-size: 2.5rem; margin: 0; font-weight: 800; color: var(--text-main);" id="quizCount">0</p>
+                <p class="csp-u-264793263f">Total Quizzes</p>
+                <p class="csp-u-1763d7c72b" id="quizCount">0</p>
             </div>
 
 
         </div>
 
         <!-- Navigation Tabs -->
-        <div style="display: flex; gap: 1rem; margin-bottom: 2rem; border-bottom: 1px solid var(--border); overflow-x: auto; padding-bottom: 0;">
-            <button class="tab-btn active" data-tab="chapters" onclick="switchTab('chapters', this)" style="padding: 0.75rem 1.5rem; border: none; background: none; color: var(--text-main); font-weight: 600; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.3s ease; white-space: nowrap;">
-                <i class="bi bi-diagram-2" style="margin-right: 0.5rem;"></i>Chapters
+        <div class="csp-u-df3658e365">
+            <button type="button" class="tab-btn active csp-u-6c79282b39" data-tab="chapters" data-action="switch-tab">
+                <i class="bi bi-diagram-2 csp-u-6b68ac9f88"></i>Chapters
             </button>
-            <button class="tab-btn" data-tab="lessons" onclick="switchTab('lessons', this)" style="padding: 0.75rem 1.5rem; border: none; background: none; color: var(--text-muted); font-weight: 600; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.3s ease; white-space: nowrap;">
-                <i class="bi bi-file-text" style="margin-right: 0.5rem;"></i>Lessons
+            <button type="button" class="tab-btn csp-u-d87579b2cc" data-tab="lessons" data-action="switch-tab">
+                <i class="bi bi-file-text csp-u-6b68ac9f88"></i>Lessons
             </button>
-            <button class="tab-btn" data-tab="quizzes" onclick="switchTab('quizzes', this)" style="padding: 0.75rem 1.5rem; border: none; background: none; color: var(--text-muted); font-weight: 600; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.3s ease; white-space: nowrap;">
-                <i class="bi bi-question-circle" style="margin-right: 0.5rem;"></i>Quizzes
+            <button type="button" class="tab-btn csp-u-d87579b2cc" data-tab="quizzes" data-action="switch-tab">
+                <i class="bi bi-question-circle csp-u-6b68ac9f88"></i>Quizzes
             </button>
         </div>
 
         <!-- Tab Contents -->
-        <div id="chapters" class="tab-content active" style="display: block;">
+        <div id="chapters" class="tab-content active">
             <div class="glass-card">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                    <h3 style="margin: 0; font-size: 1.3rem; font-weight: 700;">Chapters</h3>
-                    <button onclick="openAddChapter()" class="btn" style="background: var(--primary); color: white; border: none; border-radius: 10px; padding: 0.6rem 1.2rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; transition: all 0.3s ease;">
+                <div class="csp-u-acc837837d">
+                    <h3 class="csp-u-696fc3cc81">Chapters</h3>
+                    <button type="button" data-action="open-add-chapter" class="btn csp-u-3aeb574739">
                         <i class="bi bi-plus-lg"></i>Add Chapter
                     </button>
                 </div>
                 <div id="chaptersContainer">
-                    <div style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
-                        <i class="bi bi-inbox" style="font-size: 2rem; display: block; margin-bottom: 0.5rem; opacity: 0.5;"></i>
+                    <div class="csp-u-6c08ffa4e7">
+                        <i class="bi bi-inbox csp-u-2fe326ad71"></i>
                         <p>Loading chapters...</p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div id="lessons" class="tab-content" style="display: none;">
+        <div id="lessons" class="tab-content js-hidden">
             <div class="glass-card">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                    <h3 style="margin: 0; font-size: 1.3rem; font-weight: 700;">Lessons</h3>
-                    <button onclick="openAddLesson()" class="btn" style="background: var(--primary); color: white; border: none; border-radius: 10px; padding: 0.6rem 1.2rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; transition: all 0.3s ease;">
+                <div class="csp-u-acc837837d">
+                    <h3 class="csp-u-696fc3cc81">Lessons</h3>
+                    <button type="button" data-action="open-add-lesson" class="btn csp-u-3aeb574739">
                         <i class="bi bi-plus-lg"></i>Add Lesson
                     </button>
                 </div>
                 <div id="lessonsContainer">
-                    <div style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
-                        <i class="bi bi-inbox" style="font-size: 2rem; display: block; margin-bottom: 0.5rem; opacity: 0.5;"></i>
+                    <div class="csp-u-6c08ffa4e7">
+                        <i class="bi bi-inbox csp-u-2fe326ad71"></i>
                         <p>Loading lessons...</p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div id="quizzes" class="tab-content" style="display: none;">
+        <div id="quizzes" class="tab-content js-hidden">
             <div class="glass-card">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                    <h3 style="margin: 0; font-size: 1.3rem; font-weight: 700;">Quizzes</h3>
-                    <button onclick="openAddQuiz()" class="btn" style="background: var(--primary); color: white; border: none; border-radius: 10px; padding: 0.6rem 1.2rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; transition: all 0.3s ease;">
+                <div class="csp-u-acc837837d">
+                    <h3 class="csp-u-696fc3cc81">Quizzes</h3>
+                    <button type="button" data-action="open-add-quiz" class="btn csp-u-3aeb574739">
                         <i class="bi bi-plus-lg"></i>Add Quiz
                     </button>
                 </div>
                 <div id="quizzesContainer">
-                    <div style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
-                        <i class="bi bi-inbox" style="font-size: 2rem; display: block; margin-bottom: 0.5rem; opacity: 0.5;"></i>
+                    <div class="csp-u-6c08ffa4e7">
+                        <i class="bi bi-inbox csp-u-2fe326ad71"></i>
                         <p>Loading quizzes...</p>
                     </div>
                 </div>
@@ -121,141 +121,141 @@
 </div>
 
 <!-- Modals -->
-<div style="display: none;" id="chapterModal" class="modal-backdrop">
+<div id="chapterModal" class="modal-backdrop">
     <div class="modal-dialog">
-        <div class="glass-card" style="border-radius: 16px; max-width: 500px; width: 90%; margin: 0 auto;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem;">
-                <h5 style="margin: 0; font-size: 1.2rem; font-weight: 700;">Add Chapter</h5>
-                <button onclick="closeModal('chapterModal')" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted);">×</button>
+        <div class="glass-card csp-u-66753ecb44">
+            <div class="csp-u-9862f6cf66">
+                <h5 class="csp-u-230dc77923">Add Chapter</h5>
+                <button class="csp-u-1c4d3c504b" type="button" data-action="close-modal" data-modal-id="chapterModal">×</button>
             </div>
-            <div style="margin-bottom: 1.5rem;">
-                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-main);">Title (English) <span style="color: var(--accent);">*</span></label>
-                <input type="text" id="chap_title_en" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-body); color: var(--text-main); font-family: inherit; font-size: 1rem; transition: border-color 0.3s ease;">
+            <div class="csp-u-f0b24eea08">
+                <label class="csp-u-5ed7d017e9">Title (English) <span class="csp-u-91b434c2e8">*</span></label>
+                <input class="csp-u-5ab6660ac1" type="text" id="chap_title_en">
             </div>
-            <div style="margin-bottom: 1.5rem;">
-                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-main);">Title (Malay)</label>
-                <input type="text" id="chap_title_ms" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-body); color: var(--text-main); font-family: inherit; font-size: 1rem; transition: border-color 0.3s ease;">
+            <div class="csp-u-f0b24eea08">
+                <label class="csp-u-5ed7d017e9">Title (Malay)</label>
+                <input class="csp-u-5ab6660ac1" type="text" id="chap_title_ms">
             </div>
-            <div style="margin-bottom: 2rem;">
-                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-main);">Title (Chinese)</label>
-                <input type="text" id="chap_title_zh" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-body); color: var(--text-main); font-family: inherit; font-size: 1rem; transition: border-color 0.3s ease;">
+            <div class="csp-u-008a31c6f7">
+                <label class="csp-u-5ed7d017e9">Title (Chinese)</label>
+                <input class="csp-u-5ab6660ac1" type="text" id="chap_title_zh">
             </div>
-            <div style="display: flex; gap: 1rem; justify-content: flex-end;">
-                <button onclick="closeModal('chapterModal')" style="background: var(--bg-body); color: var(--text-main); border: 1px solid var(--border); border-radius: 10px; padding: 0.75rem 1.5rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease;">Cancel</button>
-                <button onclick="saveChapter()" style="background: var(--primary); color: white; border: none; border-radius: 10px; padding: 0.75rem 1.5rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease;">Save Chapter</button>
+            <div class="csp-u-e0f6a185da">
+                <button class="csp-u-f9f692abd7" type="button" data-action="close-modal" data-modal-id="chapterModal">Cancel</button>
+                <button class="csp-u-01766a5033" type="button" data-action="save-chapter">Save Chapter</button>
             </div>
         </div>
     </div>
 </div>
 
-<div style="display: none;" id="lessonModal" class="modal-backdrop">
+<div id="lessonModal" class="modal-backdrop">
     <div class="modal-dialog">
-        <div class="glass-card" style="border-radius: 16px; max-width: 600px; width: 90%; margin: 0 auto; max-height: 85vh; overflow-y: auto;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem; position: sticky; top: 0; background: var(--bg-card); z-index: 10;">
-                <h5 style="margin: 0; font-size: 1.2rem; font-weight: 700;">Add Lesson with Content</h5>
-                <button onclick="closeModal('lessonModal')" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted);">×</button>
+        <div class="glass-card csp-u-70d6675787">
+            <div class="csp-u-df9a743dfb">
+                <h5 class="csp-u-230dc77923">Add Lesson with Content</h5>
+                <button class="csp-u-1c4d3c504b" type="button" data-action="close-modal" data-modal-id="lessonModal">×</button>
             </div>
-            <div style="margin-bottom: 1.5rem;">
-                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-main);">Chapter <span style="color: var(--accent);">*</span></label>
-                <select id="lesson_chapter_id" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-body); color: var(--text-main); font-family: inherit; font-size: 1rem; transition: border-color 0.3s ease;">
+            <div class="csp-u-f0b24eea08">
+                <label class="csp-u-5ed7d017e9">Chapter <span class="csp-u-91b434c2e8">*</span></label>
+                <select class="csp-u-5ab6660ac1" id="lesson_chapter_id">
                     <option value="">Select a chapter...</option>
                 </select>
             </div>
             
             <!-- Multilingual Titles -->
-            <div style="background: rgba(45, 106, 79, 0.05); padding: 1rem; border-radius: 10px; margin-bottom: 1.5rem; border: 1px solid var(--border);">
-                <h6 style="margin: 0 0 1rem 0; font-weight: 700; color: var(--text-main);">Titles</h6>
-                <div style="margin-bottom: 1rem;">
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-main);">Title (English) <span style="color: var(--accent);">*</span></label>
-                    <input type="text" id="lesson_title_en" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-body); color: var(--text-main); font-family: inherit; font-size: 1rem;">
+            <div class="csp-u-0dbd9dee28">
+                <h6 class="csp-u-97775bbb59">Titles</h6>
+                <div class="csp-u-f267e3ca68">
+                    <label class="csp-u-5ed7d017e9">Title (English) <span class="csp-u-91b434c2e8">*</span></label>
+                    <input class="csp-u-be32b441ff" type="text" id="lesson_title_en">
                 </div>
-                <div style="margin-bottom: 1rem;">
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-main);">Title (Malay)</label>
-                    <input type="text" id="lesson_title_ms" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-body); color: var(--text-main); font-family: inherit; font-size: 1rem;">
+                <div class="csp-u-f267e3ca68">
+                    <label class="csp-u-5ed7d017e9">Title (Malay)</label>
+                    <input class="csp-u-be32b441ff" type="text" id="lesson_title_ms">
                 </div>
                 <div>
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-main);">Title (Chinese)</label>
-                    <input type="text" id="lesson_title_zh" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-body); color: var(--text-main); font-family: inherit; font-size: 1rem;">
+                    <label class="csp-u-5ed7d017e9">Title (Chinese)</label>
+                    <input class="csp-u-be32b441ff" type="text" id="lesson_title_zh">
                 </div>
             </div>
             
             <!-- Multilingual Content -->
-            <div style="background: rgba(45, 106, 79, 0.05); padding: 1rem; border-radius: 10px; margin-bottom: 1.5rem; border: 1px solid var(--border);">
-                <h6 style="margin: 0 0 1rem 0; font-weight: 700; color: var(--text-main);">Content (Markdown supported)</h6>
-                <div style="margin-bottom: 1rem;">
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-main);">Content (English)</label>
-                    <textarea id="lesson_content_en" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-body); color: var(--text-main); font-family: monospace; font-size: 0.9rem; min-height: 120px; resize: vertical;"></textarea>
+            <div class="csp-u-0dbd9dee28">
+                <h6 class="csp-u-97775bbb59">Content (Markdown supported)</h6>
+                <div class="csp-u-f267e3ca68">
+                    <label class="csp-u-5ed7d017e9">Content (English)</label>
+                    <textarea class="csp-u-e58a6771ea" id="lesson_content_en"></textarea>
                 </div>
-                <div style="margin-bottom: 1rem;">
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-main);">Content (Malay)</label>
-                    <textarea id="lesson_content_ms" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-body); color: var(--text-main); font-family: monospace; font-size: 0.9rem; min-height: 120px; resize: vertical;"></textarea>
+                <div class="csp-u-f267e3ca68">
+                    <label class="csp-u-5ed7d017e9">Content (Malay)</label>
+                    <textarea class="csp-u-e58a6771ea" id="lesson_content_ms"></textarea>
                 </div>
                 <div>
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-main);">Content (Chinese)</label>
-                    <textarea id="lesson_content_zh" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-body); color: var(--text-main); font-family: monospace; font-size: 0.9rem; min-height: 120px; resize: vertical;"></textarea>
+                    <label class="csp-u-5ed7d017e9">Content (Chinese)</label>
+                    <textarea class="csp-u-e58a6771ea" id="lesson_content_zh"></textarea>
                 </div>
             </div>
             
             <!-- Other Fields -->
-            <div style="margin-bottom: 1.5rem;">
-                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-main);">Estimated Time (minutes)</label>
-                <input type="number" id="lesson_estimated_time" value="30" min="1" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-body); color: var(--text-main); font-family: inherit; font-size: 1rem;">
+            <div class="csp-u-f0b24eea08">
+                <label class="csp-u-5ed7d017e9">Estimated Time (minutes)</label>
+                <input class="csp-u-be32b441ff" type="number" id="lesson_estimated_time" value="30" min="1">
             </div>
             
-            <div style="display: flex; gap: 1rem; justify-content: flex-end; position: sticky; bottom: 0; background: var(--bg-card); padding-top: 1rem; border-top: 1px solid var(--border);">
-                <button onclick="closeModal('lessonModal')" style="background: var(--bg-body); color: var(--text-main); border: 1px solid var(--border); border-radius: 10px; padding: 0.75rem 1.5rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease;">Cancel</button>
-                <button onclick="saveLesson()" style="background: var(--primary); color: white; border: none; border-radius: 10px; padding: 0.75rem 1.5rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease;">Save Lesson</button>
+            <div class="csp-u-ad20272430">
+                <button class="csp-u-f9f692abd7" type="button" data-action="close-modal" data-modal-id="lessonModal">Cancel</button>
+                <button class="csp-u-01766a5033" type="button" data-action="save-lesson">Save Lesson</button>
             </div>
         </div>
     </div>
 </div>
 
-<div style="display: none;" id="quizModal" class="modal-backdrop">
+<div id="quizModal" class="modal-backdrop">
     <div class="modal-dialog">
-        <div class="glass-card" style="border-radius: 16px; max-width: 600px; width: 90%; margin: 0 auto; max-height: 85vh; overflow-y: auto;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem; position: sticky; top: 0; background: var(--bg-card); z-index: 10;">
-                <h5 style="margin: 0; font-size: 1.2rem; font-weight: 700;">Add Quiz</h5>
-                <button onclick="closeModal('quizModal')" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted);">×</button>
+        <div class="glass-card csp-u-70d6675787">
+            <div class="csp-u-df9a743dfb">
+                <h5 class="csp-u-230dc77923">Add Quiz</h5>
+                <button class="csp-u-1c4d3c504b" type="button" data-action="close-modal" data-modal-id="quizModal">×</button>
             </div>
-            <div style="margin-bottom: 1.5rem;">
-                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-main);">Chapter <span style="color: var(--accent);">*</span></label>
-                <select id="quiz_chapter_id" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-body); color: var(--text-main); font-family: inherit; font-size: 1rem;">
+            <div class="csp-u-f0b24eea08">
+                <label class="csp-u-5ed7d017e9">Chapter <span class="csp-u-91b434c2e8">*</span></label>
+                <select class="csp-u-be32b441ff" id="quiz_chapter_id">
                     <option value="">Select a chapter...</option>
                 </select>
             </div>
             
             <!-- Multilingual Titles -->
-            <div style="background: rgba(45, 106, 79, 0.05); padding: 1rem; border-radius: 10px; margin-bottom: 1.5rem; border: 1px solid var(--border);">
-                <h6 style="margin: 0 0 1rem 0; font-weight: 700; color: var(--text-main);">Titles</h6>
-                <div style="margin-bottom: 1rem;">
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-main);">Title (English) <span style="color: var(--accent);">*</span></label>
-                    <input type="text" id="quiz_title_en" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-body); color: var(--text-main); font-family: inherit; font-size: 1rem;">
+            <div class="csp-u-0dbd9dee28">
+                <h6 class="csp-u-97775bbb59">Titles</h6>
+                <div class="csp-u-f267e3ca68">
+                    <label class="csp-u-5ed7d017e9">Title (English) <span class="csp-u-91b434c2e8">*</span></label>
+                    <input class="csp-u-be32b441ff" type="text" id="quiz_title_en">
                 </div>
-                <div style="margin-bottom: 1rem;">
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-main);">Title (Malay)</label>
-                    <input type="text" id="quiz_title_ms" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-body); color: var(--text-main); font-family: inherit; font-size: 1rem;">
+                <div class="csp-u-f267e3ca68">
+                    <label class="csp-u-5ed7d017e9">Title (Malay)</label>
+                    <input class="csp-u-be32b441ff" type="text" id="quiz_title_ms">
                 </div>
                 <div>
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-main);">Title (Chinese)</label>
-                    <input type="text" id="quiz_title_zh" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-body); color: var(--text-main); font-family: inherit; font-size: 1rem;">
+                    <label class="csp-u-5ed7d017e9">Title (Chinese)</label>
+                    <input class="csp-u-be32b441ff" type="text" id="quiz_title_zh">
                 </div>
             </div>
             
             <!-- Settings -->
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+            <div class="csp-u-e1bb00671d">
                 <div>
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-main);">Passing Score (%)</label>
-                    <input type="number" id="quiz_passing_score" value="70" min="0" max="100" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-body); color: var(--text-main); font-family: inherit; font-size: 1rem;">
+                    <label class="csp-u-5ed7d017e9">Passing Score (%)</label>
+                    <input class="csp-u-be32b441ff" type="number" id="quiz_passing_score" value="70" min="0" max="100">
                 </div>
                 <div>
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-main);">Time Limit (minutes)</label>
-                    <input type="number" id="quiz_time_limit" value="15" min="0" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-body); color: var(--text-main); font-family: inherit; font-size: 1rem;">
+                    <label class="csp-u-5ed7d017e9">Time Limit (minutes)</label>
+                    <input class="csp-u-be32b441ff" type="number" id="quiz_time_limit" value="15" min="0">
                 </div>
             </div>
             
-            <div style="display: flex; gap: 1rem; justify-content: flex-end; position: sticky; bottom: 0; background: var(--bg-card); padding-top: 1rem; border-top: 1px solid var(--border);">
-                <button onclick="closeModal('quizModal')" style="background: var(--bg-body); color: var(--text-main); border: 1px solid var(--border); border-radius: 10px; padding: 0.75rem 1.5rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease;">Cancel</button>
-                <button onclick="saveQuizAndManageQuestions()" style="background: var(--primary); color: white; border: none; border-radius: 10px; padding: 0.75rem 1.5rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease;">Save & Manage Questions</button>
+            <div class="csp-u-ad20272430">
+                <button class="csp-u-f9f692abd7" type="button" data-action="close-modal" data-modal-id="quizModal">Cancel</button>
+                <button class="csp-u-01766a5033" type="button" data-action="save-quiz-manage-questions">Save & Manage Questions</button>
             </div>
         </div>
     </div>
@@ -263,26 +263,26 @@
 
 
 
-<div style="display: none;" id="questionsModal" class="modal-backdrop">
+<div id="questionsModal" class="modal-backdrop">
     <div class="modal-dialog">
-        <div class="glass-card" style="border-radius: 16px; max-width: 800px; width: 95%; margin: 0 auto; max-height: 90vh; display: flex; flex-direction: column;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem;">
-                <h5 style="margin: 0; font-size: 1.2rem; font-weight: 700;">Manage Questions</h5>
-                <button onclick="closeModal('questionsModal')" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted);">×</button>
+        <div class="glass-card csp-u-b101a654c2">
+            <div class="csp-u-9862f6cf66">
+                <h5 class="csp-u-230dc77923">Manage Questions</h5>
+                <button class="csp-u-1c4d3c504b" type="button" data-action="close-modal" data-modal-id="questionsModal">×</button>
             </div>
             
-            <div style="flex: 1; overflow-y: auto; margin-bottom: 1.5rem;">
-                <div id="questionsContainer" style="display: flex; flex-direction: column; gap: 1rem;">
+            <div class="csp-u-a38974247a">
+                <div class="csp-u-25d6a46d62" id="questionsContainer">
                     <!-- Questions will be rendered here -->
                 </div>
             </div>
             
-            <div style="display: flex; gap: 1rem; justify-content: flex-end; border-top: 1px solid var(--border); padding-top: 1rem;">
-                <button onclick="addNewQuestionForm()" style="background: var(--accent); color: white; border: none; border-radius: 10px; padding: 0.75rem 1.5rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 0.5rem;">
+            <div class="csp-u-a34140b8fc">
+                <button class="csp-u-3c63baaf21" type="button" data-action="add-new-question">
                     <i class="bi bi-plus-lg"></i> Add Question
                 </button>
-                <button onclick="closeModal('questionsModal')" style="background: var(--bg-body); color: var(--text-main); border: 1px solid var(--border); border-radius: 10px; padding: 0.75rem 1.5rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease;">Close</button>
-                <button onclick="saveAllQuestions()" style="background: var(--primary); color: white; border: none; border-radius: 10px; padding: 0.75rem 1.5rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease;">Save Questions</button>
+                <button class="csp-u-f9f692abd7" type="button" data-action="close-modal" data-modal-id="questionsModal">Close</button>
+                <button class="csp-u-01766a5033" type="button" data-action="save-all-questions">Save Questions</button>
             </div>
         </div>
     </div>
@@ -561,30 +561,24 @@ function showAlert(msg, type = 'success') {
 }
 
 function switchTab(tab, btn) {
-    document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
-    document.querySelectorAll('.tab-btn').forEach(b => {
-        b.style.color = 'var(--text-muted)';
-        b.style.borderBottomColor = 'transparent';
+    document.querySelectorAll('.tab-content').forEach((tabContent) => {
+        tabContent.classList.add('js-hidden');
+        tabContent.classList.remove('active');
     });
-    document.getElementById(tab).style.display = 'block';
-    btn.style.color = 'var(--primary)';
-    btn.style.borderBottomColor = 'var(--primary)';
+    document.querySelectorAll('.tab-btn').forEach((button) => {
+        button.classList.remove('active');
+    });
+    document.getElementById(tab)?.classList.remove('js-hidden');
+    document.getElementById(tab)?.classList.add('active');
+    btn.classList.add('active');
 }
 
 function openModal(id) {
-    const modal = document.getElementById(id);
-    modal.classList.add('show');
-    modal.style.display = 'flex';
-    modal.style.visibility = 'visible';
-    modal.style.opacity = '1';
+    document.getElementById(id)?.classList.add('show');
 }
 
 function closeModal(id) {
-    const modal = document.getElementById(id);
-    modal.classList.remove('show');
-    modal.style.display = 'none';
-    modal.style.visibility = 'hidden';
-    modal.style.opacity = '0';
+    document.getElementById(id)?.classList.remove('show');
 }
 
 function getTitleText(item) {
@@ -602,7 +596,6 @@ async function loadChapters() {
         document.getElementById('chaptersContainer').innerHTML = `<div class="empty-state"><i class="bi bi-exclamation-circle"></i><p>${e.message}</p></div>`;
     }
 }
-
 function renderChapters() {
     if (chapters.length === 0) {
         document.getElementById('chaptersContainer').innerHTML = '<div class="empty-state"><i class="bi bi-inbox"></i><p>No chapters yet. Create one to get started!</p></div>';
@@ -612,11 +605,11 @@ function renderChapters() {
         <div class="item-row">
             <div class="item-info">
                 <h6>${getTitleText(ch)}</h6>
-                <small><i class="bi bi-diagram-2" style="margin-right: 0.3rem;"></i>${ch.lessons?.length || 0} lessons</small>
+                <small><i class="bi bi-diagram-2 csp-u-f9df6f7211"></i>${ch.lessons?.length || 0} lessons</small>
             </div>
             <div class="item-actions">
-                <button class="btn-icon" onclick="editChapter(${ch.id})" title="Edit"><i class="bi bi-pencil"></i></button>
-                <button class="btn-icon danger" onclick="delChapter(${ch.id})" title="Delete"><i class="bi bi-trash"></i></button>
+                <button type="button" class="btn-icon" data-action="edit-chapter" data-id="${ch.id}" title="Edit"><i class="bi bi-pencil"></i></button>
+                <button type="button" class="btn-icon danger" data-action="delete-chapter" data-id="${ch.id}" title="Delete"><i class="bi bi-trash"></i></button>
             </div>
         </div>
     `).join('');
@@ -706,11 +699,11 @@ function renderLessons() {
         <div class="item-row">
             <div class="item-info">
                 <h6>${getTitleText(l)}</h6>
-                <small><i class="bi bi-folder" style="margin-right: 0.3rem;"></i>Chapter ${l.chapter} | <i class="bi bi-clock" style="margin-right: 0.3rem;"></i>${l.estimated_time || 30} min</small>
+                <small><i class="bi bi-folder csp-u-f9df6f7211"></i>Chapter ${l.chapter} | <i class="bi bi-clock csp-u-f9df6f7211"></i>${l.estimated_time || 30} min</small>
             </div>
             <div class="item-actions">
-                <button class="btn-icon" onclick="editLesson(${l.id})" title="Edit"><i class="bi bi-pencil"></i></button>
-                <button class="btn-icon danger" onclick="delLesson(${l.id})" title="Delete"><i class="bi bi-trash"></i></button>
+                <button type="button" class="btn-icon" data-action="edit-lesson" data-id="${l.id}" title="Edit"><i class="bi bi-pencil"></i></button>
+                <button type="button" class="btn-icon danger" data-action="delete-lesson" data-id="${l.id}" title="Delete"><i class="bi bi-trash"></i></button>
             </div>
         </div>
     `).join('');
@@ -801,11 +794,11 @@ function renderQuizzes() {
         <div class="item-row">
             <div class="item-info">
                 <h6>${getTitleText(q)}</h6>
-                <small><i class="bi bi-question-circle" style="margin-right: 0.3rem;"></i>${q.questions?.length || 0} questions | <i class="bi bi-check-circle" style="margin-right: 0.3rem;"></i>Pass: ${q.passing_score}%</small>
+                <small><i class="bi bi-question-circle csp-u-f9df6f7211"></i>${q.questions?.length || 0} questions | <i class="bi bi-check-circle csp-u-f9df6f7211"></i>Pass: ${q.passing_score}%</small>
             </div>
             <div class="item-actions">
-                <button class="btn-icon" onclick="editQuiz(${q.id})" title="Edit"><i class="bi bi-pencil"></i></button>
-                <button class="btn-icon danger" onclick="delQuiz(${q.id})" title="Delete"><i class="bi bi-trash"></i></button>
+                <button type="button" class="btn-icon" data-action="edit-quiz" data-id="${q.id}" title="Edit"><i class="bi bi-pencil"></i></button>
+                <button type="button" class="btn-icon danger" data-action="delete-quiz" data-id="${q.id}" title="Delete"><i class="bi bi-trash"></i></button>
             </div>
         </div>
     `).join('');
@@ -908,14 +901,13 @@ function loadQuestionsEditor(content) {
 function renderQuestionsEditor() {
     const container = document.getElementById('questionsContainer');
     if (questionsData.length === 0) {
-        container.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--text-muted);"><i class="bi bi-inbox" style="font-size: 2rem; display: block; margin-bottom: 0.5rem;"></i>No questions yet. Add one to get started!</div>';
+        container.innerHTML = '<div class="csp-u-565a2b29bd"><i class="bi bi-inbox csp-u-39456bb3b1"></i>No questions yet. Add one to get started!</div>';
         return;
     }
-    
     container.innerHTML = questionsData.map((q, idx) => `
         <div class="question-form">
             <h6>Question ${idx + 1}
-                <button onclick="removeQuestion(${idx})" class="btn-remove"><i class="bi bi-trash"></i> Remove</button>
+                <button type="button" data-action="remove-question" data-question-index="${idx}" class="btn-remove"><i class="bi bi-trash"></i> Remove</button>
             </h6>
             ${renderLanguageField(q, idx, 'text')}
             ${renderOptionsEditor(q, idx)}
@@ -927,54 +919,64 @@ function renderLanguageField(question, qIdx, field) {
     const value = question[field] || {};
     const isText = field === 'text';
     const label = isText ? 'Question Text' : field.charAt(0).toUpperCase() + field.slice(1);
-    
+    if (isText) {
+        return `
+            <div class="lang-section">
+                <label>${label} (English)</label>
+                <input type="text" id="q${qIdx}_${field}_en" value="${value.en || ''}" data-question-input data-question-index="${qIdx}" data-field="${field}" data-lang="en">
+
+                <label>${label} (Malay)</label>
+                <input type="text" id="q${qIdx}_${field}_ms" value="${value.ms || ''}" data-question-input data-question-index="${qIdx}" data-field="${field}" data-lang="ms">
+
+                <label>${label} (Chinese)</label>
+                <input type="text" id="q${qIdx}_${field}_zh" value="${value.zh || ''}" data-question-input data-question-index="${qIdx}" data-field="${field}" data-lang="zh">
+            </div>
+        `;
+    }
     return `
         <div class="lang-section">
             <label>${label} (English)</label>
-            <${isText ? 'input type="text"' : 'textarea'} 
-                id="q${qIdx}_${field}_en" 
-                value="${value.en || ''}"
-                onchange="questionsData[${qIdx}].${field} = questionsData[${qIdx}].${field} || {}; questionsData[${qIdx}].${field}.en = this.value;"
-                ${!isText ? '' : ''}
-            >${!isText ? value.en || '' : ''}</${isText ? 'input' : 'textarea'}>
+            <textarea id="q${qIdx}_${field}_en" data-question-input data-question-index="${qIdx}" data-field="${field}" data-lang="en">${value.en || ''}</textarea>
+
             <label>${label} (Malay)</label>
-            <${isText ? 'input type="text"' : 'textarea'} 
-                id="q${qIdx}_${field}_ms" 
-                value="${value.ms || ''}"
-                onchange="questionsData[${qIdx}].${field} = questionsData[${qIdx}].${field} || {}; questionsData[${qIdx}].${field}.ms = this.value;"
-            >${!isText ? value.ms || '' : ''}</${isText ? 'input' : 'textarea'}>
+            <textarea id="q${qIdx}_${field}_ms" data-question-input data-question-index="${qIdx}" data-field="${field}" data-lang="ms">${value.ms || ''}</textarea>
+
             <label>${label} (Chinese)</label>
-            <${isText ? 'input type="text"' : 'textarea'} 
-                id="q${qIdx}_${field}_zh" 
-                value="${value.zh || ''}"
-                onchange="questionsData[${qIdx}].${field} = questionsData[${qIdx}].${field} || {}; questionsData[${qIdx}].${field}.zh = this.value;"
-            >${!isText ? value.zh || '' : ''}</${isText ? 'input' : 'textarea'}>
+            <textarea id="q${qIdx}_${field}_zh" data-question-input data-question-index="${qIdx}" data-field="${field}" data-lang="zh">${value.zh || ''}</textarea>
         </div>
     `;
 }
 
 function renderOptionsEditor(question, qIdx) {
     const options = question.options || [];
+
     return `
-        <div style="margin-bottom: 1rem;">
-            <label style="font-weight: 700; color: var(--text-main); margin-bottom: 0.75rem; display: block;">Options</label>
+        <div class="csp-u-f267e3ca68">
+            <label class="csp-u-3781806511">Options</label>
             ${options.map((opt, oIdx) => `
                 <div class="option-item">
                     <label>Option ${oIdx + 1} - English</label>
-                    <input type="text" value="${opt.text?.en || ''}" onchange="questionsData[${qIdx}].options[${oIdx}].text = questionsData[${qIdx}].options[${oIdx}].text || {}; questionsData[${qIdx}].options[${oIdx}].text.en = this.value;">
-                    
+                    <input type="text" value="${opt.text?.en || ''}" data-option-input data-question-index="${qIdx}" data-option-index="${oIdx}" data-lang="en">
+
                     <label>Option ${oIdx + 1} - Malay</label>
-                    <input type="text" value="${opt.text?.ms || ''}" onchange="questionsData[${qIdx}].options[${oIdx}].text = questionsData[${qIdx}].options[${oIdx}].text || {}; questionsData[${qIdx}].options[${oIdx}].text.ms = this.value;">
-                    
+                    <input type="text" value="${opt.text?.ms || ''}" data-option-input data-question-index="${qIdx}" data-option-index="${oIdx}" data-lang="ms">
+
                     <label>Option ${oIdx + 1} - Chinese</label>
-                    <input type="text" value="${opt.text?.zh || ''}" onchange="questionsData[${qIdx}].options[${oIdx}].text = questionsData[${qIdx}].options[${oIdx}].text || {}; questionsData[${qIdx}].options[${oIdx}].text.zh = this.value;">
-                    
-                    <label><input type="checkbox" ${opt.is_correct ? 'checked' : ''} onchange="questionsData[${qIdx}].options[${oIdx}].is_correct = this.checked;"> Correct Answer</label>
-                    
-                    <button onclick="removeOption(${qIdx}, ${oIdx})" class="btn-remove" style="margin-top: 0.5rem;">Remove Option</button>
+                    <input type="text" value="${opt.text?.zh || ''}" data-option-input data-question-index="${qIdx}" data-option-index="${oIdx}" data-lang="zh">
+
+                    <label>
+                        <input type="checkbox" ${opt.is_correct ? 'checked' : ''} data-option-correct data-question-index="${qIdx}" data-option-index="${oIdx}">
+                        Correct Answer
+                    </label>
+
+                    <button type="button" data-action="remove-option" data-question-index="${qIdx}" data-option-index="${oIdx}" class="btn-remove csp-u-0dc8cc6234">
+                        Remove Option
+                    </button>
                 </div>
             `).join('')}
-            <button onclick="addOption(${qIdx})" style="background: var(--primary); color: white; border: none; border-radius: 8px; padding: 0.5rem 1rem; font-size: 0.85rem; cursor: pointer; margin-top: 0.5rem;"><i class="bi bi-plus-lg"></i> Add Option</button>
+            <button class="csp-u-63cb5877c6" type="button" data-action="add-option" data-question-index="${qIdx}">
+                <i class="bi bi-plus-lg"></i> Add Option
+            </button>
         </div>
     `;
 }
@@ -1063,12 +1065,124 @@ function updateCounts() {
     document.getElementById('quizCount').textContent = quizzes.length;
 }
 
+function handleQuestionInputChange(target) {
+    const qIdx = Number(target.getAttribute('data-question-index'));
+    const field = target.getAttribute('data-field');
+    const lang = target.getAttribute('data-lang');
+    if (!questionsData[qIdx] || !field || !lang) return;
+    questionsData[qIdx][field] = questionsData[qIdx][field] || {};
+    questionsData[qIdx][field][lang] = target.value;
+}
 
+function handleOptionInputChange(target) {
+    const qIdx = Number(target.getAttribute('data-question-index'));
+    const oIdx = Number(target.getAttribute('data-option-index'));
+    const lang = target.getAttribute('data-lang');
+    if (!questionsData[qIdx] || !questionsData[qIdx].options || !questionsData[qIdx].options[oIdx] || !lang) return;
+    questionsData[qIdx].options[oIdx].text = questionsData[qIdx].options[oIdx].text || {};
+    questionsData[qIdx].options[oIdx].text[lang] = target.value;
+}
+
+function handleOptionCorrectChange(target) {
+    const qIdx = Number(target.getAttribute('data-question-index'));
+    const oIdx = Number(target.getAttribute('data-option-index'));
+    if (!questionsData[qIdx] || !questionsData[qIdx].options || !questionsData[qIdx].options[oIdx]) return;
+    questionsData[qIdx].options[oIdx].is_correct = target.checked;
+}
+
+function handleCourseDetailsAction(button) {
+    const action = button.getAttribute('data-action');
+    const id = Number(button.getAttribute('data-id'));
+    const modalId = button.getAttribute('data-modal-id');
+    const qIdx = Number(button.getAttribute('data-question-index'));
+    const oIdx = Number(button.getAttribute('data-option-index'));
+    switch (action) {
+        case 'switch-tab':
+            switchTab(button.getAttribute('data-tab'), button);
+            break;
+        case 'open-add-chapter':
+            openAddChapter();
+            break;
+        case 'open-add-lesson':
+            openAddLesson();
+            break;
+        case 'open-add-quiz':
+            openAddQuiz();
+            break;
+        case 'close-modal':
+            closeModal(modalId);
+            break;
+        case 'save-chapter':
+            saveChapter();
+            break;
+        case 'save-lesson':
+            saveLesson();
+            break;
+        case 'save-quiz-manage-questions':
+            saveQuizAndManageQuestions();
+            break;
+        case 'add-new-question':
+            addNewQuestionForm();
+            break;
+        case 'save-all-questions':
+            saveAllQuestions();
+            break;
+        case 'edit-chapter':
+            editChapter(id);
+            break;
+        case 'delete-chapter':
+            delChapter(id);
+            break;
+        case 'edit-lesson':
+            editLesson(id);
+            break;
+        case 'delete-lesson':
+            delLesson(id);
+            break;
+        case 'edit-quiz':
+            editQuiz(id);
+            break;
+        case 'delete-quiz':
+            delQuiz(id);
+            break;
+        case 'remove-question':
+            removeQuestion(qIdx);
+            break;
+        case 'remove-option':
+            removeOption(qIdx, oIdx);
+            break;
+        case 'add-option':
+            addOption(qIdx);
+            break;
+        default:
+            break;
+    }
+}
 
 document.addEventListener('DOMContentLoaded', function() {
     const savedTheme = localStorage.getItem('theme') || 'light';
     document.documentElement.setAttribute('data-theme', savedTheme);
     document.documentElement.setAttribute('data-bs-theme', savedTheme);
+    document.addEventListener('click', function(event) {
+        const button = event.target.closest('[data-action]');
+        if (!button) return;
+        handleCourseDetailsAction(button);
+    });
+    document.addEventListener('input', function(event) {
+        const target = event.target;
+        if (target.matches('[data-question-input]')) {
+            handleQuestionInputChange(target);
+        }
+        if (target.matches('[data-option-input]')) {
+            handleOptionInputChange(target);
+        }
+    });
+    document.addEventListener('change', function(event) {
+        const target = event.target;
+        if (target.matches('[data-option-correct]')) {
+            handleOptionCorrectChange(target);
+        }
+    });
     loadChapters();
     
     // Close modal when clicking outside (on backdrop)
