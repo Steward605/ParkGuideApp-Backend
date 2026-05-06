@@ -418,7 +418,7 @@
     }
 
     .course-card:nth-child(n) {
-        animation-delay: calc(0.1s * var(--index));
+        animation-delay: 0s;
     }
 </style>
 {% endblock %}
@@ -524,7 +524,7 @@
     <!-- Course Grid -->
     <div class="row g-4 mb-4" id="courseGrid">
     {% for data in course_data %}
-    <div class="col-md-6 col-lg-4" style="--index: {{ forloop.counter }}">
+    <div class="col-md-6 col-lg-4">
         <div class="course-card">
             <!-- Header -->
             <div class="course-card-header position-relative">
@@ -610,14 +610,14 @@
                             <span class="fw-bold">{{ data.completion_rate|floatformat:0 }}%</span>
                         </div>
                         <div class="progress">
-                            <div class="progress-bar" style="width: {{ data.completion_rate }}%"></div>
+                            <div class="progress-bar w-pct-{{ data.completion_rate|floatformat:0 }}"></div>
                         </div>
                     </div>
                 {% endif %}
 
                 <!-- Prerequisites Info -->
                 {% if data.prerequisites %}
-                    <div class="alert alert-sm alert-info mb-0 p-2" style="font-size: 0.85rem;">
+                    <div class="alert alert-sm alert-info mb-0 p-2 u-font-085">
                         <i class="bi bi-info-circle me-1"></i>
                         <strong>Requires:</strong> {{ data.prerequisites|join:", " }}
                     </div>
@@ -718,7 +718,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const name = card.getAttribute('data-course-name') || '';
                 const code = card.getAttribute('data-course-code') || '';
                 const matches = name.toLowerCase().includes(searchTerm) || code.toLowerCase().includes(searchTerm);
-                card.parentElement.style.display = matches ? '' : 'none';
+                card.parentElement.classList.toggle('js-hidden', !matches);
             });
         });
     }

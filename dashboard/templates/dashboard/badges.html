@@ -341,7 +341,7 @@
                         Generate From Courses
                     </button>
                 </form>
-                <form method="post" onsubmit="return confirm('Approve all pending badge requests?');">
+                <form method="post" data-confirm-message="Approve all pending badge requests?">
                     {% csrf_token %}
                     <input type="hidden" name="action" value="approve_all_badges">
                     <button
@@ -467,13 +467,13 @@
         </div>
     </div>
 
-    <form method="post" id="bulkDeleteBadgesForm" onsubmit="return confirm('Delete selected badge(s)? This will remove them from all users.');">
+    <form method="post" id="bulkDeleteBadgesForm" data-confirm-message="Delete selected badge(s)? This will remove them from all users.">
         {% csrf_token %}
         <input type="hidden" name="action" value="delete_badges_bulk">
 
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-            <div class="form-check m-0" onclick="event.stopPropagation();">
-                <input class="form-check-input" type="checkbox" id="selectAllBadges" onclick="event.stopPropagation();">
+            <div class="form-check m-0" data-stop-propagation>
+                <input class="form-check-input" type="checkbox" id="selectAllBadges" data-stop-propagation>
                 <label class="form-check-label" for="selectAllBadges">Select all badges</label>
             </div>
             <button type="submit" class="btn btn-outline-danger rounded-pill px-4" id="deleteSelectedBadgesBtn" disabled>
@@ -484,14 +484,8 @@
         <div class="badge-grid">
             {% for badge in badges %}
             <div class="glass-card badge-card position-relative" data-badge-card="{{ badge.id }}" data-badge-id="{{ badge.id }}" role="button" tabindex="0" aria-label="View {{ badge.name }} details">
-                <div class="position-absolute top-0 end-0 p-2" onclick="event.stopPropagation();">
-                    <input
-                        class="form-check-input"
-                        type="checkbox"
-                        name="badge_ids"
-                        value="{{ badge.id }}"
-                        aria-label="Select {{ badge.name }}"
-                        onclick="event.stopPropagation();">
+                <div class="position-absolute top-0 end-0 p-2" data-stop-propagation>
+                    <input class="form-check-input" type="checkbox" name="badge_ids" value="{{ badge.id }}" aria-label="Select {{ badge.name }}" data-stop-propagation>
                 </div>
                 <div class="badge-art">
                     {% if badge.display_badge_image_url %}
@@ -590,7 +584,7 @@
                     <button type="button" class="btn btn-outline-primary rounded-pill px-4" id="editBadgeBtn">
                         Edit badge
                     </button>
-                    <form method="post" class="ms-auto" onsubmit="return confirm('Delete this badge? This will remove it from all users.');">
+                    <form method="post" class="ms-auto" data-confirm-message="Delete this badge? This will remove it from all users.">
                         {% csrf_token %}
                         <input type="hidden" name="action" value="delete_badge">
                         <input type="hidden" name="badge_id" id="badgeDeleteId" value="">
