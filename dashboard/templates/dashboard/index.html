@@ -4,7 +4,54 @@
 {% block page_title %}System Overview{% endblock %}
 
 {% block extra_css %}
-<style>
+<style nonce="{{ request.csp_nonce }}">
+    .backup-dot-success {
+        background: #198754;
+    }
+    
+    .backup-dot-failed {
+        background: #dc3545;
+    }
+    
+    .backup-dot-muted {
+        background: #cfd8d3;
+    }
+    
+    .activity-icon {
+        width: 40px;
+        height: 40px;
+        flex-shrink: 0;
+    }
+    
+    .empty-state-icon {
+        font-size: 2rem;
+        opacity: 0.5;
+    }
+    
+    .insight-dot-0 {
+        background: #198754;
+    }
+    
+    .insight-dot-1 {
+        background: #0d6efd;
+    }
+    
+    .insight-dot-2 {
+        background: #adb5bd;
+    }
+    
+    .insight-dot-3 {
+        background: #52b788;
+    }
+    
+    .insight-dot-4 {
+        background: #ff9f1c;
+    }
+    
+    .insight-dot-muted {
+        background: #cfd8d3;
+    }
+    
     .overview-row-compact {
         --bs-gutter-x: 1rem;
         --bs-gutter-y: 1rem;
@@ -487,14 +534,14 @@
             <div class="backup-chart-meta">
                 <div class="backup-chart-stat">
                     <div class="backup-chart-label">
-                        <span class="backup-chart-dot" style="background: #198754;"></span>
+                        <span class="backup-chart-dot backup-dot-success"></span>
                         Success
                     </div>
                     <div class="backup-chart-value text-success">{{ backup_summary.successful_backups }}</div>
                 </div>
                 <div class="backup-chart-stat">
                     <div class="backup-chart-label">
-                        <span class="backup-chart-dot" style="background: #dc3545;"></span>
+                        <span class="backup-chart-dot backup-dot-failed"></span>
                         Failed
                     </div>
                     <div class="backup-chart-value text-danger">{{ backup_summary.failed_backups }}</div>
@@ -610,7 +657,7 @@
             <div class="timeline recent-activity-scroll">
                 {% for activity in recent_activity %}
                 <div class="d-flex gap-3 recent-activity-item">
-                    <div class="rounded-circle bg-light d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; flex-shrink: 0;">
+                    <div class="rounded-circle bg-light d-flex align-items-center justify-content-center activity-icon">
                         <i class="bi bi-lightning-charge text-primary"></i>
                     </div>
                     <div>
@@ -620,7 +667,7 @@
                 </div>
                 {% empty %}
                 <div class="text-center py-4 text-muted">
-                    <i class="bi bi-inbox" style="font-size: 2rem; opacity: 0.5;"></i>
+                    <i class="bi bi-inbox empty-state-icon"></i>
                     <div class="small mt-2">No recent activity</div>
                 </div>
                 {% endfor %}
@@ -676,7 +723,7 @@
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js" integrity="sha384-JUh163oCRItcbPme8pYnROHQMC6fNKTBWtRG3I3I0erJkzNgL7uxKlNwcrcFKeqF" crossorigin="anonymous"></script>
 {{ learning_insights.datasets|json_script:"learning-insights-data" }}
-<script>
+<script nonce="{{ request.csp_nonce }}">
     document.addEventListener('DOMContentLoaded', () => {
         if (typeof Chart === 'undefined') return;
         const rootStyles = getComputedStyle(document.documentElement);
@@ -834,7 +881,7 @@
             if (!total) {
                 breakdownEl.innerHTML = `
                     <div class="insight-breakdown-row">
-                        <span class="insight-breakdown-dot" style="background: #cfd8d3;"></span>
+                        <span class="insight-breakdown-dot insight-dot-muted"></span>
                         <div>
                             <div class="insight-breakdown-label">No data available</div>
                             <div class="insight-breakdown-meta">No matching records for this selection.</div>
@@ -847,10 +894,14 @@
             breakdownEl.innerHTML = labels.map((label, index) => {
                 const value = Number(values[index] || 0);
                 const percent = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
-                const color = colors[index] || '#adb5bd';
+                const dotClasses = selectedMetric === 'chapter_coverage'
+                    ? ['insight-dot-3', 'insight-dot-4']
+                    : ['insight-dot-0', 'insight-dot-1', 'insight-dot-2'];
+                const dotClass = dotClasses[index] || 'insight-dot-muted';
+                
                 return `
                     <div class="insight-breakdown-row">
-                        <span class="insight-breakdown-dot" style="background: ${color};"></span>
+                        <span class="insight-breakdown-dot ${dotClass}"></span>
                         <div>
                             <div class="insight-breakdown-label">${label}</div>
                             <div class="insight-breakdown-meta">${percent}% of this chart</div>
