@@ -2,7 +2,7 @@
 
 {% block page_title %}<i class="bi bi-people-fill me-2"></i>User Directory{% endblock %}
 {% block extra_css %}
-<style>
+<style nonce="{{ request.csp_nonce }}">
     .user-avatar {
         width: 38px;
         height: 38px;
@@ -420,7 +420,7 @@
         </div>
     </div>
 </div>
-<script>
+<script nonce="{{ request.csp_nonce }}">
     document.addEventListener('DOMContentLoaded', function () {
         // Edit modal autofill
         const editModal = document.getElementById('editUserModal');

@@ -288,7 +288,7 @@
     </div>
 </div>
 
-<style>
+<style nonce="{{ request.csp_nonce }}">
     .question-form {
         background: rgba(45, 106, 79, 0.05);
         border: 1px solid var(--border);
@@ -509,7 +509,7 @@
     }
 </style>
 
-<script>
+<script nonce="{{ request.csp_nonce }}">
 const courseId = {{ course.id }};
 let chapters = [], lessons = [], quizzes = [];
 
