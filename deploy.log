@@ -1,269 +1,418 @@
-2026-05-07T03:22:40.7258663Z Current runner version: '2.334.0'
-2026-05-07T03:22:40.7283857Z ##[group]Runner Image Provisioner
-2026-05-07T03:22:40.7284776Z Hosted Compute Agent
-2026-05-07T03:22:40.7285512Z Version: 20260213.493
-2026-05-07T03:22:40.7286244Z Commit: 5c115507f6dd24b8de37d8bbe0bb4509d0cc0fa3
-2026-05-07T03:22:40.7287112Z Build Date: 2026-02-13T00:28:41Z
-2026-05-07T03:22:40.7288001Z Worker ID: ***1a2e53c7-1cff-487d-9bec-2b5022814f22***
-2026-05-07T03:22:40.7288859Z Azure Region: centralus
-2026-05-07T03:22:40.7289553Z ##[endgroup]
-2026-05-07T03:22:40.7291393Z ##[group]Operating System
-2026-05-07T03:22:40.7292128Z Ubuntu
-2026-05-07T03:22:40.7292783Z 24.04.4
-2026-05-07T03:22:40.7293398Z LTS
-2026-05-07T03:22:40.7294014Z ##[endgroup]
-2026-05-07T03:22:40.7294630Z ##[group]Runner Image
-2026-05-07T03:22:40.7295318Z Image: ubuntu-24.04
-2026-05-07T03:22:40.7295972Z Version: 20260413.86.1
-2026-05-07T03:22:40.7297281Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260413.86/images/ubuntu/Ubuntu2404-Readme.md
-2026-05-07T03:22:40.7298809Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260413.86
-2026-05-07T03:22:40.7299826Z ##[endgroup]
-2026-05-07T03:22:40.7301428Z ##[group]GITHUB_TOKEN Permissions
-2026-05-07T03:22:40.7303577Z Contents: read
-2026-05-07T03:22:40.7304224Z Metadata: read
-2026-05-07T03:22:40.7304844Z Packages: read
-2026-05-07T03:22:40.7305421Z ##[endgroup]
-2026-05-07T03:22:40.7307709Z Secret source: Actions
-2026-05-07T03:22:40.7308479Z Prepare workflow directory
-2026-05-07T03:22:40.7680684Z Prepare all required actions
-2026-05-07T03:22:40.7717874Z Getting action download info
-2026-05-07T03:22:41.2003040Z Download action repository 'actions/download-artifact@v4' (SHA:d3f86a106a0bac45b974a628896c90dbdf5c8093)
-2026-05-07T03:22:41.6774165Z Download action repository 'azure/webapps-deploy@v3' (SHA:02a81bead70021f5284939794bcec79c271ab383)
-2026-05-07T03:22:42.0612476Z Download action repository 'azure/login@v2' (SHA:a457da9ea143d694b1b9c7c869ebb04ebe844ef5)
-2026-05-07T03:22:42.3669307Z Complete job name: deploy
-2026-05-07T03:22:42.4499867Z ##[group]Run actions/download-artifact@v4
-2026-05-07T03:22:42.4501602Z with:
-2026-05-07T03:22:42.4502529Z   name: python-app
-2026-05-07T03:22:42.4503515Z   merge-multiple: false
-2026-05-07T03:22:42.4504649Z   repository: MiyukiVigil/ParkGuideApp-Backend
-2026-05-07T03:22:42.4505918Z   run-id: 25474212536
-2026-05-07T03:22:42.4507018Z env:
-2026-05-07T03:22:42.4507961Z   AZURE_WEBAPP_NAME: SFC-ParkguideBackend
-2026-05-07T03:22:42.4509163Z ##[endgroup]
-2026-05-07T03:22:42.6506396Z Downloading single artifact
-2026-05-07T03:22:42.8073637Z Preparing to download the following artifacts:
-2026-05-07T03:22:42.8074597Z - python-app (ID: 6846334937, Size: 19746001, Expected Digest: sha256:012f6f5598abb4148e644762d04a4b38d396a204df5b10c5a04bc1a846083e9e)
-2026-05-07T03:22:42.9202528Z Redirecting to blob download url: https://productionresultssa4.blob.core.windows.net/actions-results/58a89160-4c09-478a-84b9-891c2af6d8c5/workflow-job-run-332ff772-ee6d-5879-877d-40b77243c55e/artifacts/c99517175a7c2869afc72b5c4bd2b96d056f3e91db32ddee0f8b80691e66ef91.zip
-2026-05-07T03:22:42.9205284Z Starting download of artifact to: /home/runner/work/ParkGuideApp-Backend/ParkGuideApp-Backend
-2026-05-07T03:22:43.1509537Z (node:2093) [DEP0005] DeprecationWarning: Buffer() is deprecated due to security and usability issues. Please use the Buffer.alloc(), Buffer.allocUnsafe(), or Buffer.from() methods instead.
-2026-05-07T03:22:43.1510732Z (Use `node --trace-deprecation ...` to show where the warning was created)
-2026-05-07T03:22:44.0792958Z SHA256 digest of downloaded artifact is 012f6f5598abb4148e644762d04a4b38d396a204df5b10c5a04bc1a846083e9e
-2026-05-07T03:22:44.0794147Z Artifact download completed successfully.
-2026-05-07T03:22:44.0823099Z Total of 1 artifact(s) downloaded
-2026-05-07T03:22:44.0824027Z Download artifact has finished successfully
-2026-05-07T03:22:44.0993805Z ##[group]Run azure/webapps-deploy@v3
-2026-05-07T03:22:44.0994204Z with:
-2026-05-07T03:22:44.0994503Z   app-name: SFC-ParkguideBackend
-2026-05-07T03:22:44.0995050Z   slot-name: Production
-2026-05-07T03:22:44.1001777Z   publish-profile: ***
-2026-05-07T03:22:44.1002110Z   package: .
-2026-05-07T03:22:44.1002414Z env:
-2026-05-07T03:22:44.1002707Z   AZURE_WEBAPP_NAME: SFC-ParkguideBackend
-2026-05-07T03:22:44.1003071Z ##[endgroup]
-2026-05-07T03:22:44.2593326Z (node:2104) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
-2026-05-07T03:22:44.2594724Z (Use `node --trace-deprecation ...` to show where the warning was created)
-2026-05-07T03:22:44.2596047Z (node:2104) [DEP0005] DeprecationWarning: Buffer() is deprecated due to security and usability issues. Please use the Buffer.alloc(), Buffer.allocUnsafe(), or Buffer.from() methods instead.
-2026-05-07T03:22:44.2597525Z (node:2104) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
-2026-05-07T03:22:45.2113212Z Predeployment Step Started
-2026-05-07T03:22:45.2115716Z Deployment Step Started
-2026-05-07T03:22:45.2117507Z Starting deployment for web app...
-2026-05-07T03:22:46.8603617Z Package deployment using OneDeploy initiated.
-2026-05-07T03:30:44.9492860Z ***
-2026-05-07T03:30:44.9493301Z   id: 'aec4812d-33fe-480e-9f21-b710567f0e85',
-2026-05-07T03:30:44.9493808Z   status: 4,
-2026-05-07T03:30:44.9494128Z   status_text: '',
-2026-05-07T03:30:44.9494503Z   author_email: 'N/A',
-2026-05-07T03:30:44.9494888Z   author: 'N/A',
-2026-05-07T03:30:44.9495276Z   deployer: 'OneDeploy',
-2026-05-07T03:30:44.9495715Z   message: 'OneDeploy',
-2026-05-07T03:30:44.9496163Z   progress: '',
-2026-05-07T03:30:44.9496649Z   received_time: '2026-05-07T03:22:56.4609691Z',
-2026-05-07T03:30:44.9497244Z   start_time: '2026-05-07T03:22:57.8404452Z',
-2026-05-07T03:30:44.9497845Z   end_time: '2026-05-07T03:30:40.1123582Z',
-2026-05-07T03:30:44.9498194Z   last_success_end_time: '2026-05-07T03:30:40.1123582Z',
-2026-05-07T03:30:44.9498537Z   complete: true,
-2026-05-07T03:30:44.9498779Z   active: true,
-2026-05-07T03:30:44.9499016Z   is_temp: false,
-2026-05-07T03:30:44.9499252Z   is_readonly: true,
-2026-05-07T03:30:44.9499921Z   url: 'https://sfc-parkguidebackend-g3epa6bjcpf9hqez.scm.malaysiawest-01.azurewebsites.net/api/deployments/aec4812d-33fe-480e-9f21-b710567f0e85',
-2026-05-07T03:30:44.9501350Z   log_url: 'https://sfc-parkguidebackend-g3epa6bjcpf9hqez.scm.malaysiawest-01.azurewebsites.net/api/deployments/aec4812d-33fe-480e-9f21-b710567f0e85/log',
-2026-05-07T03:30:44.9502108Z   site_name: 'sfc-parkguidebackend',
-2026-05-07T03:30:44.9502505Z   build_summary: *** errors: [], warnings: [] ***
-2026-05-07T03:30:44.9502821Z ***
-2026-05-07T03:30:45.4209321Z Deploy logs can be viewed at https://sfc-parkguidebackend-g3epa6bjcpf9hqez.scm.malaysiawest-01.azurewebsites.net/api/deployments/aec4812d-33fe-480e-9f21-b710567f0e85/log
-2026-05-07T03:30:45.4210251Z Successfully deployed web package to App Service.
-2026-05-07T03:30:45.4211211Z App Service Application URL: https://sfc-parkguidebackend-g3epa6bjcpf9hqez.malaysiawest-01.azurewebsites.net
-2026-05-07T03:30:45.4359979Z ##[group]Run azure/login@v2
-2026-05-07T03:30:45.4360298Z with:
-2026-05-07T03:30:45.4362818Z   creds: ***
-2026-05-07T03:30:45.4363072Z   enable-AzPSSession: false
-2026-05-07T03:30:45.4363351Z   environment: azurecloud
-2026-05-07T03:30:45.4363644Z   allow-no-subscriptions: false
-2026-05-07T03:30:45.4363953Z   audience: api://AzureADTokenExchange
-2026-05-07T03:30:45.4364275Z   auth-type: SERVICE_PRINCIPAL
-2026-05-07T03:30:45.4364553Z env:
-2026-05-07T03:30:45.4364793Z   AZURE_WEBAPP_NAME: SFC-ParkguideBackend
-2026-05-07T03:30:45.4365105Z   AZURE_HTTP_USER_AGENT: 
-2026-05-07T03:30:45.4365358Z ##[endgroup]
-2026-05-07T03:30:45.4748782Z Running Azure CLI Login.
-2026-05-07T03:30:48.2745172Z [command]/usr/bin/az cloud set -n azurecloud
-2026-05-07T03:30:48.7666359Z Done setting cloud: "azurecloud"
-2026-05-07T03:30:48.7679656Z Note: Azure/login action also supports OIDC login mechanism. Refer https://github.com/azure/login#configure-a-service-principal-with-a-federated-credential-to-use-oidc-based-authentication for more details.
-2026-05-07T03:30:48.7682323Z Attempting Azure CLI login by using service principal with secret...
-2026-05-07T03:30:50.8286938Z Subscription is set successfully.
-2026-05-07T03:30:50.8287675Z Azure CLI login succeeds by using service principal with secret.
-2026-05-07T03:30:50.8372900Z ##[group]Run RESOURCE_GROUP=$(az webapp list --query "[?name=='$***AZURE_WEBAPP_NAME***'].resourceGroup | [0]" -o tsv)
-2026-05-07T03:30:50.8374616Z [36;1mRESOURCE_GROUP=$(az webapp list --query "[?name=='$***AZURE_WEBAPP_NAME***'].resourceGroup | [0]" -o tsv)[0m
-2026-05-07T03:30:50.8375809Z [36;1mif [ -z "$RESOURCE_GROUP" ]; then[0m
-2026-05-07T03:30:50.8376666Z [36;1m  echo "Could not find resource group for $***AZURE_WEBAPP_NAME***."[0m
-2026-05-07T03:30:50.8377490Z [36;1m  exit 1[0m
-2026-05-07T03:30:50.8377937Z [36;1mfi[0m
-2026-05-07T03:30:50.8378362Z [36;1m[0m
-2026-05-07T03:30:50.8378820Z [36;1maz webapp config set \[0m
-2026-05-07T03:30:50.8379446Z [36;1m  --resource-group "$RESOURCE_GROUP" \[0m
-2026-05-07T03:30:50.8380194Z [36;1m  --name "$AZURE_WEBAPP_NAME" \[0m
-2026-05-07T03:30:50.8381360Z [36;1m  --startup-file "bash startup.sh"[0m
-2026-05-07T03:30:50.8382017Z [36;1m[0m
-2026-05-07T03:30:50.8382454Z [36;1maz webapp restart \[0m
-2026-05-07T03:30:50.8383161Z [36;1m  --resource-group "$RESOURCE_GROUP" \[0m
-2026-05-07T03:30:50.8383813Z [36;1m  --name "$AZURE_WEBAPP_NAME"[0m
-2026-05-07T03:30:50.8409565Z shell: /usr/bin/bash -e ***0***
-2026-05-07T03:30:50.8410063Z env:
-2026-05-07T03:30:50.8410480Z   AZURE_WEBAPP_NAME: SFC-ParkguideBackend
-2026-05-07T03:30:50.8411290Z   AZURE_HTTP_USER_AGENT: 
-2026-05-07T03:30:50.8411708Z ##[endgroup]
-2026-05-07T03:31:01.2561637Z ***
-2026-05-07T03:31:01.2562487Z   "acrUseManagedIdentityCreds": false,
-2026-05-07T03:31:01.2563538Z   "acrUserManagedIdentityId": null,
-2026-05-07T03:31:01.2564444Z   "alwaysOn": false,
-2026-05-07T03:31:01.2565223Z   "apiDefinition": null,
-2026-05-07T03:31:01.2566047Z   "apiManagementConfig": null,
-2026-05-07T03:31:01.2566926Z   "appCommandLine": "bash startup.sh",
-2026-05-07T03:31:01.2567858Z   "appSettings": null,
-2026-05-07T03:31:01.2568634Z   "autoHealEnabled": false,
-2026-05-07T03:31:01.2569462Z   "autoHealRules": null,
-2026-05-07T03:31:01.2570281Z   "autoSwapSlotName": null,
-2026-05-07T03:31:01.2571379Z   "azureStorageAccounts": ***,
-2026-05-07T03:31:01.2572239Z   "connectionStrings": null,
-2026-05-07T03:31:01.2573041Z   "cors": null,
-2026-05-07T03:31:01.2573773Z   "defaultDocuments": [
-2026-05-07T03:31:01.2574551Z     "Default.htm",
-2026-05-07T03:31:01.2575276Z     "Default.html",
-2026-05-07T03:31:01.2576022Z     "Default.asp",
-2026-05-07T03:31:01.2576737Z     "index.htm",
-2026-05-07T03:31:01.2577430Z     "index.html",
-2026-05-07T03:31:01.2578103Z     "iisstart.htm",
-2026-05-07T03:31:01.2578815Z     "default.aspx",
-2026-05-07T03:31:01.2579485Z     "index.php",
-2026-05-07T03:31:01.2580165Z     "hostingstart.html"
-2026-05-07T03:31:01.2581034Z   ],
-2026-05-07T03:31:01.2581508Z   "detailedErrorLoggingEnabled": false,
-2026-05-07T03:31:01.2582441Z   "documentRoot": null,
-2026-05-07T03:31:01.2583253Z   "elasticWebAppScaleLimit": 0,
-2026-05-07T03:31:01.2584149Z   "experiments": ***
-2026-05-07T03:31:01.2584898Z     "rampUpRules": []
-2026-05-07T03:31:01.2585612Z   ***,
-2026-05-07T03:31:01.2586278Z   "ftpsState": "FtpsOnly",
-2026-05-07T03:31:01.2587103Z   "functionAppScaleLimit": null,
-2026-05-07T03:31:01.2588276Z   "functionsRuntimeScaleMonitoringEnabled": false,
-2026-05-07T03:31:01.2589562Z   "handlerMappings": null,
-2026-05-07T03:31:01.2590397Z   "healthCheckPath": null,
-2026-05-07T03:31:01.2591701Z   "http20Enabled": false,
-2026-05-07T03:31:01.2592473Z   "http20ProxyFlag": 0,
-2026-05-07T03:31:01.2593239Z   "httpLoggingEnabled": false,
-2026-05-07T03:31:01.2595280Z   "id": "/subscriptions/a2893948-5696-4e0b-b9dc-ff7c727042ac/resourceGroups/SFC-Parkguide/providers/Microsoft.Web/sites/SFC-ParkguideBackend",
-2026-05-07T03:31:01.2597783Z   "ipSecurityRestrictions": [
-2026-05-07T03:31:01.2598627Z     ***
-2026-05-07T03:31:01.2599291Z       "action": "Allow",
-2026-05-07T03:31:01.2600100Z       "description": "Allow all access",
-2026-05-07T03:31:01.2601187Z       "headers": null,
-2026-05-07T03:31:01.2601927Z       "ipAddress": "Any",
-2026-05-07T03:31:01.2602684Z       "name": "Allow all",
-2026-05-07T03:31:01.2603711Z       "priority": 2147483647,
-2026-05-07T03:31:01.2604534Z       "subnetMask": null,
-2026-05-07T03:31:01.2605323Z       "subnetTrafficTag": null,
-2026-05-07T03:31:01.2606153Z       "tag": null,
-2026-05-07T03:31:01.2606850Z       "vnetSubnetResourceId": null,
-2026-05-07T03:31:01.2607717Z       "vnetTrafficTag": null
-2026-05-07T03:31:01.2608539Z     ***
-2026-05-07T03:31:01.2609163Z   ],
-2026-05-07T03:31:01.2609911Z   "ipSecurityRestrictionsDefaultAction": null,
-2026-05-07T03:31:01.2611586Z   "javaContainer": null,
-2026-05-07T03:31:01.2612390Z   "javaContainerVersion": null,
-2026-05-07T03:31:01.2613190Z   "javaVersion": null,
-2026-05-07T03:31:01.2613957Z   "keyVaultReferenceIdentity": null,
-2026-05-07T03:31:01.2614842Z   "kind": null,
-2026-05-07T03:31:01.2615519Z   "limits": null,
-2026-05-07T03:31:01.2616232Z   "linuxFxVersion": "PYTHON|3.14",
-2026-05-07T03:31:01.2617106Z   "loadBalancing": "LeastRequests",
-2026-05-07T03:31:01.2617992Z   "localMySqlEnabled": false,
-2026-05-07T03:31:01.2618824Z   "location": "Malaysia West",
-2026-05-07T03:31:01.2619665Z   "logsDirectorySizeLimit": 35,
-2026-05-07T03:31:01.2620494Z   "machineKey": null,
-2026-05-07T03:31:01.2621410Z   "managedPipelineMode": "Integrated",
-2026-05-07T03:31:01.2622405Z   "managedServiceIdentityId": null,
-2026-05-07T03:31:01.2623267Z   "metadata": null,
-2026-05-07T03:31:01.2624008Z   "minTlsCipherSuite": null,
-2026-05-07T03:31:01.2624716Z   "minTlsVersion": "1.2",
-2026-05-07T03:31:01.2625101Z   "minimumElasticInstanceCount": 1,
-2026-05-07T03:31:01.2625603Z   "name": "SFC-ParkguideBackend",
-2026-05-07T03:31:01.2626039Z   "netFrameworkVersion": "v4.0",
-2026-05-07T03:31:01.2626493Z   "nodeVersion": "",
-2026-05-07T03:31:01.2626878Z   "numberOfWorkers": 1,
-2026-05-07T03:31:01.2627274Z   "phpVersion": "",
-2026-05-07T03:31:01.2627673Z   "powerShellVersion": "",
-2026-05-07T03:31:01.2628096Z   "preWarmedInstanceCount": 0,
-2026-05-07T03:31:01.2628542Z   "publicNetworkAccess": "Enabled",
-2026-05-07T03:31:01.2629113Z   "publishingUsername": "***",
-2026-05-07T03:31:01.2629582Z   "push": null,
-2026-05-07T03:31:01.2629946Z   "pythonVersion": "",
-2026-05-07T03:31:01.2630365Z   "remoteDebuggingEnabled": false,
-2026-05-07T03:31:01.2630850Z   "remoteDebuggingVersion": "VS2022",
-2026-05-07T03:31:01.2631462Z   "requestTracingEnabled": false,
-2026-05-07T03:31:01.2631963Z   "requestTracingExpirationTime": null,
-2026-05-07T03:31:01.2632460Z   "resourceGroup": "SFC-Parkguide",
-2026-05-07T03:31:01.2632930Z   "scmIpSecurityRestrictions": [
-2026-05-07T03:31:01.2633426Z     ***
-2026-05-07T03:31:01.2633750Z       "action": "Allow",
-2026-05-07T03:31:01.2634163Z       "description": "Allow all access",
-2026-05-07T03:31:01.2634632Z       "headers": null,
-2026-05-07T03:31:01.2635009Z       "ipAddress": "Any",
-2026-05-07T03:31:01.2635403Z       "name": "Allow all",
-2026-05-07T03:31:01.2635841Z       "priority": 2147483647,
-2026-05-07T03:31:01.2636230Z       "subnetMask": null,
-2026-05-07T03:31:01.2636620Z       "subnetTrafficTag": null,
-2026-05-07T03:31:01.2637036Z       "tag": null,
-2026-05-07T03:31:01.2637432Z       "vnetSubnetResourceId": null,
-2026-05-07T03:31:01.2637899Z       "vnetTrafficTag": null
-2026-05-07T03:31:01.2638346Z     ***
-2026-05-07T03:31:01.2638694Z   ],
-2026-05-07T03:31:01.2639107Z   "scmIpSecurityRestrictionsDefaultAction": null,
-2026-05-07T03:31:01.2639687Z   "scmIpSecurityRestrictionsUseMain": false,
-2026-05-07T03:31:01.2640178Z   "scmMinTlsVersion": "1.2",
-2026-05-07T03:31:01.2640614Z   "scmType": "GitHubAction",
-2026-05-07T03:31:01.2641181Z   "tags": ***,
-2026-05-07T03:31:01.2641567Z   "tracingOptions": null,
-2026-05-07T03:31:01.2641982Z   "type": "Microsoft.Web/sites",
-2026-05-07T03:31:01.2642763Z   "use32BitWorkerProcess": true,
-2026-05-07T03:31:01.2643200Z   "virtualApplications": [
-2026-05-07T03:31:01.2643612Z     ***
-2026-05-07T03:31:01.2643993Z       "physicalPath": "site\\wwwroot",
-2026-05-07T03:31:01.2644443Z       "preloadEnabled": false,
-2026-05-07T03:31:01.2644891Z       "virtualDirectories": null,
-2026-05-07T03:31:01.2645336Z       "virtualPath": "/"
-2026-05-07T03:31:01.2645911Z     ***
-2026-05-07T03:31:01.2646264Z   ],
-2026-05-07T03:31:01.2646586Z   "vnetName": "",
-2026-05-07T03:31:01.2646975Z   "vnetPrivatePortsCount": 0,
-2026-05-07T03:31:01.2647415Z   "vnetRouteAllEnabled": false,
-2026-05-07T03:31:01.2647860Z   "webSocketsEnabled": false,
-2026-05-07T03:31:01.2648314Z   "websiteTimeZone": null,
-2026-05-07T03:31:01.2648747Z   "windowsFxVersion": null,
-2026-05-07T03:31:01.2649211Z   "xManagedServiceIdentityId": null
-2026-05-07T03:31:01.2649685Z ***
-2026-05-07T03:31:04.4672834Z Post job cleanup.
-2026-05-07T03:31:04.5111764Z Clearing azure cli accounts from the local cache.
-2026-05-07T03:31:04.5124178Z [command]/usr/bin/az account clear
-2026-05-07T03:31:04.9755826Z Cleaning up orphan processes
-2026-05-07T03:31:05.0084133Z Terminate orphan process: pid (2464) (python3)
-2026-05-07T03:31:05.0105320Z ##[warning]Node.js 20 actions are deprecated. The following actions are running on Node.js 20 and may not work as expected: actions/download-artifact@v4, azure/login@v2. Actions will be forced to run with Node.js 24 by default starting June 2nd, 2026. Node.js 20 will be removed from the runner on September 16th, 2026. Please check if updated versions of these actions are available that support Node.js 24. To opt into Node.js 24 now, set the FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true environment variable on the runner or in your workflow file. Once Node.js 24 becomes the default, you can temporarily opt out by setting ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-05-07T04:09:56.5658813Z Current runner version: '2.334.0'
+2026-05-07T04:09:56.5684625Z ##[group]Runner Image Provisioner
+2026-05-07T04:09:56.5685796Z Hosted Compute Agent
+2026-05-07T04:09:56.5686928Z Version: 20260213.493
+2026-05-07T04:09:56.5687819Z Commit: 5c115507f6dd24b8de37d8bbe0bb4509d0cc0fa3
+2026-05-07T04:09:56.5688798Z Build Date: 2026-02-13T00:28:41Z
+2026-05-07T04:09:56.5689855Z Worker ID: ***43fc74b2-f11f-4864-bbef-71cd72ceae2d***
+2026-05-07T04:09:56.5690849Z Azure Region: centralus
+2026-05-07T04:09:56.5691672Z ##[endgroup]
+2026-05-07T04:09:56.5693344Z ##[group]Operating System
+2026-05-07T04:09:56.5694224Z Ubuntu
+2026-05-07T04:09:56.5694955Z 24.04.4
+2026-05-07T04:09:56.5695718Z LTS
+2026-05-07T04:09:56.5696481Z ##[endgroup]
+2026-05-07T04:09:56.5697582Z ##[group]Runner Image
+2026-05-07T04:09:56.5698416Z Image: ubuntu-24.04
+2026-05-07T04:09:56.5699203Z Version: 20260413.86.1
+2026-05-07T04:09:56.5700755Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260413.86/images/ubuntu/Ubuntu2404-Readme.md
+2026-05-07T04:09:56.5702607Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260413.86
+2026-05-07T04:09:56.5703830Z ##[endgroup]
+2026-05-07T04:09:56.5705402Z ##[group]GITHUB_TOKEN Permissions
+2026-05-07T04:09:56.5708291Z Contents: read
+2026-05-07T04:09:56.5709031Z Metadata: read
+2026-05-07T04:09:56.5709915Z Packages: read
+2026-05-07T04:09:56.5710627Z ##[endgroup]
+2026-05-07T04:09:56.5712937Z Secret source: Actions
+2026-05-07T04:09:56.5714135Z Prepare workflow directory
+2026-05-07T04:09:56.6106039Z Prepare all required actions
+2026-05-07T04:09:56.6144653Z Getting action download info
+2026-05-07T04:09:57.0098001Z Download action repository 'actions/download-artifact@v4' (SHA:d3f86a106a0bac45b974a628896c90dbdf5c8093)
+2026-05-07T04:09:57.5143802Z Download action repository 'azure/webapps-deploy@v3' (SHA:02a81bead70021f5284939794bcec79c271ab383)
+2026-05-07T04:09:58.0201117Z Download action repository 'azure/login@v2' (SHA:a457da9ea143d694b1b9c7c869ebb04ebe844ef5)
+2026-05-07T04:09:58.3508772Z Complete job name: deploy
+2026-05-07T04:09:58.4285574Z ##[group]Run actions/download-artifact@v4
+2026-05-07T04:09:58.4287436Z with:
+2026-05-07T04:09:58.4288441Z   name: python-app
+2026-05-07T04:09:58.4289510Z   merge-multiple: false
+2026-05-07T04:09:58.4290758Z   repository: MiyukiVigil/ParkGuideApp-Backend
+2026-05-07T04:09:58.4292157Z   run-id: 25475555961
+2026-05-07T04:09:58.4293366Z env:
+2026-05-07T04:09:58.4294410Z   AZURE_WEBAPP_NAME: SFC-ParkguideBackend
+2026-05-07T04:09:58.4295749Z ##[endgroup]
+2026-05-07T04:09:58.6359942Z Downloading single artifact
+2026-05-07T04:09:58.7978653Z Preparing to download the following artifacts:
+2026-05-07T04:09:58.7982743Z - python-app (ID: 6846802168, Size: 19756258, Expected Digest: sha256:698570bfb47d1ae3b1831d5f26d06bb8ddd68d1ef1a7cb84f1d6a7a5d37e1520)
+2026-05-07T04:09:58.9140147Z Redirecting to blob download url: https://productionresultssa10.blob.core.windows.net/actions-results/bcb200ae-ef3f-408e-b5a6-7b4349edccfb/workflow-job-run-44f61afe-9b87-52c8-9f5d-de9843718e17/artifacts/c99517175a7c2869afc72b5c4bd2b96d056f3e91db32ddee0f8b80691e66ef91.zip
+2026-05-07T04:09:58.9145775Z Starting download of artifact to: /home/runner/work/ParkGuideApp-Backend/ParkGuideApp-Backend
+2026-05-07T04:09:59.1208523Z (node:2191) [DEP0005] DeprecationWarning: Buffer() is deprecated due to security and usability issues. Please use the Buffer.alloc(), Buffer.allocUnsafe(), or Buffer.from() methods instead.
+2026-05-07T04:09:59.1212159Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-05-07T04:09:59.9412473Z SHA256 digest of downloaded artifact is 698570bfb47d1ae3b1831d5f26d06bb8ddd68d1ef1a7cb84f1d6a7a5d37e1520
+2026-05-07T04:09:59.9413955Z Artifact download completed successfully.
+2026-05-07T04:09:59.9414755Z Total of 1 artifact(s) downloaded
+2026-05-07T04:09:59.9419279Z Download artifact has finished successfully
+2026-05-07T04:09:59.9649760Z ##[group]Run azure/webapps-deploy@v3
+2026-05-07T04:09:59.9650205Z with:
+2026-05-07T04:09:59.9650538Z   app-name: SFC-ParkguideBackend
+2026-05-07T04:09:59.9651194Z   slot-name: Production
+2026-05-07T04:09:59.9658530Z   publish-profile: ***
+2026-05-07T04:09:59.9658909Z   package: .
+2026-05-07T04:09:59.9659251Z env:
+2026-05-07T04:09:59.9659593Z   AZURE_WEBAPP_NAME: SFC-ParkguideBackend
+2026-05-07T04:09:59.9660005Z ##[endgroup]
+2026-05-07T04:10:00.1280692Z (node:2203) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-05-07T04:10:00.1281855Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-05-07T04:10:00.1282971Z (node:2203) [DEP0005] DeprecationWarning: Buffer() is deprecated due to security and usability issues. Please use the Buffer.alloc(), Buffer.allocUnsafe(), or Buffer.from() methods instead.
+2026-05-07T04:10:00.1284586Z (node:2203) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-05-07T04:10:02.8250247Z Predeployment Step Started
+2026-05-07T04:10:02.8253294Z Deployment Step Started
+2026-05-07T04:10:02.8255548Z Starting deployment for web app...
+2026-05-07T04:10:08.8398938Z Package deployment using OneDeploy initiated.
+2026-05-07T04:23:29.2121344Z ***
+2026-05-07T04:23:29.2121852Z   id: '38e00756-5503-4776-80c5-9e2b759c0e9e',
+2026-05-07T04:23:29.2122405Z   status: 4,
+2026-05-07T04:23:29.2122791Z   status_text: '',
+2026-05-07T04:23:29.2123184Z   author_email: 'N/A',
+2026-05-07T04:23:29.2123568Z   author: 'N/A',
+2026-05-07T04:23:29.2123947Z   deployer: 'OneDeploy',
+2026-05-07T04:23:29.2124358Z   message: 'OneDeploy',
+2026-05-07T04:23:29.2124760Z   progress: '',
+2026-05-07T04:23:29.2125181Z   received_time: '2026-05-07T04:10:19.7708389Z',
+2026-05-07T04:23:29.2125863Z   start_time: '2026-05-07T04:10:21.6907728Z',
+2026-05-07T04:23:29.2126472Z   end_time: '2026-05-07T04:23:26.3712747Z',
+2026-05-07T04:23:29.2127216Z   last_success_end_time: '2026-05-07T04:23:26.3712747Z',
+2026-05-07T04:23:29.2127617Z   complete: true,
+2026-05-07T04:23:29.2127897Z   active: true,
+2026-05-07T04:23:29.2128153Z   is_temp: false,
+2026-05-07T04:23:29.2128412Z   is_readonly: true,
+2026-05-07T04:23:29.2129142Z   url: 'https://sfc-parkguidebackend-g3epa6bjcpf9hqez.scm.malaysiawest-01.azurewebsites.net/api/deployments/38e00756-5503-4776-80c5-9e2b759c0e9e',
+2026-05-07T04:23:29.2130490Z   log_url: 'https://sfc-parkguidebackend-g3epa6bjcpf9hqez.scm.malaysiawest-01.azurewebsites.net/api/deployments/38e00756-5503-4776-80c5-9e2b759c0e9e/log',
+2026-05-07T04:23:29.2148272Z   site_name: 'sfc-parkguidebackend',
+2026-05-07T04:23:29.2148876Z   build_summary: *** errors: [], warnings: [] ***
+2026-05-07T04:23:29.2149367Z ***
+2026-05-07T04:23:29.6418123Z Deploy logs can be viewed at https://sfc-parkguidebackend-g3epa6bjcpf9hqez.scm.malaysiawest-01.azurewebsites.net/api/deployments/38e00756-5503-4776-80c5-9e2b759c0e9e/log
+2026-05-07T04:23:29.6419568Z Successfully deployed web package to App Service.
+2026-05-07T04:23:29.6424147Z App Service Application URL: https://sfc-parkguidebackend-g3epa6bjcpf9hqez.malaysiawest-01.azurewebsites.net
+2026-05-07T04:23:29.6611074Z ##[group]Run azure/login@v2
+2026-05-07T04:23:29.6611443Z with:
+2026-05-07T04:23:29.6613785Z   creds: ***
+2026-05-07T04:23:29.6614078Z   enable-AzPSSession: false
+2026-05-07T04:23:29.6614398Z   environment: azurecloud
+2026-05-07T04:23:29.6614713Z   allow-no-subscriptions: false
+2026-05-07T04:23:29.6615056Z   audience: api://AzureADTokenExchange
+2026-05-07T04:23:29.6615411Z   auth-type: SERVICE_PRINCIPAL
+2026-05-07T04:23:29.6615717Z env:
+2026-05-07T04:23:29.6615989Z   AZURE_WEBAPP_NAME: SFC-ParkguideBackend
+2026-05-07T04:23:29.6616339Z   AZURE_HTTP_USER_AGENT: 
+2026-05-07T04:23:29.6616889Z ##[endgroup]
+2026-05-07T04:23:29.7031536Z Running Azure CLI Login.
+2026-05-07T04:23:32.7658184Z [command]/usr/bin/az cloud set -n azurecloud
+2026-05-07T04:23:33.2779565Z Done setting cloud: "azurecloud"
+2026-05-07T04:23:33.2781813Z Note: Azure/login action also supports OIDC login mechanism. Refer https://github.com/azure/login#configure-a-service-principal-with-a-federated-credential-to-use-oidc-based-authentication for more details.
+2026-05-07T04:23:33.2784035Z Attempting Azure CLI login by using service principal with secret...
+2026-05-07T04:23:35.4118480Z Subscription is set successfully.
+2026-05-07T04:23:35.4119260Z Azure CLI login succeeds by using service principal with secret.
+2026-05-07T04:23:35.4206253Z ##[group]Run RESOURCE_GROUP=$(az webapp list --query "[?name=='$***AZURE_WEBAPP_NAME***'].resourceGroup | [0]" -o tsv)
+2026-05-07T04:23:35.4207647Z [36;1mRESOURCE_GROUP=$(az webapp list --query "[?name=='$***AZURE_WEBAPP_NAME***'].resourceGroup | [0]" -o tsv)[0m
+2026-05-07T04:23:35.4208260Z [36;1mif [ -z "$RESOURCE_GROUP" ]; then[0m
+2026-05-07T04:23:35.4208747Z [36;1m  echo "Could not find resource group for $***AZURE_WEBAPP_NAME***."[0m
+2026-05-07T04:23:35.4209192Z [36;1m  exit 1[0m
+2026-05-07T04:23:35.4209456Z [36;1mfi[0m
+2026-05-07T04:23:35.4209701Z [36;1m[0m
+2026-05-07T04:23:35.4209980Z [36;1maz webapp config set \[0m
+2026-05-07T04:23:35.4210334Z [36;1m  --resource-group "$RESOURCE_GROUP" \[0m
+2026-05-07T04:23:35.4210718Z [36;1m  --name "$AZURE_WEBAPP_NAME" \[0m
+2026-05-07T04:23:35.4211076Z [36;1m  --startup-file "bash startup.sh"[0m
+2026-05-07T04:23:35.4211403Z [36;1m[0m
+2026-05-07T04:23:35.4211668Z [36;1maz webapp config appsettings set \[0m
+2026-05-07T04:23:35.4212072Z [36;1m  --resource-group "$RESOURCE_GROUP" \[0m
+2026-05-07T04:23:35.4212425Z [36;1m  --name "$AZURE_WEBAPP_NAME" \[0m
+2026-05-07T04:23:35.4212754Z [36;1m  --settings \[0m
+2026-05-07T04:23:35.4213087Z [36;1m    SCM_DO_BUILD_DURING_DEPLOYMENT=true \[0m
+2026-05-07T04:23:35.4213913Z [36;1m    POST_BUILD_COMMAND='pip uninstall -y opencv-python opencv-contrib-python || true && pip install --no-cache-dir --force-reinstall "opencv-python-headless>=4.8.0"'[0m
+2026-05-07T04:23:35.4214648Z [36;1m[0m
+2026-05-07T04:23:35.4214908Z [36;1maz webapp restart \[0m
+2026-05-07T04:23:35.4215262Z [36;1m  --resource-group "$RESOURCE_GROUP" \[0m
+2026-05-07T04:23:35.4215629Z [36;1m  --name "$AZURE_WEBAPP_NAME"[0m
+2026-05-07T04:23:35.4241660Z shell: /usr/bin/bash -e ***0***
+2026-05-07T04:23:35.4241999Z env:
+2026-05-07T04:23:35.4242290Z   AZURE_WEBAPP_NAME: SFC-ParkguideBackend
+2026-05-07T04:23:35.4242658Z   AZURE_HTTP_USER_AGENT: 
+2026-05-07T04:23:35.4242954Z ##[endgroup]
+2026-05-07T04:23:45.2130809Z ***
+2026-05-07T04:23:45.2131424Z   "acrUseManagedIdentityCreds": false,
+2026-05-07T04:23:45.2132006Z   "acrUserManagedIdentityId": null,
+2026-05-07T04:23:45.2132501Z   "alwaysOn": false,
+2026-05-07T04:23:45.2132920Z   "apiDefinition": null,
+2026-05-07T04:23:45.2133370Z   "apiManagementConfig": null,
+2026-05-07T04:23:45.2133866Z   "appCommandLine": "bash startup.sh",
+2026-05-07T04:23:45.2134353Z   "appSettings": null,
+2026-05-07T04:23:45.2134770Z   "autoHealEnabled": false,
+2026-05-07T04:23:45.2135208Z   "autoHealRules": null,
+2026-05-07T04:23:45.2135631Z   "autoSwapSlotName": null,
+2026-05-07T04:23:45.2136148Z   "azureStorageAccounts": ***,
+2026-05-07T04:23:45.2136880Z   "connectionStrings": null,
+2026-05-07T04:23:45.2137327Z   "cors": null,
+2026-05-07T04:23:45.2137704Z   "defaultDocuments": [
+2026-05-07T04:23:45.2138097Z     "Default.htm",
+2026-05-07T04:23:45.2138492Z     "Default.html",
+2026-05-07T04:23:45.2138910Z     "Default.asp",
+2026-05-07T04:23:45.2139273Z     "index.htm",
+2026-05-07T04:23:45.2139651Z     "index.html",
+2026-05-07T04:23:45.2140014Z     "iisstart.htm",
+2026-05-07T04:23:45.2140394Z     "default.aspx",
+2026-05-07T04:23:45.2140753Z     "index.php",
+2026-05-07T04:23:45.2141134Z     "hostingstart.html"
+2026-05-07T04:23:45.2141546Z   ],
+2026-05-07T04:23:45.2141939Z   "detailedErrorLoggingEnabled": false,
+2026-05-07T04:23:45.2142461Z   "documentRoot": null,
+2026-05-07T04:23:45.2142871Z   "elasticWebAppScaleLimit": 0,
+2026-05-07T04:23:45.2143363Z   "experiments": ***
+2026-05-07T04:23:45.2143768Z     "rampUpRules": []
+2026-05-07T04:23:45.2144167Z   ***,
+2026-05-07T04:23:45.2144542Z   "ftpsState": "FtpsOnly",
+2026-05-07T04:23:45.2145311Z   "functionAppScaleLimit": null,
+2026-05-07T04:23:45.2145917Z   "functionsRuntimeScaleMonitoringEnabled": false,
+2026-05-07T04:23:45.2146841Z   "handlerMappings": null,
+2026-05-07T04:23:45.2147300Z   "healthCheckPath": null,
+2026-05-07T04:23:45.2147741Z   "http20Enabled": false,
+2026-05-07T04:23:45.2148170Z   "http20ProxyFlag": 0,
+2026-05-07T04:23:45.2148858Z   "httpLoggingEnabled": false,
+2026-05-07T04:23:45.2149957Z   "id": "/subscriptions/a2893948-5696-4e0b-b9dc-ff7c727042ac/resourceGroups/SFC-Parkguide/providers/Microsoft.Web/sites/SFC-ParkguideBackend",
+2026-05-07T04:23:45.2151084Z   "ipSecurityRestrictions": [
+2026-05-07T04:23:45.2151561Z     ***
+2026-05-07T04:23:45.2151929Z       "action": "Allow",
+2026-05-07T04:23:45.2152382Z       "description": "Allow all access",
+2026-05-07T04:23:45.2152880Z       "headers": null,
+2026-05-07T04:23:45.2153301Z       "ipAddress": "Any",
+2026-05-07T04:23:45.2153732Z       "name": "Allow all",
+2026-05-07T04:23:45.2154169Z       "priority": 2147483647,
+2026-05-07T04:23:45.2154676Z       "subnetMask": null,
+2026-05-07T04:23:45.2155116Z       "subnetTrafficTag": null,
+2026-05-07T04:23:45.2155568Z       "tag": null,
+2026-05-07T04:23:45.2155981Z       "vnetSubnetResourceId": null,
+2026-05-07T04:23:45.2156480Z       "vnetTrafficTag": null
+2026-05-07T04:23:45.2157098Z     ***
+2026-05-07T04:23:45.2157449Z   ],
+2026-05-07T04:23:45.2157892Z   "ipSecurityRestrictionsDefaultAction": null,
+2026-05-07T04:23:45.2158458Z   "javaContainer": null,
+2026-05-07T04:23:45.2158916Z   "javaContainerVersion": null,
+2026-05-07T04:23:45.2159384Z   "javaVersion": null,
+2026-05-07T04:23:45.2159836Z   "keyVaultReferenceIdentity": null,
+2026-05-07T04:23:45.2160325Z   "kind": null,
+2026-05-07T04:23:45.2160711Z   "limits": null,
+2026-05-07T04:23:45.2161136Z   "linuxFxVersion": "PYTHON|3.14",
+2026-05-07T04:23:45.2161655Z   "loadBalancing": "LeastRequests",
+2026-05-07T04:23:45.2162187Z   "localMySqlEnabled": false,
+2026-05-07T04:23:45.2162664Z   "location": "Malaysia West",
+2026-05-07T04:23:45.2163146Z   "logsDirectorySizeLimit": 35,
+2026-05-07T04:23:45.2163608Z   "machineKey": null,
+2026-05-07T04:23:45.2164069Z   "managedPipelineMode": "Integrated",
+2026-05-07T04:23:45.2164631Z   "managedServiceIdentityId": null,
+2026-05-07T04:23:45.2165123Z   "metadata": null,
+2026-05-07T04:23:45.2165556Z   "minTlsCipherSuite": null,
+2026-05-07T04:23:45.2166046Z   "minTlsVersion": "1.2",
+2026-05-07T04:23:45.2166511Z   "minimumElasticInstanceCount": 1,
+2026-05-07T04:23:45.2167317Z   "name": "SFC-ParkguideBackend",
+2026-05-07T04:23:45.2167806Z   "netFrameworkVersion": "v4.0",
+2026-05-07T04:23:45.2168281Z   "nodeVersion": "",
+2026-05-07T04:23:45.2168713Z   "numberOfWorkers": 1,
+2026-05-07T04:23:45.2169147Z   "phpVersion": "",
+2026-05-07T04:23:45.2169574Z   "powerShellVersion": "",
+2026-05-07T04:23:45.2170048Z   "preWarmedInstanceCount": 0,
+2026-05-07T04:23:45.2170541Z   "publicNetworkAccess": "Enabled",
+2026-05-07T04:23:45.2171133Z   "publishingUsername": "***",
+2026-05-07T04:23:45.2171586Z   "push": null,
+2026-05-07T04:23:45.2171982Z   "pythonVersion": "",
+2026-05-07T04:23:45.2172432Z   "remoteDebuggingEnabled": false,
+2026-05-07T04:23:45.2172964Z   "remoteDebuggingVersion": "VS2022",
+2026-05-07T04:23:45.2173490Z   "requestTracingEnabled": false,
+2026-05-07T04:23:45.2174010Z   "requestTracingExpirationTime": null,
+2026-05-07T04:23:45.2174561Z   "resourceGroup": "SFC-Parkguide",
+2026-05-07T04:23:45.2175087Z   "scmIpSecurityRestrictions": [
+2026-05-07T04:23:45.2175583Z     ***
+2026-05-07T04:23:45.2175942Z       "action": "Allow",
+2026-05-07T04:23:45.2176391Z       "description": "Allow all access",
+2026-05-07T04:23:45.2177103Z       "headers": null,
+2026-05-07T04:23:45.2177524Z       "ipAddress": "Any",
+2026-05-07T04:23:45.2177964Z       "name": "Allow all",
+2026-05-07T04:23:45.2178422Z       "priority": 2147483647,
+2026-05-07T04:23:45.2178900Z       "subnetMask": null,
+2026-05-07T04:23:45.2179335Z       "subnetTrafficTag": null,
+2026-05-07T04:23:45.2179788Z       "tag": null,
+2026-05-07T04:23:45.2180427Z       "vnetSubnetResourceId": null,
+2026-05-07T04:23:45.2180932Z       "vnetTrafficTag": null
+2026-05-07T04:23:45.2181410Z     ***
+2026-05-07T04:23:45.2181749Z   ],
+2026-05-07T04:23:45.2182201Z   "scmIpSecurityRestrictionsDefaultAction": null,
+2026-05-07T04:23:45.2182843Z   "scmIpSecurityRestrictionsUseMain": false,
+2026-05-07T04:23:45.2183463Z   "scmMinTlsVersion": "1.2",
+2026-05-07T04:23:45.2184142Z   "scmType": "GitHubAction",
+2026-05-07T04:23:45.2184601Z   "tags": ***,
+2026-05-07T04:23:45.2185007Z   "tracingOptions": null,
+2026-05-07T04:23:45.2185457Z   "type": "Microsoft.Web/sites",
+2026-05-07T04:23:45.2185947Z   "use32BitWorkerProcess": true,
+2026-05-07T04:23:45.2186446Z   "virtualApplications": [
+2026-05-07T04:23:45.2187191Z     ***
+2026-05-07T04:23:45.2187596Z       "physicalPath": "site\\wwwroot",
+2026-05-07T04:23:45.2188117Z       "preloadEnabled": false,
+2026-05-07T04:23:45.2188604Z       "virtualDirectories": null,
+2026-05-07T04:23:45.2189090Z       "virtualPath": "/"
+2026-05-07T04:23:45.2189545Z     ***
+2026-05-07T04:23:45.2189900Z   ],
+2026-05-07T04:23:45.2190247Z   "vnetName": "",
+2026-05-07T04:23:45.2190663Z   "vnetPrivatePortsCount": 0,
+2026-05-07T04:23:45.2191144Z   "vnetRouteAllEnabled": false,
+2026-05-07T04:23:45.2191624Z   "webSocketsEnabled": false,
+2026-05-07T04:23:45.2192091Z   "websiteTimeZone": null,
+2026-05-07T04:23:45.2192547Z   "windowsFxVersion": null,
+2026-05-07T04:23:45.2193042Z   "xManagedServiceIdentityId": null
+2026-05-07T04:23:45.2193578Z ***
+2026-05-07T04:23:48.8771600Z [
+2026-05-07T04:23:48.8772144Z   ***
+2026-05-07T04:23:48.8772527Z     "name": "ALLOWED_HOSTS",
+2026-05-07T04:23:48.8773014Z     "slotSetting": false,
+2026-05-07T04:23:48.8773440Z     "value": null
+2026-05-07T04:23:48.8773820Z   ***,
+2026-05-07T04:23:48.8774168Z   ***
+2026-05-07T04:23:48.8774559Z     "name": "CSP_UPGRADE_INSECURE_REQUESTS",
+2026-05-07T04:23:48.8775091Z     "slotSetting": false,
+2026-05-07T04:23:48.8775501Z     "value": null
+2026-05-07T04:23:48.8775871Z   ***,
+2026-05-07T04:23:48.8776229Z   ***
+2026-05-07T04:23:48.8776762Z     "name": "CSRF_COOKIE_SECURE",
+2026-05-07T04:23:48.8777229Z     "slotSetting": false,
+2026-05-07T04:23:48.8777621Z     "value": null
+2026-05-07T04:23:48.8778000Z   ***,
+2026-05-07T04:23:48.8778324Z   ***
+2026-05-07T04:23:48.8778659Z     "name": "DATABASE_URL",
+2026-05-07T04:23:48.8779087Z     "slotSetting": false,
+2026-05-07T04:23:48.8779504Z     "value": null
+2026-05-07T04:23:48.8779900Z   ***,
+2026-05-07T04:23:48.8780223Z   ***
+2026-05-07T04:23:48.8780555Z     "name": "DEBUG",
+2026-05-07T04:23:48.8780940Z     "slotSetting": false,
+2026-05-07T04:23:48.8781334Z     "value": null
+2026-05-07T04:23:48.8781673Z   ***,
+2026-05-07T04:23:48.8782007Z   ***
+2026-05-07T04:23:48.8782379Z     "name": "DEFAULT_FROM_EMAIL",
+2026-05-07T04:23:48.8782843Z     "slotSetting": false,
+2026-05-07T04:23:48.8783251Z     "value": null
+2026-05-07T04:23:48.8849551Z   ***,
+2026-05-07T04:23:48.8850193Z   ***
+2026-05-07T04:23:48.8850587Z     "name": "EMAIL_BACKEND",
+2026-05-07T04:23:48.8851104Z     "slotSetting": false,
+2026-05-07T04:23:48.8851545Z     "value": null
+2026-05-07T04:23:48.8851929Z   ***,
+2026-05-07T04:23:48.8852285Z   ***
+2026-05-07T04:23:48.8852648Z     "name": "EMAIL_HOST",
+2026-05-07T04:23:48.8853102Z     "slotSetting": false,
+2026-05-07T04:23:48.8853535Z     "value": null
+2026-05-07T04:23:48.8853918Z   ***,
+2026-05-07T04:23:48.8854275Z   ***
+2026-05-07T04:23:48.8854657Z     "name": "EMAIL_HOST_PASSWORD",
+2026-05-07T04:23:48.8855159Z     "slotSetting": false,
+2026-05-07T04:23:48.8855581Z     "value": null
+2026-05-07T04:23:48.8855975Z   ***,
+2026-05-07T04:23:48.8856332Z   ***
+2026-05-07T04:23:48.8856943Z     "name": "EMAIL_HOST_USER",
+2026-05-07T04:23:48.8857417Z     "slotSetting": false,
+2026-05-07T04:23:48.8857824Z     "value": null
+2026-05-07T04:23:48.8858212Z   ***,
+2026-05-07T04:23:48.8858562Z   ***
+2026-05-07T04:23:48.8858923Z     "name": "EMAIL_PORT",
+2026-05-07T04:23:48.8859362Z     "slotSetting": false,
+2026-05-07T04:23:48.8859783Z     "value": null
+2026-05-07T04:23:48.8860638Z   ***,
+2026-05-07T04:23:48.8860988Z   ***
+2026-05-07T04:23:48.8861363Z     "name": "EMAIL_USE_TLS",
+2026-05-07T04:23:48.8861826Z     "slotSetting": false,
+2026-05-07T04:23:48.8862247Z     "value": null
+2026-05-07T04:23:48.8862634Z   ***,
+2026-05-07T04:23:48.8862970Z   ***
+2026-05-07T04:23:48.8863341Z     "name": "ENVIRONMENT",
+2026-05-07T04:23:48.8863780Z     "slotSetting": false,
+2026-05-07T04:23:48.8864432Z     "value": null
+2026-05-07T04:23:48.8864821Z   ***,
+2026-05-07T04:23:48.8865159Z   ***
+2026-05-07T04:23:48.8865518Z     "name": "EXPO_PUSH_URL",
+2026-05-07T04:23:48.8865945Z     "slotSetting": false,
+2026-05-07T04:23:48.8866369Z     "value": null
+2026-05-07T04:23:48.8866938Z   ***,
+2026-05-07T04:23:48.8867290Z   ***
+2026-05-07T04:23:48.8867681Z     "name": "FIREBASE_SERVICE_ACCOUNT_JSON",
+2026-05-07T04:23:48.8868208Z     "slotSetting": false,
+2026-05-07T04:23:48.8868643Z     "value": null
+2026-05-07T04:23:48.8869025Z   ***,
+2026-05-07T04:23:48.8869384Z   ***
+2026-05-07T04:23:48.8869766Z     "name": "FIREBASE_STORAGE_BUCKET",
+2026-05-07T04:23:48.8870277Z     "slotSetting": false,
+2026-05-07T04:23:48.8870716Z     "value": null
+2026-05-07T04:23:48.8871111Z   ***,
+2026-05-07T04:23:48.8871469Z   ***
+2026-05-07T04:23:48.8871898Z     "name": "PASSKEY_ANDROID_PACKAGE_NAME",
+2026-05-07T04:23:48.8872446Z     "slotSetting": false,
+2026-05-07T04:23:48.8872885Z     "value": null
+2026-05-07T04:23:48.8873294Z   ***,
+2026-05-07T04:23:48.8873642Z   ***
+2026-05-07T04:23:48.8874030Z     "name": "PASSKEY_ANDROID_SHA256",
+2026-05-07T04:23:48.8874533Z     "slotSetting": false,
+2026-05-07T04:23:48.8874956Z     "value": null
+2026-05-07T04:23:48.8875342Z   ***,
+2026-05-07T04:23:48.8875688Z   ***
+2026-05-07T04:23:48.8876057Z     "name": "PASSKEY_ORIGIN",
+2026-05-07T04:23:48.8876527Z     "slotSetting": false,
+2026-05-07T04:23:48.8877184Z     "value": null
+2026-05-07T04:23:48.8877579Z   ***,
+2026-05-07T04:23:48.8877942Z   ***
+2026-05-07T04:23:48.8878322Z     "name": "PASSKEY_RP_ID",
+2026-05-07T04:23:48.8878785Z     "slotSetting": false,
+2026-05-07T04:23:48.8879235Z     "value": null
+2026-05-07T04:23:48.8879619Z   ***,
+2026-05-07T04:23:48.8879972Z   ***
+2026-05-07T04:23:48.8880348Z     "name": "PASSKEY_RP_NAME",
+2026-05-07T04:23:48.8880824Z     "slotSetting": false,
+2026-05-07T04:23:48.8881248Z     "value": null
+2026-05-07T04:23:48.8881626Z   ***,
+2026-05-07T04:23:48.8881978Z   ***
+2026-05-07T04:23:48.8882388Z     "name": "SCM_DO_BUILD_DURING_DEPLOYMENT",
+2026-05-07T04:23:48.8882940Z     "slotSetting": false,
+2026-05-07T04:23:48.8883363Z     "value": null
+2026-05-07T04:23:48.8883747Z   ***,
+2026-05-07T04:23:48.8884098Z   ***
+2026-05-07T04:23:48.8884498Z     "name": "SECURE_HSTS_INCLUDE_SUBDOMAINS",
+2026-05-07T04:23:48.8885048Z     "slotSetting": false,
+2026-05-07T04:23:48.8885483Z     "value": null
+2026-05-07T04:23:48.8885861Z   ***,
+2026-05-07T04:23:48.8886198Z   ***
+2026-05-07T04:23:48.8886750Z     "name": "SECURE_HSTS_PRELOAD",
+2026-05-07T04:23:48.8887246Z     "slotSetting": false,
+2026-05-07T04:23:48.8887669Z     "value": null
+2026-05-07T04:23:48.8888069Z   ***,
+2026-05-07T04:23:48.8888419Z   ***
+2026-05-07T04:23:48.8888796Z     "name": "SECURE_HSTS_SECONDS",
+2026-05-07T04:23:48.8889277Z     "slotSetting": false,
+2026-05-07T04:23:48.8889701Z     "value": null
+2026-05-07T04:23:48.8890085Z   ***,
+2026-05-07T04:23:48.8890434Z   ***
+2026-05-07T04:23:48.8890823Z     "name": "SECURE_SSL_REDIRECT",
+2026-05-07T04:23:48.8891314Z     "slotSetting": false,
+2026-05-07T04:23:48.8891877Z     "value": null
+2026-05-07T04:23:48.8892268Z   ***,
+2026-05-07T04:23:48.8892613Z   ***
+2026-05-07T04:23:48.8892994Z     "name": "SESSION_COOKIE_SECURE",
+2026-05-07T04:23:48.8893505Z     "slotSetting": false,
+2026-05-07T04:23:48.8893935Z     "value": null
+2026-05-07T04:23:48.8894325Z   ***,
+2026-05-07T04:23:48.8894668Z   ***
+2026-05-07T04:23:48.8895052Z     "name": "POST_BUILD_COMMAND",
+2026-05-07T04:23:48.8895530Z     "slotSetting": false,
+2026-05-07T04:23:48.8895951Z     "value": null
+2026-05-07T04:23:48.8896338Z   ***
+2026-05-07T04:23:50.3130869Z ]
+2026-05-07T04:23:50.3209411Z Post job cleanup.
+2026-05-07T04:23:50.3636214Z Clearing azure cli accounts from the local cache.
+2026-05-07T04:23:50.3652491Z [command]/usr/bin/az account clear
+2026-05-07T04:23:50.8420553Z Cleaning up orphan processes
+2026-05-07T04:23:50.8779479Z Terminate orphan process: pid (2608) (python3)
+2026-05-07T04:23:50.8796412Z ##[warning]Node.js 20 actions are deprecated. The following actions are running on Node.js 20 and may not work as expected: actions/download-artifact@v4, azure/login@v2. Actions will be forced to run with Node.js 24 by default starting June 2nd, 2026. Node.js 20 will be removed from the runner on September 16th, 2026. Please check if updated versions of these actions are available that support Node.js 24. To opt into Node.js 24 now, set the FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true environment variable on the runner or in your workflow file. Once Node.js 24 becomes the default, you can temporarily opt out by setting ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

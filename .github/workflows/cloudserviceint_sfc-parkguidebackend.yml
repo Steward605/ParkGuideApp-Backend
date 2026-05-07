@@ -67,21 +67,13 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: python-app
-      
-      - name: 'Deploy to Azure Web App'
-        uses: azure/webapps-deploy@v3
-        id: deploy-to-webapp
-        with:
-          app-name: ${{ env.AZURE_WEBAPP_NAME }}
-          slot-name: 'Production'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_91CADE5BE94248159CB6B522E0E0048B }}
 
       - name: Login to Azure for app configuration
         uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Configure Azure startup command
+      - name: Configure Azure deployment settings
         run: |
           RESOURCE_GROUP=$(az webapp list --query "[?name=='${AZURE_WEBAPP_NAME}'].resourceGroup | [0]" -o tsv)
           if [ -z "$RESOURCE_GROUP" ]; then
@@ -92,15 +84,27 @@ jobs:
           az webapp config set \
             --resource-group "$RESOURCE_GROUP" \
             --name "$AZURE_WEBAPP_NAME" \
+            --linux-fx-version "PYTHON|3.12" \
             --startup-file "bash startup.sh"
 
           az webapp config appsettings set \
             --resource-group "$RESOURCE_GROUP" \
             --name "$AZURE_WEBAPP_NAME" \
             --settings \
-              SCM_DO_BUILD_DURING_DEPLOYMENT=true \
-              POST_BUILD_COMMAND='pip uninstall -y opencv-python opencv-contrib-python || true && pip install --no-cache-dir --force-reinstall "opencv-python-headless>=4.8.0"'
+              SCM_DO_BUILD_DURING_DEPLOYMENT=false \
+              POST_BUILD_COMMAND=
 
+      - name: 'Deploy to Azure Web App'
+        uses: azure/webapps-deploy@v3
+        id: deploy-to-webapp
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          slot-name: 'Production'
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_91CADE5BE94248159CB6B522E0E0048B }}
+
+      - name: Restart Azure Web App
+        run: |
+          RESOURCE_GROUP=$(az webapp list --query "[?name=='${AZURE_WEBAPP_NAME}'].resourceGroup | [0]" -o tsv)
           az webapp restart \
             --resource-group "$RESOURCE_GROUP" \
             --name "$AZURE_WEBAPP_NAME"
