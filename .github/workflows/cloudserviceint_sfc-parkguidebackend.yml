@@ -59,6 +59,8 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     needs: build
+    env:
+      AZURE_WEBAPP_NAME: SFC-ParkguideBackend
     
     steps:
       - name: Download artifact from build job
@@ -70,7 +72,28 @@ jobs:
         uses: azure/webapps-deploy@v3
         id: deploy-to-webapp
         with:
-          app-name: 'SFC-ParkguideBackend'
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
           slot-name: 'Production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_91CADE5BE94248159CB6B522E0E0048B }}
-          startup-command: 'bash startup.sh'
+
+      - name: Login to Azure for app configuration
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Configure Azure startup command
+        run: |
+          RESOURCE_GROUP=$(az webapp list --query "[?name=='${AZURE_WEBAPP_NAME}'].resourceGroup | [0]" -o tsv)
+          if [ -z "$RESOURCE_GROUP" ]; then
+            echo "Could not find resource group for ${AZURE_WEBAPP_NAME}."
+            exit 1
+          fi
+
+          az webapp config set \
+            --resource-group "$RESOURCE_GROUP" \
+            --name "$AZURE_WEBAPP_NAME" \
+            --startup-file "bash startup.sh"
+
+          az webapp restart \
+            --resource-group "$RESOURCE_GROUP" \
+            --name "$AZURE_WEBAPP_NAME"
