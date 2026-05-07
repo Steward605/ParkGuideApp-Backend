@@ -68,6 +68,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'corsheaders',
     'courses',
     'user_progress.apps.UserProgressConfig',
     'secure_files.apps.SecureFilesConfig',
@@ -77,7 +78,6 @@ INSTALLED_APPS = [
     'monitoring.apps.MonitoringConfig',
     'ar_training.apps.ArTrainingConfig',
     'rest_framework.authtoken',
-    'corsheaders',
     'ranger_eye',
 ]
 
@@ -250,6 +250,14 @@ EMAIL_TIMEOUT = _env_int('EMAIL_TIMEOUT', default=30)
 SERVER_EMAIL = os.getenv('SERVER_EMAIL', DEFAULT_FROM_EMAIL)
 
 AUTH_USER_MODEL = 'accounts.CustomUser'
+
+# CORS settings (which origins allowed to make requests to backends)
+CORS_ALLOWED_ORIGINS = [
+    origin.strip()
+    for origin in os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:8081').split(',') # for now we use local frontend
+    if origin.strip()
+]
+CORS_ALLOW_CREDENTIALS = True
 
 # Auth redirect behavior for custom dashboard flow
 LOGIN_URL = '/login/'
