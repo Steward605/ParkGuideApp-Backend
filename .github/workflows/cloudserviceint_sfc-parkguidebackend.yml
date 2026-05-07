@@ -94,13 +94,6 @@ jobs:
             --name "$AZURE_WEBAPP_NAME" \
             --startup-file "bash startup.sh"
 
-          az webapp config appsettings set \
-            --resource-group "$RESOURCE_GROUP" \
-            --name "$AZURE_WEBAPP_NAME" \
-            --settings \
-              SCM_DO_BUILD_DURING_DEPLOYMENT=true \
-              POST_BUILD_COMMAND='pip uninstall -y opencv-python opencv-contrib-python || true && pip install --no-cache-dir --force-reinstall "opencv-python-headless>=4.8.0"'
-
           az webapp restart \
             --resource-group "$RESOURCE_GROUP" \
             --name "$AZURE_WEBAPP_NAME"

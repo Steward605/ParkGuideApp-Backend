@@ -3,6 +3,12 @@ set -e
 
 echo "Starting ParkGuide backend startup script"
 
+apt-get update
+apt-get install -y libgl1 libglib2.0-0 libsm6 libxext6 ffmpeg
+ldconfig -p | grep libGL.so.1 || true
+
+python -m pip uninstall -y opencv-python opencv-contrib-python || true
+python -m pip install --no-cache-dir "opencv-python-headless>=4.8.0"
 python - <<'PY'
 import cv2
 from ultralytics import YOLO
