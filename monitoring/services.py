@@ -1,4 +1,5 @@
 import os
+import logging
 import mimetypes
 import subprocess
 import tempfile
@@ -13,10 +14,13 @@ from django.utils import timezone
 from notifications.services import create_notification_for_staff, create_notification_for_user, create_notification_for_users
 from secure_files.services.firebase_storage import delete_file as delete_secure_blob, upload_file
 
+_YOLO_IMPORT_ERROR = None
+
 try:
     from ultralytics import YOLO
-except Exception:  # pragma: no cover - optional dependency during local setup
+except Exception as exc:  # pragma: no cover - optional dependency during local setup
     YOLO = None
+    _YOLO_IMPORT_ERROR = exc
 
 try:
     import cv2
@@ -24,6 +28,8 @@ except Exception:  # pragma: no cover - optional dependency during local setup
     cv2 = None
 
 from .models import MonitorSession, ViolationAlert
+
+logger = logging.getLogger(__name__)
 
 RISK_CLASSES = {"plant_approaching"}
 VIOLATION_CLASSES = {"plant_plucking", "animal_touching"}
@@ -40,9 +46,13 @@ def _candidate_model_paths():
 
     candidates = []
     if configured:
-        candidates.append(Path(configured))
+        configured_path = Path(configured)
+        candidates.append(configured_path)
+        if not configured_path.is_absolute():
+            candidates.append(base_dir / configured_path)
     candidates.extend(
         [
+            base_dir / "models/best.pt",
             ai_root / "runs/train/park_activity_v2/weights/best.pt",
             ai_root / "yolo11s.pt",
             ai_root / "yolo26n.pt",
@@ -56,12 +66,22 @@ def load_detection_model():
     if _MODEL_CACHE is not None:
         return _MODEL_CACHE
     if YOLO is None:
+        logger.warning("YOLO detection model is unavailable: %s", _YOLO_IMPORT_ERROR)
         return None
 
     for candidate in _candidate_model_paths():
         if candidate.exists():
-            _MODEL_CACHE = YOLO(str(candidate))
-            return _MODEL_CACHE
+            try:
+                _MODEL_CACHE = YOLO(str(candidate))
+                logger.info("Loaded YOLO detection model from %s", candidate)
+                return _MODEL_CACHE
+            except Exception:
+                logger.exception("Failed to load YOLO detection model from %s", candidate)
+                return None
+    logger.warning(
+        "No YOLO detection model found. Checked: %s",
+        ", ".join(str(path) for path in _candidate_model_paths()),
+    )
     return None
 
 
