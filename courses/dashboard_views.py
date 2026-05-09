@@ -15,7 +15,7 @@ from django.core.paginator import Paginator
 
 from accounts.models import CustomUser
 from .models import (
-    Course, CourseEnrollment, ChapterProgress, LessonProgress,
+    Course, Chapter, CourseEnrollment, ChapterProgress, LessonProgress,
     PracticeAttempt, QuizAttempt
 )
 from .dashboard_serializers import (
@@ -341,3 +341,141 @@ class LeaderboardView(APIView):
             'quizzes_passed': 'quizzes_passed',
         }
         return values.get(metric_map.get(metric, 'courses_completed'), 0)
+
+
+class SpoofProgressView(APIView):
+    """
+    Admin-only endpoint to spoof progress/enrollment for testing.
+
+    POST payload (JSON):
+    - users: [user_id, ...] OR
+    - emails: [email, ...] OR
+    - all: true
+    - course_id: optional int to target a specific course
+    - action: 'complete' | 'reset' | 'partial'  (default 'complete')
+    - progress: float between 0-100 (used for 'partial')
+    - score: float (optional final score)
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        if not (request.user.is_staff or request.user.is_superuser):
+            return Response({'error': 'Admin privileges required'}, status=status.HTTP_403_FORBIDDEN)
+
+        payload = request.data or {}
+        user_ids = payload.get('users')
+        emails = payload.get('emails')
+        apply_all = payload.get('all', False)
+        course_id = payload.get('course_id')
+        action = payload.get('action', 'complete')
+        progress_value = float(payload.get('progress', 100))
+        score_value = payload.get('score', 100)
+
+        users_qs = None
+        if apply_all:
+            users_qs = User.objects.filter(user_type='learner')
+        elif user_ids:
+            users_qs = User.objects.filter(id__in=user_ids)
+        elif emails:
+            users_qs = User.objects.filter(email__in=emails)
+        else:
+            return Response({'error': 'No target users specified'}, status=status.HTTP_400_BAD_REQUEST)
+
+        now = timezone.now()
+        affected = {'enrollments_updated': 0, 'chapter_progress_created': 0}
+        from django.db import transaction
+
+        with transaction.atomic():
+            for user in users_qs:
+                enrollments = CourseEnrollment.objects.filter(user=user)
+                if course_id:
+                    enrollments = enrollments.filter(course_id=course_id)
+
+                for enroll in enrollments:
+                    # ensure total_chapters is set
+                    total_chapters = enroll.total_chapters or enroll.course.chapters.count()
+                    enroll.total_chapters = total_chapters
+
+                    if action == 'reset':
+                        enroll.status = 'enrolled'
+                        enroll.completed_chapters = 0
+                        enroll.progress_percentage = 0
+                        enroll.completed_date = None
+                        enroll.final_score = None
+                        enroll.save()
+                        affected['enrollments_updated'] += 1
+                        continue
+
+                    if action == 'partial':
+                        # set a partial progress
+                        percent = max(0.0, min(100.0, progress_value))
+                        enroll.progress_percentage = percent
+                        enroll.completed_chapters = int(round((percent / 100.0) * total_chapters))
+                        enroll.status = 'in_progress' if percent < 100 else 'completed'
+                        if percent >= 100:
+                            enroll.completed_date = now
+                            enroll.final_score = score_value
+                        enroll.save()
+                        affected['enrollments_updated'] += 1
+                    else:
+                        # default: mark complete
+                        enroll.completed_chapters = total_chapters
+                        enroll.progress_percentage = 100
+                        enroll.status = 'completed'
+                        enroll.completed_date = now
+                        enroll.final_score = score_value
+                        enroll.save()
+                        affected['enrollments_updated'] += 1
+
+                        # create/update chapter progress for all chapters
+                        chapters = enroll.course.chapters.all()
+                        for chapter in chapters:
+                            cp, created = ChapterProgress.objects.update_or_create(
+                                user=user,
+                                chapter=chapter,
+                                defaults={
+                                    'completed_lessons': chapter.lessons.count(),
+                                    'total_lessons': chapter.lessons.count() or 0,
+                                    'practice_completed': True,
+                                    'practice_score': 100,
+                                    'practice_passed': True,
+                                    'quiz_completed': True,
+                                    'quiz_score': 100,
+                                    'quiz_passed': True,
+                                    'progress_percentage': 100,
+                                    'is_complete': True,
+                                    'completed_at': now,
+                                    'started_at': now,
+                                }
+                            )
+                            if created:
+                                affected['chapter_progress_created'] += 1
+
+                            # mark lessons complete for the chapter
+                            for lesson in chapter.lessons.all():
+                                LessonProgress.objects.update_or_create(
+                                    user=user,
+                                    lesson=lesson,
+                                    defaults={
+                                        'completed': True,
+                                        'time_spent': 60,
+                                        'completed_at': now,
+                                    }
+                                )
+
+                        # create a synthetic quiz attempt (optional)
+                        try:
+                            QuizAttempt.objects.create(
+                                user=user,
+                                quiz=enroll.course.chapters.first().quizzes.first() if enroll.course.chapters.exists() and enroll.course.chapters.first().quizzes.exists() else None,
+                                attempt_number=1,
+                                answers={},
+                                score=score_value or 100,
+                                passed=True,
+                                time_spent=30,
+                            )
+                        except Exception:
+                            # ignore if no quiz exists or required fields missing
+                            pass
+
+        return Response({'status': 'ok', 'summary': affected})

@@ -8,6 +8,9 @@ class BadgeStatusSerializer(serializers.ModelSerializer):
     badge_image_url = serializers.SerializerMethodField()
     course_id = serializers.SerializerMethodField()  # ✅ Fixed: handles null course
     course_title = serializers.SerializerMethodField()
+    course_title_translations = serializers.SerializerMethodField()
+    skills_awarded_translations = serializers.SerializerMethodField()
+    lesson_highlights_translations = serializers.SerializerMethodField()
     earned = serializers.SerializerMethodField()
     pending = serializers.SerializerMethodField()
     rejected = serializers.SerializerMethodField()
@@ -23,12 +26,17 @@ class BadgeStatusSerializer(serializers.ModelSerializer):
             'id',
             'name',
             'description',
+            'name_translations',
+            'description_translations',
             'badge_image_url',
             'badge_image_source',
             'skills_awarded',
+            'skills_awarded_translations',
             'lesson_highlights',
+            'lesson_highlights_translations',
             'course_id',
             'course_title',
+            'course_title_translations',
             'required_completed_modules',
             'is_major_badge',
             'required_badges_count',
@@ -46,6 +54,25 @@ class BadgeStatusSerializer(serializers.ModelSerializer):
         if not obj.course:
             return None
         return obj.course.title.get('en', 'Course')
+
+    def get_course_title_translations(self, obj):
+        if not obj.course:
+            return {}
+        return obj.course.title or {}
+
+    def get_skills_awarded_translations(self, obj):
+        if not obj.course:
+            return []
+        return [chapter.title or {} for chapter in obj.course.chapters.order_by('order')]
+
+    def get_lesson_highlights_translations(self, obj):
+        if not obj.course:
+            return []
+        return [
+            lesson.title or {}
+            for chapter in obj.course.chapters.order_by('order').prefetch_related('lessons')
+            for lesson in chapter.lessons.all().order_by('order')
+        ][:8]
 
     def get_badge_image_url(self, obj):
         return get_badge_image_access_url(obj.badge_image_url)
@@ -92,15 +119,20 @@ class BadgeStatusSerializer(serializers.ModelSerializer):
 class UserBadgeSerializer(serializers.ModelSerializer):
     badge_name = serializers.CharField(source='badge.name', read_only=True)
     badge_description = serializers.CharField(source='badge.description', read_only=True)
+    badge_name_translations = serializers.JSONField(source='badge.name_translations', read_only=True)
+    badge_description_translations = serializers.JSONField(source='badge.description_translations', read_only=True)
     badge_image_url = serializers.SerializerMethodField()
     badge_image_source = serializers.CharField(source='badge.badge_image_source', read_only=True)
     badge_skills_awarded = serializers.JSONField(source='badge.skills_awarded', read_only=True)
+    badge_skills_awarded_translations = serializers.SerializerMethodField()
     badge_lesson_highlights = serializers.JSONField(source='badge.lesson_highlights', read_only=True)
+    badge_lesson_highlights_translations = serializers.SerializerMethodField()
     badge_required_completed_modules = serializers.IntegerField(source='badge.required_completed_modules', read_only=True)
     badge_required_badges_count = serializers.IntegerField(source='badge.required_badges_count', read_only=True)
     badge_is_major_badge = serializers.BooleanField(source='badge.is_major_badge', read_only=True)
     badge_course_id = serializers.SerializerMethodField()  # ✅ Fixed: handles null course
     badge_course_title = serializers.SerializerMethodField()
+    badge_course_title_translations = serializers.SerializerMethodField()
 
     class Meta:
         model = UserBadge
@@ -109,15 +141,20 @@ class UserBadgeSerializer(serializers.ModelSerializer):
             'badge',
             'badge_name',
             'badge_description',
+            'badge_name_translations',
+            'badge_description_translations',
             'badge_image_url',
             'badge_image_source',
             'badge_skills_awarded',
+            'badge_skills_awarded_translations',
             'badge_lesson_highlights',
+            'badge_lesson_highlights_translations',
             'badge_required_completed_modules',
             'badge_required_badges_count',
             'badge_is_major_badge',
             'badge_course_id',
             'badge_course_title',
+            'badge_course_title_translations',
             'status',
             'is_awarded',
             'awarded_at',
@@ -136,3 +173,22 @@ class UserBadgeSerializer(serializers.ModelSerializer):
         if not obj.badge.course:
             return None
         return obj.badge.course.title.get('en', 'Course')
+
+    def get_badge_course_title_translations(self, obj):
+        if not obj.badge.course:
+            return {}
+        return obj.badge.course.title or {}
+
+    def get_badge_skills_awarded_translations(self, obj):
+        if not obj.badge.course:
+            return []
+        return [chapter.title or {} for chapter in obj.badge.course.chapters.order_by('order')]
+
+    def get_badge_lesson_highlights_translations(self, obj):
+        if not obj.badge.course:
+            return []
+        return [
+            lesson.title or {}
+            for chapter in obj.badge.course.chapters.order_by('order').prefetch_related('lessons')
+            for lesson in chapter.lessons.all().order_by('order')
+        ][:8]

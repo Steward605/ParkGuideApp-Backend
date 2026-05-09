@@ -9,7 +9,7 @@ from .views import (
     ModuleViewSet, ModuleProgressViewSet, CourseProgressViewSet, CompleteModuleView
 )
 from .dashboard_views import (
-    UserProgressViewSet, DashboardStatsView, LeaderboardView
+    UserProgressViewSet, DashboardStatsView, LeaderboardView, SpoofProgressView
 )
 
 # MANUAL ROUTE REGISTRATION - NO DEFAULTS ROUTER FOR CRUD ENDPOINTS
@@ -87,4 +87,5 @@ urlpatterns += [
     path('complete-module/', CompleteModuleView.as_view(), name='complete-module'),
     path('dashboard/stats/overview/', DashboardStatsView.as_view(), name='dashboard-stats'),
     path('dashboard/leaderboard/', LeaderboardView.as_view(), name='leaderboard'),
+    path('dashboard/spoof-progress/', SpoofProgressView.as_view(), name='spoof-progress'),
 ]

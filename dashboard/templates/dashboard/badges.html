@@ -417,8 +417,16 @@
                     <input type="hidden" name="badge_id" id="badgeIdInput" value="">
                     <input type="hidden" name="badge_image_storage_path" id="badgeImageStoragePathInput" value="">
                     <div class="col-md-4">
-                        <label class="form-label">Badge Name</label>
+                        <label class="form-label">Badge Name (English)</label>
                         <input type="text" name="name" class="form-control" required id="badgeNameInput">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Badge Name (Malay)</label>
+                        <input type="text" name="name_ms" class="form-control" id="badgeNameMsInput">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Badge Name (Mandarin)</label>
+                        <input type="text" name="name_zh" class="form-control" id="badgeNameZhInput">
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Related Course</label>
@@ -433,9 +441,18 @@
                         <label class="form-label">Completion Requirement</label>
                         <input type="number" min="1" name="required_completed_modules" class="form-control" value="1" required id="requiredModulesInput">
                     </div>
-                    <div class="col-12">
-                        <label class="form-label">Badge Info</label>
+                    <div class="col-md-4"></div>
+                    <div class="col-md-4">
+                        <label class="form-label">Badge Info (English)</label>
                         <textarea name="description" class="form-control" rows="2" id="badgeDescriptionInput"></textarea>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Badge Info (Malay)</label>
+                        <textarea name="description_ms" class="form-control" rows="2" id="badgeDescriptionMsInput"></textarea>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Badge Info (Mandarin)</label>
+                        <textarea name="description_zh" class="form-control" rows="2" id="badgeDescriptionZhInput"></textarea>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Badge Image URL</label>
@@ -622,9 +639,13 @@
         const badgeIdInput = document.getElementById('badgeIdInput');
         const badgeImageStoragePathInput = document.getElementById('badgeImageStoragePathInput');
         const badgeNameInput = document.getElementById('badgeNameInput');
+        const badgeNameMsInput = document.getElementById('badgeNameMsInput');
+        const badgeNameZhInput = document.getElementById('badgeNameZhInput');
         const badgeCourseSelect = document.getElementById('badgeCourseSelect');
         const requiredModulesInput = document.getElementById('requiredModulesInput');
         const badgeDescriptionInput = document.getElementById('badgeDescriptionInput');
+        const badgeDescriptionMsInput = document.getElementById('badgeDescriptionMsInput');
+        const badgeDescriptionZhInput = document.getElementById('badgeDescriptionZhInput');
         const badgeImageUrlInput = document.getElementById('badgeImageUrlInput');
         const badgeImageSourceInput = document.getElementById('badgeImageSourceInput');
         const useDefaultBadgeImageBtn = document.getElementById('useDefaultBadgeImageBtn');
@@ -678,9 +699,13 @@
             if (!badge) return;
             if (badgeIdInput) badgeIdInput.value = badge.id || '';
             if (badgeNameInput) badgeNameInput.value = badge.name || '';
+            if (badgeNameMsInput) badgeNameMsInput.value = badge.name_translations?.ms || '';
+            if (badgeNameZhInput) badgeNameZhInput.value = badge.name_translations?.zh || '';
             if (badgeCourseSelect) badgeCourseSelect.value = badge.course_id || '';
             if (requiredModulesInput) requiredModulesInput.value = badge.required_completed_modules || 1;
             if (badgeDescriptionInput) badgeDescriptionInput.value = badge.description || '';
+            if (badgeDescriptionMsInput) badgeDescriptionMsInput.value = badge.description_translations?.ms || '';
+            if (badgeDescriptionZhInput) badgeDescriptionZhInput.value = badge.description_translations?.zh || '';
             if (badgeImageUrlInput) badgeImageUrlInput.value = badge.badge_image_url || '';
             if (badgeImageStoragePathInput) badgeImageStoragePathInput.value = badge.raw_badge_image_url || '';
             if (badgeImageSourceInput) badgeImageSourceInput.value = badge.badge_image_source || '';

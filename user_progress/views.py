@@ -16,7 +16,8 @@ class BadgeViewSet(viewsets.ReadOnlyModelViewSet):
         context = super().get_serializer_context()
         user = self.request.user
         ensure_badge_rows_for_user(user)
-        sync_user_badges(user)
+        if self.request.query_params.get('sync') == '1':
+            sync_user_badges(user)
         badges = list(self.get_queryset())
 
         status_rows = UserBadge.objects.filter(
@@ -53,7 +54,8 @@ class MyBadgeViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         ensure_badge_rows_for_user(self.request.user)
-        sync_user_badges(self.request.user)
+        if self.request.query_params.get('sync') == '1':
+            sync_user_badges(self.request.user)
         return UserBadge.objects.filter(
             user=self.request.user,
             status=UserBadge.STATUS_GRANTED,

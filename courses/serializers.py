@@ -85,11 +85,31 @@ class MultiLanguageField(serializers.Field):
 class LessonSerializer(serializers.ModelSerializer):
     title = MultiLanguageField()
     content_text = MultiLanguageField(required=False, allow_null=True)
-    content_images = serializers.SerializerMethodField()
+    ar_scenario_info = serializers.SerializerMethodField()
     
     class Meta:
         model = Lesson
-        fields = ['id', 'chapter', 'title', 'content_text', 'content_images', 'content_videos', 'order', 'estimated_time']
+        fields = [
+            'id', 'chapter', 'title', 'content_text', 'content_images',
+            'content_videos', 'ar_scenario', 'ar_scenario_info', 'order',
+            'estimated_time'
+        ]
+
+    def get_ar_scenario_info(self, obj):
+        scenario = obj.ar_scenario
+        if not scenario:
+            return None
+        return {
+            'id': scenario.id,
+            'code': scenario.code,
+            'title': scenario.title,
+            'description': scenario.description,
+            'scenario_type': scenario.scenario_type,
+            'difficulty': scenario.difficulty,
+            'duration_minutes': scenario.duration_minutes,
+            'thumbnail': scenario.thumbnail,
+            'initial_panorama_url': scenario.initial_panorama_url,
+        }
 
     def get_content_images(self, obj):
         return get_firebase_access_urls(obj.content_images)
@@ -109,13 +129,14 @@ class LessonCreateSerializer(serializers.ModelSerializer):
     
     content_images = serializers.ListField(required=False, allow_empty=True, help_text="List of image URLs")
     content_videos = serializers.ListField(required=False, allow_empty=True, help_text="List of video URLs")
+    ar_scenario = serializers.PrimaryKeyRelatedField(read_only=True)
     order = serializers.IntegerField(required=False, default=1)
     estimated_time = serializers.IntegerField(required=False, default=30)
     
     class Meta:
         model = Lesson
         fields = ['id', 'chapter', 'title_en', 'title_ms', 'title_zh', 'content_text_en', 'content_text_ms', 'content_text_zh', 
-                  'content_images', 'content_videos', 'order', 'estimated_time']
+                  'content_images', 'content_videos', 'ar_scenario', 'order', 'estimated_time']
     
     def create(self, validated_data):
         # Extract language fields
@@ -173,14 +194,18 @@ class LessonDetailSerializer(serializers.ModelSerializer):
     """Detailed lesson view with progress info"""
     progress = serializers.SerializerMethodField()
     is_completed = serializers.SerializerMethodField()
-    content_images = serializers.SerializerMethodField()
+    ar_scenario_info = serializers.SerializerMethodField()
     
     class Meta:
         model = Lesson
-        fields = ['id', 'title', 'content_text', 'content_images', 'content_videos', 'estimated_time', 'order', 'progress', 'is_completed']
+        fields = [
+            'id', 'title', 'content_text', 'content_images', 'content_videos',
+            'ar_scenario', 'ar_scenario_info', 'estimated_time', 'order',
+            'progress', 'is_completed'
+        ]
 
-    def get_content_images(self, obj):
-        return get_firebase_access_urls(obj.content_images)
+    def get_ar_scenario_info(self, obj):
+        return LessonSerializer(context=self.context).get_ar_scenario_info(obj)
     
     def get_progress(self, obj):
         user = self.context.get('request').user
@@ -546,11 +571,25 @@ class ChapterDetailSerializer(ChapterSerializer):
 # ============================================================================
 
 class CourseEnrollmentSerializer(serializers.ModelSerializer):
-    course_title = serializers.CharField(source='course.title', read_only=True)
+    course_title = serializers.JSONField(source='course.title', read_only=True)
+    course_code = serializers.CharField(source='course.code', read_only=True)
+    course_type = serializers.CharField(source='course.course_type', read_only=True)
     
     class Meta:
         model = CourseEnrollment
-        fields = ['id', 'course', 'course_title', 'status', 'progress_percentage', 'final_score', 'enrollment_date', 'completed_date', 'updated_at']
+        fields = [
+            'id',
+            'course',
+            'course_code',
+            'course_type',
+            'course_title',
+            'status',
+            'progress_percentage',
+            'final_score',
+            'enrollment_date',
+            'completed_date',
+            'updated_at',
+        ]
         read_only_fields = ['id', 'enrollment_date', 'progress_percentage', 'final_score', 'updated_at']
 
 
@@ -565,10 +604,11 @@ class CourseSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Course
-        fields = ['id', 'code', 'title', 'description', 'thumbnail', 'is_published', 'chapters', 'enrollment_status', 'prerequisites_info']
-
-    def get_thumbnail(self, obj):
-        return get_firebase_access_url(obj.thumbnail)
+        fields = [
+            'id', 'code', 'title', 'description', 'thumbnail', 'course_type',
+            'tags', 'is_published', 'chapters', 'enrollment_status',
+            'prerequisites_info'
+        ]
     
     def get_chapters(self, obj):
         chapters = Chapter.objects.filter(course=obj).order_by('order')
@@ -626,7 +666,7 @@ class CourseCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
         fields = ['id', 'code', 'title_en', 'title_ms', 'title_zh', 'description_en', 'description_ms', 'description_zh',
-                  'thumbnail', 'is_published', 'prerequisites']
+                  'thumbnail', 'course_type', 'tags', 'is_published', 'prerequisites']
     
     def create(self, validated_data):
         title = {

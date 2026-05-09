@@ -12,11 +12,12 @@ from .services.firebase_storage import upload_file
 @admin.register(SecureFile)
 class SecureFileAdmin(DashboardStatsChangeListMixin, admin.ModelAdmin):
     change_list_template = 'admin/secure_files/securefile/change_list.html'
-    list_display = ('id', 'owner', 'original_name', 'size', 'uploaded_at')
-    list_filter = ('uploaded_at',)
+    list_display = ('id', 'owner', 'original_name', 'category', 'size', 'uploaded_at')
+    list_filter = ('category', 'uploaded_at')
     search_fields = ('owner__email', 'owner__username', 'original_name', 's3_key')
     autocomplete_fields = ('owner',)
     readonly_fields = ('uploaded_at',)
+    fields = ('owner', 'original_name', 's3_key', 'content_type', 'size', 'category', 'tags', 'uploaded_at')
     dashboard_title = 'Secure Content Library'
     dashboard_description = 'Manage protected training files and keep an eye on storage usage.'
 

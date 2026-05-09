@@ -8,6 +8,8 @@ class SecureFile(models.Model):
     s3_key = models.CharField(max_length=500, unique=True)
     content_type = models.CharField(max_length=255, blank=True)
     size = models.PositiveBigIntegerField(default=0)
+    category = models.CharField(max_length=80, blank=True, default='')
+    tags = models.JSONField(default=list, blank=True)
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
