@@ -19,20 +19,72 @@
                         {% endif %}
                     </div>
                     
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">{{ form.title_en.label }}</label>
-                        {{ form.title_en }}
-                        {% if form.title_en.errors %}
-                            <div class="invalid-feedback d-block">{{ form.title_en.errors.0 }}</div>
-                        {% endif %}
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">{{ form.description_en.label }}</label>
-                        {{ form.description_en }}
-                        {% if form.description_en.errors %}
-                            <div class="invalid-feedback d-block">{{ form.description_en.errors.0 }}</div>
-                        {% endif %}
+                    <ul class="nav nav-pills mb-3" id="courseLanguageTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="course-en-tab" data-bs-toggle="pill" data-bs-target="#course-en" type="button" role="tab" aria-controls="course-en" aria-selected="true">English</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="course-ms-tab" data-bs-toggle="pill" data-bs-target="#course-ms" type="button" role="tab" aria-controls="course-ms" aria-selected="false">Malay</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="course-zh-tab" data-bs-toggle="pill" data-bs-target="#course-zh" type="button" role="tab" aria-controls="course-zh" aria-selected="false">Mandarin</button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content mb-3" id="courseLanguageTabsContent">
+                        <div class="tab-pane fade show active" id="course-en" role="tabpanel" aria-labelledby="course-en-tab">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">{{ form.title_en.label }}</label>
+                                {{ form.title_en }}
+                                {% if form.title_en.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.title_en.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">{{ form.description_en.label }}</label>
+                                {{ form.description_en }}
+                                {% if form.description_en.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.description_en.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="tab-pane fade" id="course-ms" role="tabpanel" aria-labelledby="course-ms-tab">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">{{ form.title_ms.label }}</label>
+                                {{ form.title_ms }}
+                                {% if form.title_ms.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.title_ms.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">{{ form.description_ms.label }}</label>
+                                {{ form.description_ms }}
+                                {% if form.description_ms.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.description_ms.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="tab-pane fade" id="course-zh" role="tabpanel" aria-labelledby="course-zh-tab">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">{{ form.title_zh.label }}</label>
+                                {{ form.title_zh }}
+                                {% if form.title_zh.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.title_zh.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">{{ form.description_zh.label }}</label>
+                                {{ form.description_zh }}
+                                {% if form.description_zh.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.description_zh.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
                     </div>
                     
                     <div class="mb-3">

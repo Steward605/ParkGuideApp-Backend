@@ -46,16 +46,14 @@ def get_badge_storage_path(value):
         return ''
 
     value = value.strip()
+    if value.startswith('http://') or value.startswith('https://'):
+        return ''
+
     bucket_name = getattr(settings, 'FIREBASE_STORAGE_BUCKET', '').strip()
 
     if value.startswith('gs://'):
         path = value.split('/', 3)
         return path[3] if len(path) > 3 else ''
-
-    firebase_prefix = f'https://firebasestorage.googleapis.com/v0/b/{bucket_name}/o/'
-    if bucket_name and value.startswith(firebase_prefix):
-        encoded_part = value[len(firebase_prefix):].split('?', 1)[0]
-        return encoded_part.replace('%2F', '/')
 
     if value.startswith(f'{DEFAULT_BADGE_STORAGE_PATH}/'):
         return value
@@ -75,7 +73,11 @@ def get_badge_image_access_url(raw_value):
 
 def build_course_badge_metadata(course):
     course_title = course.title.get('en', f'Course {course.id}')
+    course_title_ms = course.title.get('ms') or course_title
+    course_title_zh = course.title.get('zh') or course_title
     course_description = (course.description or {}).get('en', '').strip()
+    course_description_ms = (course.description or {}).get('ms', '').strip() or course_description
+    course_description_zh = (course.description or {}).get('zh', '').strip() or course_description
     skills_awarded = list(
         course.chapters.order_by('order').values_list('title__en', flat=True)
     )
@@ -91,10 +93,22 @@ def build_course_badge_metadata(course):
 
     default_blob_path = get_default_badge_blob_path(course)
     default_image_url = build_firebase_media_url(default_blob_path)
+    name_translations = {
+        'en': f'{course_title} Completion Badge',
+        'ms': f'Lencana Tamat {course_title_ms}',
+        'zh': f'{course_title_zh}结业徽章',
+    }
+    description_translations = {
+        'en': course_description or f'Awarded for completing the {course_title} course.',
+        'ms': course_description_ms or f'Dianugerahkan selepas melengkapkan kursus {course_title_ms}.',
+        'zh': course_description_zh or f'完成“{course_title_zh}”课程后获得。',
+    }
 
     return {
-        'name': f'{course_title} Completion Badge',
-        'description': course_description or f'Awarded for completing the {course_title} course.',
+        'name': name_translations['en'],
+        'description': description_translations['en'],
+        'name_translations': name_translations,
+        'description_translations': description_translations,
         'badge_image_url': default_blob_path or course.thumbnail or '',
         'badge_image_source': default_blob_path or course.thumbnail or '',
         'skills_awarded': skills_awarded,
@@ -113,6 +127,7 @@ def create_or_update_course_badge(course):
     badge = Badge.objects.filter(course=course, is_major_badge=False).order_by('id').first()
     if badge:
         badge.name = badge_defaults['name']
+        badge.name_translations = badge_defaults['name_translations']
         badge.course = course
         badge.required_completed_modules = badge_defaults['required_completed_modules']
         badge.required_badges_count = 0
@@ -122,6 +137,8 @@ def create_or_update_course_badge(course):
 
         if not (badge.description or '').strip():
             badge.description = badge_defaults['description']
+        if not badge.description_translations:
+            badge.description_translations = badge_defaults['description_translations']
         if not (badge.badge_image_url or '').strip():
             badge.badge_image_url = badge_defaults['badge_image_url']
         if not (badge.badge_image_source or '').strip():
@@ -245,20 +262,26 @@ def get_user_requirement_progress_for_badge(badge, user):
 
 
 def ensure_badge_rows_for_user(user):
-    badges = Badge.objects.filter(is_active=True)
-    created_count = 0
-    for badge in badges:
-        _, created = UserBadge.objects.get_or_create(
+    badge_ids = list(Badge.objects.filter(is_active=True).values_list('id', flat=True))
+    if not badge_ids:
+        return 0
+
+    existing_badge_ids = set(
+        UserBadge.objects.filter(user=user, badge_id__in=badge_ids).values_list('badge_id', flat=True)
+    )
+    missing_badge_ids = [badge_id for badge_id in badge_ids if badge_id not in existing_badge_ids]
+    rows = [
+        UserBadge(
             user=user,
-            badge=badge,
-            defaults={
-                'status': UserBadge.STATUS_IN_PROGRESS,
-                'is_awarded': False,
-            },
+            badge_id=badge_id,
+            status=UserBadge.STATUS_IN_PROGRESS,
+            is_awarded=False,
         )
-        if created:
-            created_count += 1
-    return created_count
+        for badge_id in missing_badge_ids
+    ]
+    if rows:
+        UserBadge.objects.bulk_create(rows, ignore_conflicts=True)
+    return len(rows)
 
 
 def ensure_badge_rows_for_all_users():

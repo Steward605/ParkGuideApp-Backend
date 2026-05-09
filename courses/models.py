@@ -8,10 +8,24 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 
 class Course(models.Model):
     """Container for all course information"""
+    COURSE_TYPE_GENERAL = 'general'
+    COURSE_TYPE_PARK_SPECIFIC = 'park_specific'
+    COURSE_TYPE_CHOICES = [
+        (COURSE_TYPE_GENERAL, 'General'),
+        (COURSE_TYPE_PARK_SPECIFIC, 'Park Specific'),
+    ]
+
     code = models.CharField(max_length=50, help_text="Course code (e.g., 'park-guide-101')")
     title = models.JSONField(help_text="Multilingual title {en, ms, zh}")
     description = models.JSONField(blank=True, null=True, help_text="Multilingual description")
     thumbnail = models.URLField(blank=True, null=True, help_text="Course thumbnail image URL")
+    course_type = models.CharField(
+        max_length=20,
+        choices=COURSE_TYPE_CHOICES,
+        default=COURSE_TYPE_GENERAL,
+        help_text="General courses unlock park-specific courses when all general courses are complete.",
+    )
+    tags = models.JSONField(default=list, blank=True, help_text="Course/material tags used by apps and dashboards")
     
     # Prerequisites & availability
     prerequisites = models.ManyToManyField('self', symmetrical=False, blank=True, help_text="Courses that must be completed first")
@@ -54,6 +68,14 @@ class Lesson(models.Model):
     content_text = models.JSONField(blank=True, null=True, help_text="Multilingual markdown/HTML content")
     content_images = models.JSONField(default=list, help_text="List of image URLs")
     content_videos = models.JSONField(default=list, help_text="List of {url, title, description}")
+    ar_scenario = models.ForeignKey(
+        'ar_training.ARScenario',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='course_lessons',
+        help_text="Optional AR/VR scenario attached to this normal course lesson",
+    )
     
     order = models.PositiveIntegerField(default=0, help_text="Display order within chapter")
     estimated_time = models.PositiveIntegerField(default=10, help_text="Estimated reading time in minutes")

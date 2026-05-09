@@ -63,6 +63,14 @@ class CourseViewSet(viewsets.ModelViewSet):
             elif status_filter == 'completed':
                 enrollments = CourseEnrollment.objects.filter(user=self.request.user, status='completed').values_list('course_id')
                 queryset = queryset.filter(id__in=enrollments)
+
+        course_type = self.request.query_params.get('course_type')
+        if course_type in ['general', 'park_specific']:
+            queryset = queryset.filter(course_type=course_type)
+
+        tag = self.request.query_params.get('tag')
+        if tag:
+            queryset = queryset.filter(tags__contains=[tag])
         
         return queryset.order_by('code')
     
@@ -96,7 +104,7 @@ class CourseEnrollmentViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [IsAuthenticated]
     
     def get_queryset(self):
-        return CourseEnrollment.objects.filter(user=self.request.user).order_by('-updated_at')
+        return CourseEnrollment.objects.filter(user=self.request.user).select_related('course').order_by('-updated_at')
 
 
 # ============================================================================

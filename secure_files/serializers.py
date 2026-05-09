@@ -7,7 +7,7 @@ class SecureFileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SecureFile
-        fields = ['id', 'owner', 'original_name', 'content_type', 'size', 'uploaded_at', 'download_url']
+        fields = ['id', 'owner', 'original_name', 'content_type', 'size', 'category', 'tags', 'uploaded_at', 'download_url']
         read_only_fields = ['id', 'owner', 'original_name', 'content_type', 'size', 'uploaded_at', 'download_url']
 
     def get_download_url(self, obj):

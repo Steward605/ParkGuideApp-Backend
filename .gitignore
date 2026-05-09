@@ -19,3 +19,4 @@ google-services.json
 **/*-key.json
 .backup
 .codex
+secrets.json

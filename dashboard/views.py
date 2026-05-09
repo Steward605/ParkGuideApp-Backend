@@ -2269,6 +2269,8 @@ def dashboard_badges(request):
                     'id': badge.id,
                     'name': badge.name,
                     'description': badge.description or '',
+                    'name_translations': badge.name_translations or {'en': badge.name},
+                    'description_translations': badge.description_translations or {'en': badge.description or ''},
                     'raw_badge_image_url': badge.badge_image_url or '',
                     'badge_image_url': get_badge_image_access_url(badge.badge_image_url),
                     'badge_image_source': badge.badge_image_source or '',
@@ -2337,16 +2339,30 @@ def dashboard_badges(request):
 
         if action == 'sync_course_badges':
             created_or_updated = 0
-            for course in Course.objects.all().order_by('code'):
+            for course in Course.objects.filter(is_published=True).order_by('code'):
                 create_or_update_course_badge(course)
                 created_or_updated += 1
-            messages.success(request, f'Generated or refreshed {created_or_updated} course badge(s).')
+            messages.success(
+                request,
+                f'Generated or refreshed {created_or_updated} published course badge(s). '
+                'User badge eligibility sync is skipped here to keep the page responsive.'
+            )
             return redirect('dashboard:badges')
 
         if action == 'save_badge':
             badge_id = (request.POST.get('badge_id') or '').strip()
             name = (request.POST.get('name') or '').strip()
             description = (request.POST.get('description') or '').strip()
+            name_translations = {
+                'en': name,
+                'ms': (request.POST.get('name_ms') or '').strip() or name,
+                'zh': (request.POST.get('name_zh') or '').strip() or name,
+            }
+            description_translations = {
+                'en': description,
+                'ms': (request.POST.get('description_ms') or '').strip() or description,
+                'zh': (request.POST.get('description_zh') or '').strip() or description,
+            }
             course_id = (request.POST.get('course_id') or '').strip()
             badge_image_url = (request.POST.get('badge_image_url') or '').strip()
             badge_image_storage_path = (request.POST.get('badge_image_storage_path') or '').strip()
@@ -2372,6 +2388,13 @@ def dashboard_badges(request):
                 lesson_highlights = list(course.chapters.order_by('order', 'lessons__order').values_list('lessons__title__en', flat=True))
             if course and not description:
                 description = (course.description or {}).get('en', '').strip()
+                description_translations = {
+                    'en': description,
+                    'ms': (course.description or {}).get('ms', '').strip() or description,
+                    'zh': (course.description or {}).get('zh', '').strip() or description,
+                }
+            else:
+                description_translations['en'] = description
             final_badge_image_value = badge_image_storage_path or badge_image_url
             if course and not final_badge_image_value:
                 final_badge_image_value = get_default_badge_blob_path(course) or course.thumbnail or ''
@@ -2398,6 +2421,8 @@ def dashboard_badges(request):
 
             badge.name = name
             badge.description = description
+            badge.name_translations = name_translations
+            badge.description_translations = description_translations
             badge.badge_image_url = final_badge_image_value
             badge.badge_image_source = badge_image_source
             badge.skills_awarded = skills_awarded
