@@ -36,6 +36,16 @@ def generate_download_url(blob_path):
     # Generate a signed URL valid for 1 hour
     return blob.generate_signed_url(datetime.timedelta(seconds=3600), method='GET')
 
+def generate_upload_url(blob_path, content_type='application/octet-stream', expires_seconds=900):
+    bucket = storage.bucket()
+    blob = bucket.blob(blob_path)
+    return blob.generate_signed_url(
+        datetime.timedelta(seconds=expires_seconds),
+        method='PUT',
+        content_type=content_type,
+        version='v4',
+    )
+
 def delete_file(blob_path):
     bucket = storage.bucket()
     blob = bucket.blob(blob_path)

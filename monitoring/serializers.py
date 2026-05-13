@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 from secure_files.serializers import SecureFileSerializer
 
-from .models import MonitorSession, ViolationAlert
+from .models import MonitorClip, MonitorSession, ViolationAlert
 
 
 class MonitorSessionSerializer(serializers.ModelSerializer):
@@ -70,6 +70,38 @@ class ViolationAlertSerializer(serializers.ModelSerializer):
         if obj.confidence_score is None:
             return "N/A"
         return f"{obj.confidence_score:.0%}"
+
+    def get_video_url(self, obj):
+        if obj.evidence_file:
+            return SecureFileSerializer().get_download_url(obj.evidence_file)
+        return None
+
+
+class MonitorClipSerializer(serializers.ModelSerializer):
+    evidence_file = SecureFileSerializer(read_only=True)
+    alert = ViolationAlertSerializer(read_only=True)
+    video_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = MonitorClip
+        fields = [
+            "id",
+            "user",
+            "session",
+            "evidence_file",
+            "alert",
+            "source_mode",
+            "camera_source",
+            "location",
+            "status",
+            "video_url",
+            "video_filename",
+            "video_duration",
+            "details",
+            "raw_payload",
+            "recorded_at",
+        ]
+        read_only_fields = fields
 
     def get_video_url(self, obj):
         if obj.evidence_file:

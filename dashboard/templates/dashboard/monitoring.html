@@ -7,16 +7,16 @@
 <style>
     .monitoring-summary-grid {
         display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 1rem;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.8rem;
     }
 
     .monitoring-summary-card {
-        min-height: 140px;
-        border-radius: 20px;
+        min-height: 118px;
+        border-radius: 16px;
         border: 1px solid rgba(45, 106, 79, 0.16);
         background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(45, 106, 79, 0.04));
-        padding: 1.2rem;
+        padding: 1rem;
     }
 
     [data-theme="dark"] .monitoring-summary-card {
@@ -41,8 +41,67 @@
 
     .monitoring-summary-note {
         color: var(--text-muted);
-        margin-top: 0.6rem;
+        margin-top: 0.45rem;
         line-height: 1.45;
+    }
+
+    .monitoring-quick-nav {
+        position: sticky;
+        top: 0.75rem;
+        z-index: 20;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        background: var(--bg-card);
+        padding: 0.75rem;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+    }
+
+    .monitoring-quick-nav .btn {
+        border-radius: 999px;
+        font-weight: 700;
+    }
+
+    .monitoring-control-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+        gap: 1rem;
+        align-items: start;
+    }
+
+    .sensor-node-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.85rem;
+    }
+
+    .sensor-node-card {
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        background: var(--bg-body);
+        padding: 1rem;
+    }
+
+    .sensor-metric-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.5rem;
+        margin-top: 0.75rem;
+    }
+
+    .sensor-metric {
+        border-radius: 12px;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        padding: 0.55rem;
+    }
+
+    .monitoring-summary-value.status-text {
+        font-size: clamp(1.2rem, 2vw, 1.65rem);
     }
 
     .monitoring-table td,
@@ -51,7 +110,7 @@
     }
 
     .monitoring-alerts-scroll {
-        max-height: min(720px, 72vh);
+        max-height: min(680px, 62vh);
         overflow: auto;
         border: 1px solid var(--border);
         border-radius: 16px;
@@ -132,6 +191,12 @@
     }
 
     @media (max-width: 991.98px) {
+        .monitoring-summary-grid,
+        .monitoring-control-grid,
+        .sensor-node-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
         .monitoring-test-grid {
             grid-template-columns: repeat(2, minmax(0, 1fr));
         }
@@ -139,6 +204,11 @@
 
     @media (max-width: 575.98px) {
         .monitoring-summary-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .monitoring-control-grid,
+        .sensor-node-grid {
             grid-template-columns: 1fr;
         }
 
@@ -154,7 +224,20 @@
 {% endblock %}
 
 {% block content %}
-<div class="monitoring-summary-grid mb-4">
+<div class="monitoring-quick-nav mb-3">
+    <div class="d-flex flex-wrap align-items-center gap-2">
+        <a class="btn btn-sm btn-primary" href="#monitoring-overview"><i class="bi bi-grid-1x2 me-1"></i>Overview</a>
+        <a class="btn btn-sm btn-outline-primary" href="#monitoring-controls"><i class="bi bi-camera-video me-1"></i>Controls</a>
+        <a class="btn btn-sm btn-outline-primary" href="#monitoring-sensors"><i class="bi bi-cpu me-1"></i>Sensors</a>
+        <a class="btn btn-sm btn-outline-primary" href="#monitoring-alerts"><i class="bi bi-shield-exclamation me-1"></i>Alerts</a>
+    </div>
+    <span class="monitoring-pill">
+        <i class="bi {{ esp32_phone_status.icon }} {{ esp32_phone_status.badge_class }}"></i>
+        {{ esp32_phone_status.state_label }}
+    </span>
+</div>
+
+<div id="monitoring-overview" class="monitoring-summary-grid mb-3">
     <div class="monitoring-summary-card">
         <div class="monitoring-summary-label">Pending Alerts</div>
         <div class="monitoring-summary-value text-warning">{{ stats.pending_alerts }}</div>
@@ -170,23 +253,40 @@
         <div class="monitoring-summary-value text-success">{{ stats.stored_evidence }}</div>
         <div class="monitoring-summary-note">Evidence remains until an admin deletes it.</div>
     </div>
+    <div class="monitoring-summary-card">
+        <div class="monitoring-summary-label">ESP32 Phone Link</div>
+        <div class="monitoring-summary-value status-text {{ stats.esp32_phone_status.badge_class }}">
+            {{ stats.esp32_phone_status.state_label }}
+        </div>
+        <div class="monitoring-summary-note">
+            {{ stats.esp32_phone_status.camera_source }} • {{ stats.esp32_phone_status.last_seen_display }}
+        </div>
+    </div>
+    <div class="monitoring-summary-card">
+        <div class="monitoring-summary-label">Sensor Nodes</div>
+        <div class="monitoring-summary-value text-primary">{{ stats.online_sensor_nodes }}/{{ stats.sensor_node_count }}</div>
+        <div class="monitoring-summary-note">Online ESP32 sensor nodes reporting telemetry.</div>
+    </div>
 </div>
 
-<div class="glass-card mb-4">
+<div id="monitoring-controls" class="monitoring-control-grid mb-4">
+<div class="glass-card mb-0">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
         <div>
-            <h5 class="fw-bold mb-1">RangerEye AI Pipeline</h5>
-            <div class="text-muted small">{{ recorder_status.message }}</div>
-            <div class="small text-muted mt-1">Last: {{ recorder_status.last_recording }} • Next: {{ recorder_status.next_recording }}</div>
+            <h5 class="fw-bold mb-1">Phone Reported ESP32</h5>
+            <div class="text-muted small">{{ esp32_phone_status.message }}</div>
+            <div class="small text-muted mt-1">
+                Camera: {{ esp32_phone_status.camera_source }} • Phone: {{ esp32_phone_status.reporting_guide }} • Last seen: {{ esp32_phone_status.last_seen_display }}
+            </div>
         </div>
         <span class="monitoring-pill">
-            <i class="bi {% if recorder_status.running %}bi-record-circle text-danger{% else %}bi-hourglass-split text-success{% endif %}"></i>
-            {% if recorder_status.running %}Processing{% else %}Waiting{% endif %}
+            <i class="bi {{ esp32_phone_status.icon }} {{ esp32_phone_status.badge_class }}"></i>
+            {{ esp32_phone_status.state_label }}
         </span>
     </div>
 </div>
 
-<div class="glass-card mb-4">
+<div class="glass-card mb-0">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
         <div>
             <h5 class="fw-bold mb-1">Test AI Upload</h5>
@@ -238,8 +338,50 @@
         </div>
     </div>
 </div>
+</div>
 
-<div class="glass-card mb-4">
+<div id="monitoring-sensors" class="glass-card mb-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+        <div>
+            <h5 class="fw-bold mb-1">ESP32 Sensor Nodes</h5>
+            <div class="text-muted small">Live soil, sound, movement, WiFi, and node health reported by ESP32 sensors.</div>
+        </div>
+        <span class="monitoring-pill"><i class="bi bi-cpu text-primary"></i>{{ stats.online_sensor_nodes }} online</span>
+    </div>
+
+    {% if stats.sensor_nodes %}
+    <div class="sensor-node-grid">
+        {% for node in stats.sensor_nodes %}
+        <div class="sensor-node-card">
+            <div class="d-flex justify-content-between align-items-start gap-2">
+                <div>
+                    <div class="fw-bold">{{ node.device_name }}</div>
+                    <div class="small text-muted">{{ node.device_id }}</div>
+                    <div class="small text-muted">{{ node.location }}</div>
+                </div>
+                <span class="badge {% if node.is_online %}bg-success{% else %}bg-secondary{% endif %}">
+                    {% if node.is_online %}Online{% else %}Offline{% endif %}
+                </span>
+            </div>
+            <div class="sensor-metric-grid">
+                <div class="sensor-metric"><div class="small text-muted">Soil</div><div class="fw-bold">{{ node.soil_value|default:"N/A" }}</div></div>
+                <div class="sensor-metric"><div class="small text-muted">Sound</div><div class="fw-bold">{{ node.sound_state|default:"N/A" }}</div></div>
+                <div class="sensor-metric"><div class="small text-muted">Movement</div><div class="fw-bold">{{ node.movement_score|floatformat:1|default:"N/A" }}</div></div>
+                <div class="sensor-metric"><div class="small text-muted">RSSI</div><div class="fw-bold">{{ node.wifi_rssi|default:"N/A" }}</div></div>
+            </div>
+            <div class="small text-muted mt-2">IP {{ node.ip_address|default:"N/A" }} • Last seen {{ node.last_seen_at|timesince }} ago</div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-4 text-muted">
+        <i class="bi bi-cpu" style="font-size: 2rem;"></i>
+        <div class="mt-2">No ESP32 sensor node has reported yet.</div>
+    </div>
+    {% endif %}
+</div>
+
+<div id="monitoring-alerts" class="glass-card mb-4">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
         <div>
             <h5 class="fw-bold mb-1">Monitoring Alerts</h5>

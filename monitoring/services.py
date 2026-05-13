@@ -1,9 +1,12 @@
 import os
 import mimetypes
+import shutil
 import subprocess
 import tempfile
+import time
 from pathlib import Path
 
+import requests
 from django.contrib.auth import get_user_model
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
@@ -23,13 +26,264 @@ try:
 except Exception:  # pragma: no cover - optional dependency during local setup
     cv2 = None
 
+try:
+    import imageio_ffmpeg
+except Exception:  # pragma: no cover - optional dependency during local setup
+    imageio_ffmpeg = None
+
 from .models import MonitorSession, ViolationAlert
 
 RISK_CLASSES = {"plant_approaching"}
 VIOLATION_CLASSES = {"plant_plucking", "animal_touching"}
 EXPECTED_CLASSES = RISK_CLASSES | VIOLATION_CLASSES
 
+ESP32_RECORDING_FPS = 8
+ESP32_CAPTURE_FPS = 2
+ESP32_RECORDING_WIDTH = 320
+ESP32_RECORDING_HEIGHT = 240
+ESP32_MIN_VALID_FRAMES = 5
+ESP32_MIN_VIDEO_SIZE_BYTES = 10000
+
 _MODEL_CACHE = None
+
+
+def build_esp32_stream_url(base_url="", stream_url=""):
+    if stream_url:
+        return str(stream_url).strip()
+
+    base = str(base_url or "").strip().rstrip("/")
+    if not base:
+        raise ImproperlyConfigured("ESP32 stream URL or base URL is required.")
+    if not base.startswith(("http://", "https://")):
+        base = f"http://{base}"
+
+    from urllib.parse import urlparse, urlunparse
+
+    parsed = urlparse(base)
+    netloc = parsed.hostname or parsed.netloc
+    if not netloc:
+        raise ImproperlyConfigured("Invalid ESP32 base URL.")
+    if parsed.username or parsed.password:
+        auth = parsed.netloc.rsplit("@", 1)[0]
+        netloc = f"{auth}@{netloc}"
+    netloc = f"{netloc}:81"
+    return urlunparse((parsed.scheme or "http", netloc, "/stream", "", "", ""))
+
+
+def build_esp32_capture_url(base_url="", capture_url=""):
+    if capture_url:
+        return str(capture_url).strip()
+
+    base = str(base_url or "").strip().rstrip("/")
+    if not base:
+        raise ImproperlyConfigured("ESP32 capture URL or base URL is required.")
+    if not base.startswith(("http://", "https://")):
+        base = f"http://{base}"
+    return f"{base}/capture"
+
+
+def _encode_frames_to_mp4(frames_dir, output_path, *, fps=ESP32_RECORDING_FPS, width=ESP32_RECORDING_WIDTH, height=ESP32_RECORDING_HEIGHT):
+    if imageio_ffmpeg is None:
+        raise ImproperlyConfigured("imageio-ffmpeg is required to encode ESP32 footage.")
+
+    input_pattern = str(Path(frames_dir) / "frame_%04d.jpg")
+    command = [
+        imageio_ffmpeg.get_ffmpeg_exe(),
+        "-y",
+        "-hide_banner",
+        "-loglevel",
+        "error",
+        "-framerate",
+        str(fps),
+        "-i",
+        input_pattern,
+        "-vf",
+        f"scale={width}:{height}",
+        "-an",
+        "-c:v",
+        "libx264",
+        "-preset",
+        "ultrafast",
+        "-pix_fmt",
+        "yuv420p",
+        "-movflags",
+        "+faststart",
+        str(output_path),
+    ]
+
+    result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=120)
+    if result.returncode != 0:
+        raise RuntimeError(result.stderr or f"FFmpeg encoding failed with code {result.returncode}")
+
+
+def record_esp32_stream_to_mp4(
+    stream_url,
+    *,
+    duration_seconds=12,
+    fps=ESP32_RECORDING_FPS,
+    width=ESP32_RECORDING_WIDTH,
+    height=ESP32_RECORDING_HEIGHT,
+):
+    if cv2 is None:
+        raise ImproperlyConfigured("OpenCV is required to record ESP32-CAM footage.")
+
+    duration_seconds = max(3, min(int(duration_seconds or 12), 60))
+    fps = max(1, min(int(fps or ESP32_RECORDING_FPS), 20))
+    target_frames = duration_seconds * fps
+    frame_interval = 1.0 / fps
+
+    frames_dir = tempfile.mkdtemp(prefix="esp32_monitor_frames_")
+    output_file = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4")
+    output_path = Path(output_file.name)
+    output_file.close()
+
+    capture = None
+    valid_frames = 0
+    saved_frames = 0
+    last_good_frame = None
+
+    try:
+        capture = cv2.VideoCapture(stream_url)
+        try:
+            capture.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+        except Exception:
+            pass
+
+        for frame_number in range(1, target_frames + 1):
+            loop_start = time.time()
+
+            if capture is None or not capture.isOpened():
+                if capture is not None:
+                    capture.release()
+                time.sleep(0.25)
+                capture = cv2.VideoCapture(stream_url)
+
+            ok, frame = capture.read() if capture is not None else (False, None)
+            if ok and frame is not None:
+                frame = cv2.resize(frame, (width, height))
+                last_good_frame = frame
+                valid_frames += 1
+            elif last_good_frame is not None:
+                frame = last_good_frame.copy()
+            else:
+                frame = 0 * cv2.UMat(height, width, cv2.CV_8UC3).get()
+
+            cv2.imwrite(str(Path(frames_dir) / f"frame_{frame_number:04d}.jpg"), frame)
+            saved_frames += 1
+
+            sleep_time = frame_interval - (time.time() - loop_start)
+            if sleep_time > 0:
+                time.sleep(sleep_time)
+
+        if valid_frames < ESP32_MIN_VALID_FRAMES:
+            raise RuntimeError(f"Not enough real ESP32 camera frames: {valid_frames}.")
+
+        _encode_frames_to_mp4(frames_dir, output_path, fps=fps, width=width, height=height)
+        if not output_path.exists() or output_path.stat().st_size < ESP32_MIN_VIDEO_SIZE_BYTES:
+            raise RuntimeError("ESP32 recording was too small or was not created.")
+
+        return {
+            "path": output_path,
+            "duration_seconds": duration_seconds,
+            "fps": fps,
+            "valid_frames": valid_frames,
+            "saved_frames": saved_frames,
+            "stream_url": stream_url,
+        }
+    except Exception:
+        try:
+            output_path.unlink(missing_ok=True)
+        except OSError:
+            pass
+        raise
+    finally:
+        if capture is not None:
+            capture.release()
+        shutil.rmtree(frames_dir, ignore_errors=True)
+
+
+def record_esp32_captures_to_mp4(
+    capture_url,
+    *,
+    duration_seconds=12,
+    fps=ESP32_CAPTURE_FPS,
+    width=ESP32_RECORDING_WIDTH,
+    height=ESP32_RECORDING_HEIGHT,
+):
+    if cv2 is None:
+        raise ImproperlyConfigured("OpenCV is required to record ESP32-CAM footage.")
+
+    duration_seconds = max(3, min(int(duration_seconds or 12), 60))
+    fps = max(1, min(int(fps or ESP32_CAPTURE_FPS), 5))
+    target_frames = duration_seconds * fps
+    frame_interval = 1.0 / fps
+
+    frames_dir = tempfile.mkdtemp(prefix="esp32_capture_frames_")
+    output_file = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4")
+    output_path = Path(output_file.name)
+    output_file.close()
+
+    valid_frames = 0
+    saved_frames = 0
+    last_good_frame = None
+
+    try:
+        with requests.Session() as session:
+            for frame_number in range(1, target_frames + 1):
+                loop_start = time.time()
+                frame = None
+
+                try:
+                    response = session.get(capture_url, timeout=(3, 8))
+                    response.raise_for_status()
+                    image_data = response.content
+                    if image_data:
+                        import numpy as np
+
+                        array = np.frombuffer(image_data, dtype=np.uint8)
+                        decoded = cv2.imdecode(array, cv2.IMREAD_COLOR)
+                        if decoded is not None:
+                            frame = cv2.resize(decoded, (width, height))
+                            last_good_frame = frame
+                            valid_frames += 1
+                except requests.RequestException:
+                    frame = None
+
+                if frame is None and last_good_frame is not None:
+                    frame = last_good_frame.copy()
+                elif frame is None:
+                    frame = 0 * cv2.UMat(height, width, cv2.CV_8UC3).get()
+
+                cv2.imwrite(str(Path(frames_dir) / f"frame_{frame_number:04d}.jpg"), frame)
+                saved_frames += 1
+
+                sleep_time = frame_interval - (time.time() - loop_start)
+                if sleep_time > 0:
+                    time.sleep(sleep_time)
+
+        if valid_frames < 3:
+            raise RuntimeError(f"Not enough real ESP32 snapshot frames: {valid_frames}.")
+
+        _encode_frames_to_mp4(frames_dir, output_path, fps=fps, width=width, height=height)
+        if not output_path.exists() or output_path.stat().st_size < ESP32_MIN_VIDEO_SIZE_BYTES:
+            raise RuntimeError("ESP32 snapshot recording was too small or was not created.")
+
+        return {
+            "path": output_path,
+            "duration_seconds": duration_seconds,
+            "fps": fps,
+            "valid_frames": valid_frames,
+            "saved_frames": saved_frames,
+            "capture_url": capture_url,
+        }
+    except Exception:
+        try:
+            output_path.unlink(missing_ok=True)
+        except OSError:
+            pass
+        raise
+    finally:
+        shutil.rmtree(frames_dir, ignore_errors=True)
 
 
 def _candidate_model_paths():
@@ -505,6 +759,7 @@ def process_monitoring_clip(
     annotate=False,
     send_notifications=True,
     created_by=None,
+    keep_without_detection=False,
 ):
     owner = get_monitoring_owner(owner)
     if owner is None:
@@ -543,13 +798,15 @@ def process_monitoring_clip(
         raise
 
     if analysis is None:
-        _delete_secure_file(raw_secure_file)
+        if not keep_without_detection:
+            _delete_secure_file(raw_secure_file)
+            raw_secure_file = None
         return {
             "alert": None,
-            "secure_file": None,
+            "secure_file": raw_secure_file,
             "session": None,
             "analysis": None,
-            "deleted_after_processing": True,
+            "deleted_after_processing": not keep_without_detection,
         }
 
     annotated_video_path = analysis.get("annotated_video_path")
