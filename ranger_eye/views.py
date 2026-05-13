@@ -1,10 +1,11 @@
 from django.http import JsonResponse
+import json
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST
 from django.core.files.base import ContentFile
 from django.utils import timezone
 
-from .models import RangerEyeAlert, RangerEyeRecording, RangerEyeRecorderStatus
+from .models import RangerEyeAlert, RangerEyeRecording, RangerEyeRecorderStatus, RangerEyeSensorNode
 
 
 def make_alert_id():
@@ -36,6 +37,28 @@ def serialize_recording(recording):
         "duration": recording.duration_seconds,
         "source": recording.source,
         "video_url": recording.video_file.url if recording.video_file else None,
+    }
+
+
+def serialize_sensor_node(node):
+    return {
+        "id": node.id,
+        "device_id": node.device_id,
+        "device_name": node.device_name,
+        "location": node.location,
+        "ip_address": node.ip_address,
+        "firmware_version": node.firmware_version,
+        "soil_value": node.soil_value,
+        "sound_state": node.sound_state,
+        "movement_score": node.movement_score,
+        "accel_x": node.accel_x,
+        "accel_y": node.accel_y,
+        "accel_z": node.accel_z,
+        "wifi_rssi": node.wifi_rssi,
+        "mpu_ready": node.mpu_ready,
+        "is_online": node.is_online,
+        "last_seen_at": node.last_seen_at.strftime("%Y-%m-%d %H:%M:%S") if node.last_seen_at else None,
+        "updated_at": node.updated_at.strftime("%Y-%m-%d %H:%M:%S"),
     }
 
 
@@ -73,7 +96,43 @@ def dashboard_data(request):
             "next_recording": recorder_status.next_recording,
             "message": recorder_status.message,
         },
+        "sensor_nodes": [serialize_sensor_node(node) for node in RangerEyeSensorNode.objects.all()[:20]],
     })
+
+
+@csrf_exempt
+@require_POST
+def sensor_telemetry(request):
+    try:
+        payload = json.loads(request.body.decode("utf-8") or "{}")
+    except json.JSONDecodeError:
+        return JsonResponse({"detail": "Invalid JSON payload."}, status=400)
+
+    device_id = str(payload.get("device_id") or "SENSOR-NODE-01").strip()
+    if not device_id:
+        return JsonResponse({"detail": "device_id is required."}, status=400)
+
+    node, _created = RangerEyeSensorNode.objects.get_or_create(device_id=device_id)
+    node.device_name = payload.get("device_name") or node.device_name
+    node.location = payload.get("location") or node.location
+    node.ip_address = payload.get("ip_address") or request.META.get("REMOTE_ADDR", "")
+    node.firmware_version = payload.get("firmware_version") or node.firmware_version
+    node.soil_value = payload.get("soil_value")
+    node.sound_state = payload.get("sound_state")
+    node.movement_score = payload.get("movement_score")
+    node.accel_x = payload.get("accel_x")
+    node.accel_y = payload.get("accel_y")
+    node.accel_z = payload.get("accel_z")
+    node.wifi_rssi = payload.get("wifi_rssi")
+    node.mpu_ready = bool(payload.get("mpu_ready", False))
+    node.raw_payload = payload
+    node.last_seen_at = timezone.now()
+    node.save()
+
+    return JsonResponse({
+        "detail": "Sensor telemetry received.",
+        "sensor_node": serialize_sensor_node(node),
+    }, status=200)
 
 
 @csrf_exempt
@@ -117,28 +176,37 @@ def upload_evidence(request):
 @csrf_exempt
 @require_POST
 def sensor_alert(request):
-    alert_type = request.GET.get("type", "sensor")
-    location = request.GET.get("location", "Protected Plant Zone")
-    message = request.body.decode("utf-8") if request.body else ""
+    payload = {}
+    content_type = request.META.get("CONTENT_TYPE", "")
+    if "application/json" in content_type:
+        try:
+            payload = json.loads(request.body.decode("utf-8") or "{}")
+        except json.JSONDecodeError:
+            payload = {}
+
+    alert_type = payload.get("type") or request.GET.get("type", "sensor")
+    location = payload.get("location") or request.GET.get("location", "Protected Plant Zone")
+    message = payload.get("message") or (request.body.decode("utf-8") if request.body and not payload else "")
+    reported_device_id = payload.get("device_id")
 
     if alert_type == "plant_disturbance":
         event_type = "Possible Plant Disturbance Detected"
-        device_id = "PLANT-SENSOR-01"
+        device_id = reported_device_id or "PLANT-SENSOR-01"
     elif alert_type == "sound_disturbance":
         event_type = "Abnormal Sound Near Protected Plant"
-        device_id = "SOUND-SENSOR-01"
+        device_id = reported_device_id or "SOUND-SENSOR-01"
     elif alert_type == "node_disturbance":
         event_type = "Sensor Node Disturbance Alert"
-        device_id = "MPU6050-TILT-01"
+        device_id = reported_device_id or "MPU6050-TILT-01"
     elif alert_type == "theft_alert":
         event_type = "Sensor Node Theft / Shake Alert"
-        device_id = "MPU6050-SHAKE-01"
+        device_id = reported_device_id or "MPU6050-SHAKE-01"
     elif alert_type == "restricted_zone":
         event_type = "Restricted Zone Activity Detected"
-        device_id = "ZONE-SENSOR-01"
+        device_id = reported_device_id or "ZONE-SENSOR-01"
     else:
         event_type = "Sensor Alert"
-        device_id = "SENSOR-NODE-01"
+        device_id = reported_device_id or "SENSOR-NODE-01"
 
     alert = RangerEyeAlert.objects.create(
         alert_id=make_alert_id(),

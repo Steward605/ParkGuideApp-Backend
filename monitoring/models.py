@@ -76,3 +76,36 @@ class ViolationAlert(models.Model):
 
     def __str__(self):
         return f"{self.title} ({self.severity})"
+
+
+class MonitorClip(models.Model):
+    STATUS_RECORDED = "recorded"
+    STATUS_ALERT = "alert"
+    STATUS_NO_DETECTION = "no_detection"
+    STATUS_PROCESSING_FAILED = "processing_failed"
+    STATUS_CHOICES = [
+        (STATUS_RECORDED, "Recorded"),
+        (STATUS_ALERT, "Alert generated"),
+        (STATUS_NO_DETECTION, "No detection"),
+        (STATUS_PROCESSING_FAILED, "Processing failed"),
+    ]
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="monitor_clips")
+    session = models.ForeignKey(MonitorSession, null=True, blank=True, on_delete=models.SET_NULL, related_name="clips")
+    evidence_file = models.ForeignKey(SecureFile, null=True, blank=True, on_delete=models.SET_NULL, related_name="monitor_clips")
+    alert = models.ForeignKey(ViolationAlert, null=True, blank=True, on_delete=models.SET_NULL, related_name="source_clips")
+    source_mode = models.CharField(max_length=24, choices=MonitorSession.SOURCE_CHOICES, default=MonitorSession.SOURCE_ESP32)
+    camera_source = models.CharField(max_length=120, blank=True, default="RE-CAM-01")
+    location = models.CharField(max_length=255, blank=True, default="")
+    status = models.CharField(max_length=32, choices=STATUS_CHOICES, default=STATUS_RECORDED)
+    video_filename = models.CharField(max_length=255, blank=True, default="")
+    video_duration = models.CharField(max_length=32, blank=True, default="")
+    details = models.TextField(blank=True, default="")
+    raw_payload = models.JSONField(default=dict, blank=True)
+    recorded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ("-recorded_at", "-id")
+
+    def __str__(self):
+        return f"{self.video_filename or 'monitor clip'} ({self.status})"

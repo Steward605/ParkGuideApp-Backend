@@ -41,6 +41,9 @@ urlpatterns = [
         'patch': 'partial_update',
         'delete': 'destroy'
     }), name='lesson-detail'),
+    path('lessons/<int:pk>/mark_complete/', LessonViewSet.as_view({
+        'post': 'mark_complete'
+    }), name='lesson-mark-complete'),
     
     # ======================================
     # QUIZZES - Full CRUD with explicit DELETE support
@@ -55,6 +58,9 @@ urlpatterns = [
         'patch': 'partial_update',
         'delete': 'destroy'
     }), name='quiz-detail'),
+    path('quizzes/<int:pk>/submit/', QuizViewSet.as_view({
+        'post': 'submit'
+    }), name='quiz-submit'),
     
     # ======================================
     # PRACTICE EXERCISES - Full CRUD with explicit DELETE support
@@ -69,6 +75,9 @@ urlpatterns = [
         'patch': 'partial_update',
         'delete': 'destroy'
     }), name='practice-detail'),
+    path('practice/<int:pk>/submit/', PracticeExerciseViewSet.as_view({
+        'post': 'submit'
+    }), name='practice-submit'),
 ]
 
 # Router for remaining endpoints (courses, enrollments, modules, progress)

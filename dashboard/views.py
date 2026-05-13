@@ -36,6 +36,7 @@ from datetime import datetime
 from pathlib import Path
 import secrets
 import string
+from types import SimpleNamespace
 
 from accounts.models import CustomUser, AccountApplication
 from accounts.services import delete_application_cv, generate_application_cv_url
@@ -51,7 +52,7 @@ from secure_files.models import SecureFile
 from secure_files.services.firebase_storage import delete_file as delete_secure_blob, upload_file
 from monitoring.models import MonitorSession, ViolationAlert
 from monitoring.services import process_monitoring_clip
-from ranger_eye.models import RangerEyeRecorderStatus
+from ranger_eye.models import RangerEyeAlert, RangerEyeSensorNode
 from .models import BackupSetting, BackupHistory, BackupAuditLog
 
 
@@ -833,7 +834,7 @@ def dashboard_monitoring(request):
     context = {
         'stats': monitoring_summary,
         'alerts': monitoring_summary['recent_alerts'],
-        'recorder_status': monitoring_summary['recorder_status'],
+        'esp32_phone_status': monitoring_summary['esp32_phone_status'],
     }
     return render(request, 'dashboard/monitoring.html', context)
 
@@ -2864,9 +2865,52 @@ def get_monitoring_dashboard_summary():
     pending_alerts = ViolationAlert.objects.filter(status=ViolationAlert.STATUS_PENDING).count()
     high_alerts = ViolationAlert.objects.filter(severity=ViolationAlert.SEVERITY_HIGH).count()
     stored_evidence = ViolationAlert.objects.filter(evidence_file__isnull=False).count()
+    sensor_nodes = list(RangerEyeSensorNode.objects.all()[:12])
+    sensor_alerts = list(RangerEyeAlert.objects.filter(source="ESP32 Sensor Node").order_by("-created_at")[:8])
+    online_sensor_nodes = sum(1 for node in sensor_nodes if node.is_online)
     total_sessions = MonitorSession.objects.count()
     active_sessions = MonitorSession.objects.filter(is_active=True).count()
-    recorder_status, _ = RangerEyeRecorderStatus.objects.get_or_create(pk=1)
+    latest_esp32_session = (
+        MonitorSession.objects
+        .filter(source_mode=MonitorSession.SOURCE_ESP32)
+        .select_related('user')
+        .order_by('-last_seen_at', '-updated_at')
+        .first()
+    )
+    now = timezone.now()
+    last_seen = latest_esp32_session.last_seen_at if latest_esp32_session else None
+    seen_seconds_ago = (now - last_seen).total_seconds() if last_seen else None
+    is_recent = seen_seconds_ago is not None and seen_seconds_ago <= 90
+    is_potentially_online = bool(latest_esp32_session and latest_esp32_session.is_active and is_recent)
+    if is_potentially_online:
+        esp32_state_label = 'Potential online'
+        esp32_message = 'A phone recently confirmed it can reach the ESP32-CAM.'
+        esp32_badge_class = 'text-success'
+        esp32_icon = 'bi-wifi'
+    elif latest_esp32_session and latest_esp32_session.is_active:
+        esp32_state_label = 'Stale report'
+        esp32_message = 'A phone connected before, but no fresh ESP32 heartbeat has arrived.'
+        esp32_badge_class = 'text-warning'
+        esp32_icon = 'bi-wifi-off'
+    else:
+        esp32_state_label = 'Offline'
+        esp32_message = 'No phone is currently reporting ESP32-CAM connectivity.'
+        esp32_badge_class = 'text-muted'
+        esp32_icon = 'bi-wifi-off'
+
+    reporter = latest_esp32_session.user if latest_esp32_session else None
+    esp32_phone_status = SimpleNamespace(
+        is_online=is_potentially_online,
+        state_label=esp32_state_label,
+        message=esp32_message,
+        badge_class=esp32_badge_class,
+        icon=esp32_icon,
+        camera_source=latest_esp32_session.camera_source if latest_esp32_session else 'No ESP32 reported',
+        reporting_guide=reporter.get_full_name() or reporter.get_username() if reporter else 'No phone reporter',
+        last_seen=last_seen,
+        last_seen_display=f'{timesince(last_seen)} ago' if last_seen else 'Never',
+        session_id=latest_esp32_session.id if latest_esp32_session else None,
+    )
     recent_alerts = list(ViolationAlert.objects.select_related('session', 'evidence_file', 'user').order_by('-received_at', '-id'))
 
     for alert in recent_alerts:
@@ -2879,9 +2923,13 @@ def get_monitoring_dashboard_summary():
         'pending_alerts': pending_alerts,
         'high_alerts': high_alerts,
         'stored_evidence': stored_evidence,
+        'sensor_nodes': sensor_nodes,
+        'sensor_alerts': sensor_alerts,
+        'sensor_node_count': len(sensor_nodes),
+        'online_sensor_nodes': online_sensor_nodes,
         'total_sessions': total_sessions,
         'active_sessions': active_sessions,
-        'recorder_status': recorder_status,
+        'esp32_phone_status': esp32_phone_status,
         'recent_alerts': recent_alerts,
     }
 

@@ -84,6 +84,23 @@ GENERAL_CATALOG = [
             ('Contingency Planning', ['Backup meeting points', 'Radio and phone handover', 'Escalation without data']),
         ],
     },
+    {
+        'code': 'general-ar-field-simulations-106',
+        'tags': ['General', 'AR', 'Immersive', 'Simulation'],
+        'image': 'wildlife',
+        'title': 'Immersive AR Park Guide Training',
+        'summary': 'Practise biodiversity interpretation, eco-tourism control, wildlife safety, conservation, and professional guiding through integrated AR lessons.',
+        'ar_code_map': {
+            'Launch AR biodiversity briefing': 'vr-biodiversity-canopy-briefing',
+            'Launch AR eco-tourism trail control': 'ar-ecotourism-low-impact-trail',
+            'Launch AR wildlife encounter drill': 'vr-wildlife-encounter-response',
+        },
+        'chapters': [
+            ('AR Field Simulation Briefing', ['How AR lessons work', '360 hotspot review workflow', 'Field decision scoring']),
+            ('Core AR Scenarios', ['Launch AR biodiversity briefing', 'Launch AR eco-tourism trail control', 'Launch AR wildlife encounter drill']),
+            ('Debrief and Transfer', ['Translating AR decisions to live tours', 'Recording scenario learning', 'Preparing for park-specific AR drills']),
+        ],
+    },
 ]
 
 
@@ -117,29 +134,27 @@ PARK_CATALOG = [
     },
     {
         'park': 'Bako',
-        'code': 'bako-coastal-ecotourism-ar-203',
-        'tags': ['Park Specific', 'Bako', 'Eco-tourism', 'AR'],
+        'code': 'bako-coastal-ecotourism-203',
+        'tags': ['Park Specific', 'Bako', 'Eco-tourism'],
         'image': 'coast',
-        'ar_code': 'ar-ecotourism-low-impact-trail',
-        'title': 'Bako Coastal Eco-tourism Control with AR',
+        'title': 'Bako Coastal Eco-tourism Control',
         'summary': 'Practise viewpoint control, photo boundaries, waste prevention, boardwalk etiquette, and leave-no-trace language.',
         'chapters': [
             ('Coastal Visitor Flow', ['Photo stop boundaries', 'Boardwalk congestion', 'Viewpoint timing']),
-            ('AR Eco-tourism Practice', ['Scenario briefing', 'Launch AR trail control', 'Decision debrief']),
+            ('Eco-tourism Practice', ['Scenario briefing', 'Trail control role-play', 'Decision debrief']),
             ('Leave No Trace Coaching', ['Waste messaging', 'Noise and wildlife impact', 'Positive visitor reminders']),
         ],
     },
     {
         'park': 'Bako',
-        'code': 'bako-wildlife-response-ar-204',
-        'tags': ['Park Specific', 'Bako', 'Wildlife', 'AR', 'Safety'],
+        'code': 'bako-wildlife-response-204',
+        'tags': ['Park Specific', 'Bako', 'Wildlife', 'Safety'],
         'image': 'wildlife',
-        'ar_code': 'vr-wildlife-encounter-response',
-        'title': 'Bako Wildlife Encounter Response with AR',
+        'title': 'Bako Wildlife Encounter Response',
         'summary': 'Rehearse macaque and trail wildlife response: safe distance, no feeding, calm crowd control, rerouting, and escalation.',
         'chapters': [
             ('Wildlife Risk Cues', ['Animal stress signals', 'Visitor food risk', 'Distance and noise']),
-            ('AR Wildlife Drill', ['Scenario briefing', 'Launch AR encounter response', 'Decision debrief']),
+            ('Wildlife Response Drill', ['Scenario briefing', 'Encounter response role-play', 'Decision debrief']),
             ('After-Encounter Reporting', ['What to report', 'Visitor education follow-up', 'Route status updates']),
         ],
     },
@@ -159,10 +174,10 @@ PARK_CATALOG = [
     {
         'park': 'Semenggoh',
         'code': 'semenggoh-orangutan-behaviour-302',
-        'tags': ['Park Specific', 'Semenggoh', 'Orangutan', 'Wildlife'],
+        'tags': ['Park Specific', 'Semenggoh', 'Orangutan', 'Wildlife', 'AR'],
         'image': 'semenggoh',
         'ar_code': 'vr-wildlife-encounter-response',
-        'title': 'Semenggoh Orangutan Behaviour and Safety',
+        'title': 'Semenggoh Orangutan Behaviour and Safety with AR',
         'summary': 'Teach orangutan behaviour, viewing etiquette, safe distance, visitor silence, and no-feeding expectations.',
         'chapters': [
             ('Orangutan Behaviour Basics', ['Movement and feeding cues', 'Stress signs', 'Mother-infant sensitivity']),
@@ -240,6 +255,14 @@ TRANSLATIONS = {
         'ms': 'Sediakan peta, bahan dimuat turun, kenalan kecemasan, dan aliran kerja sandaran sebelum memasuki kawasan isyarat lemah.',
         'zh': '进入低信号区域前，准备地图、已下载资料、紧急联系人和备用流程。',
     },
+    'Immersive AR Park Guide Training': {
+        'ms': 'Latihan AR Imersif Pemandu Taman',
+        'zh': '沉浸式 AR 公园导游培训',
+    },
+    'Practise biodiversity interpretation, eco-tourism control, wildlife safety, conservation, and professional guiding through integrated AR lessons.': {
+        'ms': 'Latih interpretasi biodiversiti, kawalan eko-pelancongan, keselamatan hidupan liar, pemuliharaan, dan panduan profesional melalui pelajaran AR bersepadu.',
+        'zh': '通过整合式 AR 课程练习生物多样性讲解、生态旅游管控、野生动物安全、保育和专业导览。',
+    },
     'Bako National Park Orientation': {
         'ms': 'Orientasi Taman Negara Bako',
         'zh': '巴哥国家公园导览',
@@ -256,17 +279,17 @@ TRANSLATIONS = {
         'ms': 'Gunakan AR untuk melatih penerangan lapisan hutan, adaptasi tumbuhan, regenerasi, dan pemerhatian berimpak rendah.',
         'zh': '使用 AR 练习讲解森林层次、植物适应、再生过程和低影响观察。',
     },
-    'Bako Coastal Eco-tourism Control with AR': {
-        'ms': 'Kawalan Eko-pelancongan Pesisir Bako dengan AR',
-        'zh': '巴哥海岸生态旅游管控 AR 课程',
+    'Bako Coastal Eco-tourism Control': {
+        'ms': 'Kawalan Eko-pelancongan Pesisir Bako',
+        'zh': '巴哥海岸生态旅游管控',
     },
     'Practise viewpoint control, photo boundaries, waste prevention, boardwalk etiquette, and leave-no-trace language.': {
         'ms': 'Latih kawalan tempat tinjauan, sempadan fotografi, pencegahan sisa, etika laluan papan, dan bahasa tanpa jejak.',
         'zh': '练习观景点管控、拍照边界、垃圾预防、栈道礼仪和无痕旅游表达。',
     },
-    'Bako Wildlife Encounter Response with AR': {
-        'ms': 'Tindak Balas Pertemuan Hidupan Liar Bako dengan AR',
-        'zh': '巴哥野生动物相遇应对 AR 课程',
+    'Bako Wildlife Encounter Response': {
+        'ms': 'Tindak Balas Pertemuan Hidupan Liar Bako',
+        'zh': '巴哥野生动物相遇应对',
     },
     'Rehearse macaque and trail wildlife response: safe distance, no feeding, calm crowd control, rerouting, and escalation.': {
         'ms': 'Latih tindak balas terhadap kera dan hidupan liar denai: jarak selamat, larangan memberi makan, kawalan orang ramai, lencongan, dan eskalasi.',
@@ -280,9 +303,9 @@ TRANSLATIONS = {
         'ms': 'Pelajari tujuan pusat, aliran pelawat, tingkah laku di kawasan pemberian makan, sempadan renjer, dan mesej pemuliharaan.',
         'zh': '学习中心宗旨、访客动线、喂食区行为规范、护林员边界和保育讯息。',
     },
-    'Semenggoh Orangutan Behaviour and Safety': {
-        'ms': 'Tingkah Laku Orang Utan Semenggoh dan Keselamatan',
-        'zh': '实蒙谷红毛猩猩行为与安全',
+    'Semenggoh Orangutan Behaviour and Safety with AR': {
+        'ms': 'Tingkah Laku dan Keselamatan Orang Utan Semenggoh dengan AR',
+        'zh': '实蒙谷红毛猩猩行为与安全 AR 课程',
     },
     'Teach orangutan behaviour, viewing etiquette, safe distance, visitor silence, and no-feeding expectations.': {
         'ms': 'Ajarkan tingkah laku orang utan, etika pemerhatian, jarak selamat, kesenyapan pelawat, dan larangan memberi makan.',
@@ -322,6 +345,9 @@ PHRASE_TRANSLATIONS = {
     'Before Leaving Base': ('Sebelum Meninggalkan Pangkalan', '离开基地前'),
     'Low-Signal Operations': ('Operasi Isyarat Lemah', '低信号操作'),
     'Contingency Planning': ('Perancangan Kontingensi', '应急计划'),
+    'AR Field Simulation Briefing': ('Taklimat Simulasi Lapangan AR', 'AR 实地模拟简报'),
+    'Core AR Scenarios': ('Senario AR Teras', '核心 AR 场景'),
+    'Debrief and Transfer': ('Rumusan dan Pemindahan Kemahiran', '复盘与迁移'),
     'Bako Site Familiarity': ('Kefahaman Tapak Bako', '熟悉巴哥场地'),
     'Bako Safety Briefing': ('Taklimat Keselamatan Bako', '巴哥安全简报'),
     'Bako Visitor Management': ('Pengurusan Pelawat Bako', '巴哥访客管理'),
@@ -329,10 +355,10 @@ PHRASE_TRANSLATIONS = {
     'AR Biodiversity Practice': ('Latihan Biodiversiti AR', 'AR 生物多样性练习'),
     'Visitor Questions': ('Soalan Pelawat', '访客提问'),
     'Coastal Visitor Flow': ('Aliran Pelawat Pesisir', '海岸访客动线'),
-    'AR Eco-tourism Practice': ('Latihan Eko-pelancongan AR', 'AR 生态旅游练习'),
+    'Eco-tourism Practice': ('Latihan Eko-pelancongan', '生态旅游练习'),
     'Leave No Trace Coaching': ('Bimbingan Tanpa Jejak', '无痕旅游指导'),
     'Wildlife Risk Cues': ('Petunjuk Risiko Hidupan Liar', '野生动物风险线索'),
-    'AR Wildlife Drill': ('Latihan Hidupan Liar AR', 'AR 野生动物演练'),
+    'Wildlife Response Drill': ('Latihan Tindak Balas Hidupan Liar', '野生动物应对演练'),
     'After-Encounter Reporting': ('Pelaporan Selepas Pertemuan', '相遇后报告'),
     'Centre Role and Layout': ('Peranan dan Susun Atur Pusat', '中心角色与布局'),
     'Viewing Area Protocol': ('Protokol Kawasan Pemerhatian', '观赏区规程'),
@@ -394,6 +420,15 @@ PHRASE_TRANSLATIONS.update({
     'Backup meeting points': ('Titik pertemuan sandaran', '备用集合点'),
     'Radio and phone handover': ('Serahan radio dan telefon', '无线电与电话交接'),
     'Escalation without data': ('Eskalasi tanpa data', '无数据时升级通报'),
+    'How AR lessons work': ('Cara pelajaran AR berfungsi', 'AR 课程如何运作'),
+    '360 hotspot review workflow': ('Aliran semakan hotspot 360', '360 热点复习流程'),
+    'Field decision scoring': ('Pemarkahan keputusan lapangan', '现场决策评分'),
+    'Launch AR biodiversity briefing': ('Lancarkan taklimat biodiversiti AR', '启动 AR 生物多样性简报'),
+    'Launch AR eco-tourism trail control': ('Lancarkan kawalan denai eko-pelancongan AR', '启动 AR 生态旅游步道管控'),
+    'Launch AR wildlife encounter drill': ('Lancarkan latihan pertemuan hidupan liar AR', '启动 AR 野生动物相遇演练'),
+    'Translating AR decisions to live tours': ('Menterjemah keputusan AR kepada lawatan sebenar', '把 AR 决策迁移到真实导览'),
+    'Recording scenario learning': ('Merekod pembelajaran senario', '记录场景学习成果'),
+    'Preparing for park-specific AR drills': ('Bersedia untuk latihan AR khusus taman', '准备公园专项 AR 演练'),
     'Park identity and visitor profile': ('Identiti taman dan profil pelawat', '公园定位与访客画像'),
     'Trail zones and common stops': ('Zon denai dan hentian biasa', '步道分区与常见停靠点'),
     'Jetty and arrival flow': ('Jeti dan aliran ketibaan', '码头与抵达动线'),
@@ -415,14 +450,14 @@ PHRASE_TRANSLATIONS.update({
     'Photo stop boundaries': ('Sempadan hentian foto', '拍照点边界'),
     'Boardwalk congestion': ('Kesesakan laluan papan', '栈道拥堵'),
     'Viewpoint timing': ('Masa di tempat tinjauan', '观景点时间控制'),
-    'Launch AR trail control': ('Mulakan kawalan denai AR', '启动 AR 步道管控'),
+    'Trail control role-play': ('Lakon peranan kawalan denai', '步道管控角色演练'),
     'Waste messaging': ('Mesej pencegahan sisa', '垃圾预防讯息'),
     'Noise and wildlife impact': ('Bunyi dan kesan terhadap hidupan liar', '噪音与野生动物影响'),
     'Positive visitor reminders': ('Peringatan positif kepada pelawat', '正向访客提醒'),
     'Animal stress signals': ('Isyarat tekanan haiwan', '动物压力信号'),
     'Visitor food risk': ('Risiko makanan pelawat', '访客食物风险'),
     'Distance and noise': ('Jarak dan bunyi', '距离与噪音'),
-    'Launch AR encounter response': ('Mulakan tindak balas pertemuan AR', '启动 AR 相遇应对'),
+    'Encounter response role-play': ('Lakon peranan tindak balas pertemuan', '相遇应对角色演练'),
     'Visitor education follow-up': ('Susulan pendidikan pelawat', '访客教育跟进'),
     'Route status updates': ('Kemas kini status laluan', '路线状态更新'),
     'Conservation purpose': ('Tujuan pemuliharaan', '保育目的'),
@@ -791,14 +826,26 @@ def build_lesson(course_title, chapter_title, lesson_title, course_summary, imag
     }
 
 
+def get_lesson_ar_scenario(course_data, lesson_title):
+    ar_code_map = course_data.get('ar_code_map') or {}
+    scenario_code = ar_code_map.get(lesson_title)
+
+    if not scenario_code and course_data.get('ar_code') and ('Launch AR' in lesson_title or 'AR ' in lesson_title):
+        scenario_code = course_data.get('ar_code')
+
+    if not scenario_code:
+        return None
+
+    return ARScenario.objects.filter(code=scenario_code).first()
+
+
 def build_course_chapters(course_data):
-    scenario = ARScenario.objects.filter(code=course_data.get('ar_code')).first() if course_data.get('ar_code') else None
     chapters = []
 
     for chapter_index, (chapter_title, lesson_titles) in enumerate(course_data['chapters'], start=1):
         lessons = []
         for lesson_index, lesson_title in enumerate(lesson_titles, start=1):
-            lesson_scenario = scenario if 'Launch AR' in lesson_title or 'AR ' in lesson_title else None
+            lesson_scenario = get_lesson_ar_scenario(course_data, lesson_title)
             lessons.append(
                 build_lesson(
                     course_data['title'],

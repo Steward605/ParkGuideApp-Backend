@@ -208,13 +208,30 @@ class CourseEnrollmentSerializer(serializers.ModelSerializer):
 class LessonSerializer(serializers.ModelSerializer):
     """Basic lesson data"""
     progress = serializers.SerializerMethodField()
-    content_images = serializers.SerializerMethodField()
+    ar_scenario_info = serializers.SerializerMethodField()
 
     class Meta:
         model = Lesson
         fields = ['id', 'chapter', 'title', 'content_text', 'content_images', 
-                  'content_videos', 'order', 'estimated_time', 'progress']
+                  'content_videos', 'ar_scenario', 'ar_scenario_info', 'order',
+                  'estimated_time', 'progress']
         read_only_fields = ['id', 'chapter', 'order']
+
+    def get_ar_scenario_info(self, obj):
+        scenario = obj.ar_scenario
+        if not scenario:
+            return None
+        return {
+            'id': scenario.id,
+            'code': scenario.code,
+            'title': scenario.title,
+            'description': scenario.description,
+            'scenario_type': scenario.scenario_type,
+            'difficulty': scenario.difficulty,
+            'duration_minutes': scenario.duration_minutes,
+            'thumbnail': scenario.thumbnail,
+            'initial_panorama_url': scenario.initial_panorama_url,
+        }
 
     def get_progress(self, obj):
         """Get user's lesson progress if authenticated"""
@@ -357,7 +374,7 @@ class CourseDetailSerializer(CourseThumbnailMixin, serializers.ModelSerializer):
     class Meta:
         model = Course
         fields = ['id', 'code', 'title', 'description', 'thumbnail', 
-                  'is_published', 'chapter_count', 'chapters',
+                  'course_type', 'tags', 'is_published', 'chapter_count', 'chapters',
                   'enrollment_status', 'prerequisites_info']
         read_only_fields = ['id', 'chapter_count']
 
@@ -412,7 +429,7 @@ class CourseListSerializer(CourseThumbnailMixin, serializers.ModelSerializer):
     class Meta:
         model = Course
         fields = ['id', 'code', 'title', 'description', 'thumbnail', 
-                  'is_published', 'chapter_count', 'enrollment_status',
+                  'course_type', 'tags', 'is_published', 'chapter_count', 'enrollment_status',
                   'prerequisites_info']
         read_only_fields = ['id']
 
@@ -461,7 +478,7 @@ class CourseCreateUpdateSerializer(serializers.ModelSerializer):
     """Create/Update course"""
     class Meta:
         model = Course
-        fields = ['code', 'title', 'description', 'thumbnail', 'is_published']
+        fields = ['code', 'title', 'description', 'thumbnail', 'course_type', 'tags', 'is_published']
 
     def validate_code(self, value):
         """Code must be unique"""
@@ -513,7 +530,7 @@ class LessonCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Lesson
         fields = ['title', 'content_text', 'content_images', 'content_videos', 
-                  'order', 'estimated_time']
+                  'ar_scenario', 'order', 'estimated_time']
 
     def validate_estimated_time(self, value):
         """Time must be positive"""

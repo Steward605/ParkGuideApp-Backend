@@ -39,6 +39,15 @@ def build_firebase_media_url(blob_path):
     encoded_path = blob_path.replace('/', '%2F')
     return f'https://firebasestorage.googleapis.com/v0/b/{bucket_name}/o/{encoded_path}?alt=media'
 
+
+def get_localized_value(value, language='en', fallback=''):
+    if not value:
+        return fallback
+    if isinstance(value, dict):
+        return value.get(language) or value.get('en') or value.get('ms') or value.get('zh') or fallback
+    return str(value)
+
+
 def get_badge_storage_path(value):
     if not value:
         return ''
@@ -79,12 +88,17 @@ def build_course_badge_metadata(course):
     course_description = (course.description or {}).get('en', '').strip()
     course_description_ms = (course.description or {}).get('ms', '').strip() or course_description
     course_description_zh = (course.description or {}).get('zh', '').strip() or course_description
-    skills_awarded = list(
-        course.chapters.order_by('order').values_list('title__en', flat=True)
-    )
-    lesson_highlights = list(
-        course.chapters.order_by('order', 'lessons__order').values_list('lessons__title__en', flat=True)
-    )
+    skills_awarded = [
+        get_localized_value(chapter.title)
+        for chapter in course.chapters.order_by('order')
+    ]
+    lesson_highlights = [
+        get_localized_value(lesson.title)
+        for chapter in course.chapters.order_by('order').prefetch_related('lessons')
+        for lesson in chapter.lessons.all().order_by('order')
+    ]
+    skills_awarded = [item for item in skills_awarded if item]
+    lesson_highlights = [item for item in lesson_highlights if item]
 
     summary_bits = []
     if skills_awarded:
@@ -164,6 +178,12 @@ def notify_badge_pending_for_admins(user_badge, admin_user=None):
         ),
         created_by=admin_user,
         related_user=user_badge.user,
+        push_data={
+            'type': 'badge_review',
+            'badge_id': str(user_badge.badge_id),
+            'user_badge_id': str(user_badge.id),
+            'user_id': str(user_badge.user_id),
+        },
     )
 
 def notify_badge_granted_to_user(user_badge, admin_user=None):
@@ -177,6 +197,11 @@ def notify_badge_granted_to_user(user_badge, admin_user=None):
         ),
         created_by=admin_user,
         related_user=user_badge.user,
+        push_data={
+            'type': 'badge_granted',
+            'badge_id': str(user_badge.badge_id),
+            'user_badge_id': str(user_badge.id),
+        },
     )
 
 def get_user_completed_module_counts(user_ids=None):
@@ -322,12 +347,17 @@ def grant_course_completion_badge(user, course):
         return True
     
     # Badge already exists but in different status
-    if user_badge.status in ['pending', 'in_progress', 'rejected']:
+    if user_badge.status == UserBadge.STATUS_PENDING:
+        check_and_grant_achievement_badges(user)
+        return False
+
+    if user_badge.status in ['in_progress', 'rejected']:
         user_badge.status = UserBadge.STATUS_PENDING
         user_badge.is_awarded = False
         user_badge.awarded_at = timezone.now()
         user_badge.save()
         notify_badge_pending_for_admins(user_badge, admin_user=None)
+        check_and_grant_achievement_badges(user)
         return True
     
     return False
@@ -596,7 +626,7 @@ def evaluate_user_badge(user, badge, admin_user=None, completed_count=None, gran
         if user_badge.status == UserBadge.STATUS_GRANTED:
             target_status = UserBadge.STATUS_GRANTED
         else:
-            target_status = UserBadge.STATUS_GRANTED if badge.is_major_badge or badge.auto_approve_when_eligible else UserBadge.STATUS_PENDING
+            target_status = UserBadge.STATUS_GRANTED if badge.auto_approve_when_eligible else UserBadge.STATUS_PENDING
         target_awarded = target_status == UserBadge.STATUS_GRANTED
         target_awarded_by = admin_user if (target_status == UserBadge.STATUS_GRANTED and admin_user is not None) else user_badge.awarded_by
 
