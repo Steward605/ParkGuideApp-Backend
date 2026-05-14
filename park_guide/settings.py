@@ -71,6 +71,7 @@ INSTALLED_APPS = [
     'notifications.apps.NotificationsConfig',
     'accounts',
     'dashboard.apps.DashboardConfig',
+    'payments.apps.PaymentsConfig',
     'monitoring.apps.MonitoringConfig',
     'ar_training.apps.ArTrainingConfig',
     'rest_framework.authtoken',
@@ -216,6 +217,11 @@ EMAIL_USE_TLS = _env_bool('EMAIL_USE_TLS', default=True)
 EMAIL_USE_SSL = _env_bool('EMAIL_USE_SSL', default=False)
 EMAIL_TIMEOUT = _env_int('EMAIL_TIMEOUT', default=30)
 SERVER_EMAIL = os.getenv('SERVER_EMAIL', DEFAULT_FROM_EMAIL)
+
+# Mock payment settings
+PUBLIC_BACKEND_BASE_URL = os.getenv('PUBLIC_BACKEND_BASE_URL', '').rstrip('/')
+PARK_GUIDE_PAYMENT_AMOUNT = os.getenv('PARK_GUIDE_PAYMENT_AMOUNT', '50.00')
+PAYMENT_LINK_EXPIRY_DAYS = _env_int('PAYMENT_LINK_EXPIRY_DAYS', 14)
 
 AUTH_USER_MODEL = 'accounts.CustomUser'
 
