@@ -13,6 +13,7 @@ urlpatterns = [
     path('dashboard/', views.dashboard_home, name='home'),
     path('dashboard/users/', views.dashboard_users, name='users'),
     path('dashboard/requests/', views.dashboard_requests, name='requests'),
+    path('dashboard/payments/', views.dashboard_payments, name='payments'),
     path('dashboard/requests/<int:application_id>/cv/', views.dashboard_request_cv, name='request_cv'),
     path('dashboard/courses/', views.dashboard_courses, name='courses'),
     path('dashboard/enrollments/', views.dashboard_enrollments, name='enrollments'),

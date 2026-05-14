@@ -772,6 +772,9 @@
                 <a href="{% url 'dashboard:requests' %}" class="nav-link {% if request.resolver_match.url_name == 'requests' %}active{% endif %}">
                     <i class="bi bi-file-earmark-text"></i> Requests
                 </a>
+                <a href="{% url 'dashboard:payments' %}" class="nav-link {% if request.resolver_match.url_name == 'payments' %}active{% endif %}">
+                    <i class="bi bi-credit-card"></i> Payments
+                </a>
                 <a href="{% url 'dashboard:courses' %}" class="nav-link {% if request.resolver_match.url_name == 'courses' %}active{% endif %}">
                     <i class="bi bi-book"></i> Courses
                 </a>

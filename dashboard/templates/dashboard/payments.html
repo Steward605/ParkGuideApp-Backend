@@ -1,0 +1,508 @@
+{% extends "dashboard/base.html" %}
+
+{% block page_title %}Payments{% endblock %}
+
+{% block extra_css %}
+<style>
+    .payments-page {
+        width: 100%;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    .payments-stats {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .payment-stat-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 24px;
+        box-shadow: var(--shadow);
+        padding: 1.5rem;
+        min-height: 120px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .payment-stat-label {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        font-weight: 700;
+        margin-bottom: 0.75rem;
+    }
+
+    .payment-stat-value {
+        color: var(--text-main);
+        font-size: 2.25rem;
+        font-weight: 800;
+        line-height: 1;
+    }
+
+    .payments-filter-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        box-shadow: var(--shadow);
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .payments-filter-form {
+        display: grid;
+        grid-template-columns: minmax(240px, 1fr) 220px auto auto;
+        gap: 0.75rem;
+        align-items: center;
+    }
+
+    .payments-filter-form .form-control,
+    .payments-filter-form .form-select {
+        min-height: 46px;
+        border-radius: 12px;
+    }
+
+    .payments-filter-form .btn {
+        min-height: 46px;
+        border-radius: 12px;
+        font-weight: 700;
+        padding-left: 1.25rem;
+        padding-right: 1.25rem;
+        white-space: nowrap;
+    }
+
+    .payments-table-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 24px;
+        box-shadow: var(--shadow);
+        overflow: hidden;
+    }
+
+    .payments-table-card .table {
+        margin-bottom: 0;
+    }
+
+    .payments-table-card .table thead th {
+        white-space: nowrap;
+    }
+
+    .payments-table-card .table tbody td {
+        vertical-align: middle;
+    }
+
+    .payment-reference {
+        font-weight: 800;
+        color: var(--text-main);
+        white-space: nowrap;
+    }
+
+    .payment-applicant-name {
+        font-weight: 800;
+        color: var(--text-main);
+        margin-bottom: 0.2rem;
+    }
+
+    .payment-applicant-email,
+    .payment-muted {
+        color: var(--text-muted);
+        font-size: 0.88rem;
+    }
+
+    .payment-status-pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        padding: 0.4rem 0.75rem;
+        font-size: 0.75rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        white-space: nowrap;
+    }
+
+    .payment-status-pending {
+        background: rgba(255, 159, 28, 0.15);
+        color: #c77700;
+    }
+
+    .payment-status-paid {
+        background: rgba(82, 183, 136, 0.18);
+        color: #2d8f63;
+    }
+
+    .payment-status-expired,
+    .payment-status-cancelled {
+        background: rgba(220, 53, 69, 0.14);
+        color: #dc3545;
+    }
+
+    .payment-empty-state {
+        padding: 2.25rem 1.5rem !important;
+        color: var(--text-muted) !important;
+        text-align: center;
+    }
+
+    .payment-details-btn {
+        border-radius: 10px;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .payment-modal {
+        border: none;
+        border-radius: 24px;
+        max-width: 720px;
+        width: min(720px, calc(100% - 2rem));
+        padding: 0;
+        background: var(--bg-card);
+        color: var(--text-main);
+        box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+        overflow: hidden;
+    }
+
+    .payment-modal::backdrop {
+        background: rgba(0, 0, 0, 0.55);
+        backdrop-filter: blur(4px);
+    }
+
+    .payment-modal-header {
+        background: linear-gradient(135deg, var(--primary), var(--primary-light));
+        color: #ffffff;
+        padding: 1.5rem;
+    }
+
+    .payment-modal-header h3 {
+        margin: 0;
+        font-size: 1.25rem;
+        font-weight: 800;
+    }
+
+    .payment-modal-body {
+        padding: 1.5rem;
+    }
+
+    .payment-modal-row {
+        display: grid;
+        grid-template-columns: 170px 1fr;
+        gap: 1rem;
+        padding: 0.85rem 0;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .payment-modal-row:first-child {
+        padding-top: 0;
+    }
+
+    .payment-modal-row span:first-child {
+        color: var(--text-muted);
+        font-weight: 700;
+    }
+
+    .payment-modal-row span:last-child {
+        color: var(--text-main);
+        font-weight: 700;
+        word-break: break-word;
+    }
+
+    .payment-modal-actions {
+        padding: 0 1.5rem 1.5rem;
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .payment-modal-actions .btn {
+        border-radius: 12px;
+        font-weight: 700;
+    }
+
+    .payments-pagination {
+        margin-top: 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+
+    @media (max-width: 1199.98px) {
+        .payments-stats {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .payments-filter-form {
+            grid-template-columns: 1fr 200px;
+        }
+    }
+
+    @media (max-width: 767.98px) {
+        .payments-stats,
+        .payments-filter-form {
+            grid-template-columns: 1fr;
+        }
+
+        .payment-modal-row {
+            grid-template-columns: 1fr;
+            gap: 0.25rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="payments-page">
+    <div class="payments-stats">
+        <div class="payment-stat-card">
+            <div class="payment-stat-label">Pending</div>
+            <div class="payment-stat-value">{{ stats.pending }}</div>
+        </div>
+
+        <div class="payment-stat-card">
+            <div class="payment-stat-label">Paid</div>
+            <div class="payment-stat-value">{{ stats.paid }}</div>
+        </div>
+
+        <div class="payment-stat-card">
+            <div class="payment-stat-label">Expired</div>
+            <div class="payment-stat-value">{{ stats.expired }}</div>
+        </div>
+
+        <div class="payment-stat-card">
+            <div class="payment-stat-label">Cancelled</div>
+            <div class="payment-stat-value">{{ stats.cancelled }}</div>
+        </div>
+    </div>
+
+    <div class="payments-filter-card">
+        <form method="get" class="payments-filter-form">
+            <input
+                type="search"
+                class="form-control"
+                name="search"
+                placeholder="Search name, email, reference..."
+                value="{{ search_query }}"
+            >
+
+            <select name="status" class="form-select">
+                <option value="">All statuses</option>
+                {% for value, label in status_choices %}
+                    <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>
+                        {{ label }}
+                    </option>
+                {% endfor %}
+            </select>
+
+            <button type="submit" class="btn btn-primary">Filter</button>
+            <a href="{% url 'dashboard:payments' %}" class="btn btn-light">Reset</a>
+        </form>
+    </div>
+
+    <div class="payments-table-card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Reference</th>
+                        <th>Applicant</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                        <th>Paid</th>
+                        <th class="text-end">Details</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for payment in payments %}
+                        <tr>
+                            <td>
+                                <div class="payment-reference">{{ payment.payment_reference }}</div>
+                            </td>
+
+                            <td>
+                                <div class="payment-applicant-name">{{ payment.applicant_name }}</div>
+                                <div class="payment-applicant-email">{{ payment.applicant_email }}</div>
+                            </td>
+
+                            <td>
+                                <strong>{{ payment.currency }} {{ payment.amount }}</strong>
+                            </td>
+
+                            <td>
+                                <span class="payment-status-pill payment-status-{{ payment.status }}">
+                                    {{ payment.get_status_display }}
+                                </span>
+                            </td>
+
+                            <td>
+                                <span class="payment-muted">{{ payment.created_at|date:"d M Y H:i" }}</span>
+                            </td>
+
+                            <td>
+                                {% if payment.paid_at %}
+                                    <span class="payment-muted">{{ payment.paid_at|date:"d M Y H:i" }}</span>
+                                {% else %}
+                                    <span class="payment-muted">-</span>
+                                {% endif %}
+                            </td>
+
+                            <td class="text-end">
+                                <button
+                                    type="button"
+                                    class="btn btn-sm btn-outline-primary payment-details-btn"
+                                    onclick="document.getElementById('payment-modal-{{ payment.id }}').showModal()"
+                                >
+                                    View
+                                </button>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="7" class="payment-empty-state">
+                                No payment records found.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% for payment in payments %}
+        <dialog class="payment-modal" id="payment-modal-{{ payment.id }}">
+            <div class="payment-modal-header">
+                <h3>Payment Details</h3>
+            </div>
+
+            <div class="payment-modal-body">
+                <div class="payment-modal-row">
+                    <span>Reference</span>
+                    <span>{{ payment.payment_reference }}</span>
+                </div>
+
+                <div class="payment-modal-row">
+                    <span>Status</span>
+                    <span>
+                        <span class="payment-status-pill payment-status-{{ payment.status }}">
+                            {{ payment.get_status_display }}
+                        </span>
+                    </span>
+                </div>
+
+                <div class="payment-modal-row">
+                    <span>Applicant</span>
+                    <span>{{ payment.applicant_name }}</span>
+                </div>
+
+                <div class="payment-modal-row">
+                    <span>Email</span>
+                    <span>{{ payment.applicant_email }}</span>
+                </div>
+
+                <div class="payment-modal-row">
+                    <span>Guide Account</span>
+                    <span>
+                        {% if payment.guide %}
+                            {{ payment.guide.username }} / {{ payment.guide.email }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </span>
+                </div>
+
+                <div class="payment-modal-row">
+                    <span>Application ID</span>
+                    <span>
+                        {% if payment.application %}
+                            #{{ payment.application.id }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </span>
+                </div>
+
+                <div class="payment-modal-row">
+                    <span>Amount</span>
+                    <span>{{ payment.currency }} {{ payment.amount }}</span>
+                </div>
+
+                <div class="payment-modal-row">
+                    <span>Transaction ID</span>
+                    <span>{{ payment.mock_transaction_id|default:"-" }}</span>
+                </div>
+
+                <div class="payment-modal-row">
+                    <span>Created By</span>
+                    <span>
+                        {% if payment.created_by %}
+                            {{ payment.created_by.username }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </span>
+                </div>
+
+                <div class="payment-modal-row">
+                    <span>Created At</span>
+                    <span>{{ payment.created_at|date:"d M Y H:i" }}</span>
+                </div>
+
+                <div class="payment-modal-row">
+                    <span>Expires At</span>
+                    <span>
+                        {% if payment.expires_at %}
+                            {{ payment.expires_at|date:"d M Y H:i" }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </span>
+                </div>
+
+                <div class="payment-modal-row">
+                    <span>Paid At</span>
+                    <span>
+                        {% if payment.paid_at %}
+                            {{ payment.paid_at|date:"d M Y H:i" }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+
+            <div class="payment-modal-actions">
+                <button
+                    type="button"
+                    class="btn btn-primary"
+                    onclick="document.getElementById('payment-modal-{{ payment.id }}').close()"
+                >
+                    Close
+                </button>
+            </div>
+        </dialog>
+    {% endfor %}
+
+    {% if total_pages > 1 %}
+        <div class="payments-pagination">
+            <span class="text-muted fw-semibold">
+                Page {{ current_page }} of {{ total_pages }}
+            </span>
+
+            {% if current_page > 1 %}
+                <a class="btn btn-sm btn-light" href="?page={{ current_page|add:'-1' }}&search={{ search_query|urlencode }}&status={{ status_filter|urlencode }}">
+                    Previous
+                </a>
+            {% endif %}
+
+            {% if current_page < total_pages %}
+                <a class="btn btn-sm btn-light" href="?page={{ current_page|add:'1' }}&search={{ search_query|urlencode }}&status={{ status_filter|urlencode }}">
+                    Next
+                </a>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
