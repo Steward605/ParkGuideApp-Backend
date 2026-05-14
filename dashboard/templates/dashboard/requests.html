@@ -2,6 +2,139 @@
 
 {% block page_title %}<i class="bi bi-file-earmark-text me-2"></i>Application Requests{% endblock %}
 
+{% block extra_css %}
+<style>
+    .request-actions-cell {
+        min-width: 250px;
+        width: 250px;
+    }
+
+    .request-actions-panel {
+        width: 100%;
+        max-width: 250px;
+        display: flex;
+        flex-direction: column;
+        gap: 0.65rem;
+    }
+
+    .request-cv-toggle {
+        width: fit-content;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        padding: 0.35rem 0.7rem;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        color: var(--text-muted);
+        background: rgba(255, 255, 255, 0.03);
+        font-size: 0.82rem;
+        font-weight: 700;
+        cursor: pointer;
+        margin: 0;
+        white-space: nowrap;
+    }
+
+    .request-cv-toggle .form-check-input {
+        margin: 0;
+    }
+
+    .request-primary-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.55rem;
+        width: 100%;
+    }
+
+    .request-primary-actions form,
+    .request-cancel-payment-form,
+    .request-delete-form {
+        margin: 0;
+    }
+
+    .request-btn {
+        width: 100%;
+        min-height: 38px;
+        border-radius: 12px;
+        border: 1px solid transparent;
+        padding: 0.45rem 0.85rem;
+        font-size: 0.88rem;
+        font-weight: 800;
+        line-height: 1;
+        transition: 0.18s ease;
+    }
+
+    .request-btn-approve {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: #ffffff;
+    }
+
+    .request-btn-approve:hover {
+        filter: brightness(1.06);
+    }
+
+    .request-btn-deny {
+        background: transparent;
+        border-color: rgba(220, 53, 69, 0.55);
+        color: #dc3545;
+    }
+
+    .request-btn-deny:hover {
+        background: rgba(220, 53, 69, 0.12);
+        border-color: #dc3545;
+    }
+
+    .request-cancel-payment-form {
+        padding-top: 0.65rem;
+        border-top: 1px solid var(--border);
+    }
+
+    .request-btn-cancel-payment {
+        background: rgba(255, 193, 7, 0.12);
+        border-color: rgba(255, 193, 7, 0.45);
+        color: #ffc107;
+        min-height: 34px;
+        font-size: 0.82rem;
+    }
+
+    .request-btn-cancel-payment:hover {
+        background: rgba(255, 193, 7, 0.20);
+        border-color: #ffc107;
+    }
+
+    .request-delete-form {
+        padding-top: 0.65rem;
+        border-top: 1px solid var(--border);
+    }
+
+    .request-btn-delete {
+        background: transparent;
+        border-color: rgba(220, 53, 69, 0.35);
+        color: #dc3545;
+        min-height: 34px;
+        font-size: 0.82rem;
+    }
+
+    .request-btn-delete:hover {
+        background: rgba(220, 53, 69, 0.12);
+        border-color: #dc3545;
+    }
+
+    .request-handled-pill {
+        width: fit-content;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.45rem 0.8rem;
+        border-radius: 999px;
+        background: rgba(108, 117, 125, 0.18);
+        color: var(--text-muted);
+        font-size: 0.8rem;
+        font-weight: 800;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="glass-card mb-4">
     <div class="row g-3 align-items-center">
@@ -87,29 +220,68 @@
                             <span class="badge text-bg-danger">Denied</span>
                         {% endif %}
                     </td>
-                    <td>
-                        {% if request.status == 'pending' %}
-                            <div class="d-flex flex-column gap-2">
-                                <form method="post" action="{% url 'dashboard:users' %}" class="d-flex gap-2 align-items-center">
+                    <td class="request-actions-cell">
+                        <div class="request-actions-panel">
+                            {% if request.status == 'pending' %}
+                                <label class="request-cv-toggle" title="Keep CV in Firebase after approval/denial">
+                                    <input class="form-check-input" type="checkbox" data-keep-cv-checkbox="{{ request.id }}" checked>
+                                    <span>Keep CV</span>
+                                </label>
+
+                                <div class="request-primary-actions">
+                                    <form method="post" action="{% url 'dashboard:users' %}">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="approve_application">
+                                        <input type="hidden" name="application_id" value="{{ request.id }}">
+                                        <input type="hidden" name="next" value="{% url 'dashboard:requests' %}?search={{ search_query|urlencode }}&status={{ status_filter|urlencode }}&page={{ current_page }}">
+                                        <input type="hidden" name="keep_cv" value="on" data-keep-cv-input="{{ request.id }}">
+
+                                        <button type="submit" class="request-btn request-btn-approve">
+                                            Approve
+                                        </button>
+                                    </form>
+
+                                    <form method="post" action="{% url 'dashboard:users' %}">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="deny_application">
+                                        <input type="hidden" name="application_id" value="{{ request.id }}">
+                                        <input type="hidden" name="next" value="{% url 'dashboard:requests' %}?search={{ search_query|urlencode }}&status={{ status_filter|urlencode }}&page={{ current_page }}">
+                                        <input type="hidden" name="keep_cv" value="on" data-keep-cv-input="{{ request.id }}">
+
+                                        <button type="submit" class="request-btn request-btn-deny">
+                                            Deny
+                                        </button>
+                                    </form>
+                                </div>
+                            {% else %}
+                                <span class="request-handled-pill">
+                                    Handled
+                                </span>
+                            {% endif %}
+
+                            {% if request.status == 'approved' and request.payment_record.status == 'pending' %}
+                                <form method="post" action="{% url 'dashboard:users' %}" class="request-cancel-payment-form" onsubmit="return confirm('Cancel this pending payment link? The applicant will no longer be able to use this payment link.');">
                                     {% csrf_token %}
-                                    <input type="hidden" name="action" value="approve_application">
+                                    <input type="hidden" name="action" value="cancel_application_payment">
                                     <input type="hidden" name="application_id" value="{{ request.id }}">
-                                    <input type="hidden" name="next" value="{% url 'dashboard:requests' %}">
-                                    <input class="form-check-input" type="checkbox" name="keep_cv" checked title="Keep CV in Firebase">
-                                    <button type="submit" class="btn btn-sm btn-success">Approve</button>
+                                    <input type="hidden" name="next" value="{% url 'dashboard:requests' %}?search={{ search_query|urlencode }}&status={{ status_filter|urlencode }}&page={{ current_page }}">
+                                    <button type="submit" class="request-btn request-btn-cancel-payment">
+                                        Cancel Payment
+                                    </button>
                                 </form>
-                                <form method="post" action="{% url 'dashboard:users' %}" class="d-flex gap-2 align-items-center">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="action" value="deny_application">
-                                    <input type="hidden" name="application_id" value="{{ request.id }}">
-                                    <input type="hidden" name="next" value="{% url 'dashboard:requests' %}">
-                                    <input class="form-check-input" type="checkbox" name="keep_cv" checked title="Keep CV in Firebase">
-                                    <button type="submit" class="btn btn-sm btn-outline-danger">Deny</button>
-                                </form>
-                            </div>
-                        {% else %}
-                            <span class="text-muted">Handled</span>
-                        {% endif %}
+                            {% endif %}
+
+                            <form method="post" action="{% url 'dashboard:users' %}" class="request-delete-form" onsubmit="return confirm('Delete this application request record? This cannot be undone.');">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="delete_application">
+                                <input type="hidden" name="application_id" value="{{ request.id }}">
+                                <input type="hidden" name="next" value="{% url 'dashboard:requests' %}?search={{ search_query|urlencode }}&status={{ status_filter|urlencode }}&page={{ current_page }}">
+
+                                <button type="submit" class="request-btn request-btn-delete">
+                                    Delete
+                                </button>
+                            </form>
+                        </div>
                     </td>
                     <td>
                         {% if request.reviewed_by %}
@@ -146,4 +318,20 @@
     </div>
     {% endif %}
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('[data-keep-cv-checkbox]').forEach(function (checkbox) {
+            const requestId = checkbox.getAttribute('data-keep-cv-checkbox');
+            const hiddenInputs = document.querySelectorAll(`[data-keep-cv-input="${requestId}"]`);
+            function syncKeepCvValue() {
+                hiddenInputs.forEach(function (input) {
+                    input.disabled = !checkbox.checked;
+                });
+            }
+            checkbox.addEventListener('change', syncKeepCvValue);
+            syncKeepCvValue();
+        });
+    });
+</script>
 {% endblock %}

@@ -54,7 +54,8 @@ from monitoring.models import MonitorSession, ViolationAlert
 from monitoring.services import process_monitoring_clip
 from ranger_eye.models import RangerEyeAlert, RangerEyeSensorNode
 from .models import BackupSetting, BackupHistory, BackupAuditLog
-
+from payments.models import PaymentRecord
+from payments.services import create_payment_record_for_application, send_payment_link_email
 
 def get_title_text(title_obj, lang='en', default='Untitled'):
     """Safely extract title text from either dict or string format"""
@@ -94,7 +95,6 @@ def dashboard_sso_login(request):
     token = request.GET.get('token', '').strip()
     if not token:
         return redirect('dashboard:login')
-
     try:
         access_token = AccessToken(token)
         user_id = access_token.get('user_id')
@@ -969,61 +969,18 @@ def dashboard_users(request):
             notes = (request.POST.get('admin_notes') or '').strip()
             keep_cv = request.POST.get('keep_cv') == 'on'
             application = AccountApplication.objects.filter(id=application_id).first()
-
             if not application:
                 messages.error(request, 'Application not found.')
                 return redirect(next_url)
-
             if application.status != AccountApplication.STATUS_PENDING:
                 messages.error(request, 'Only pending applications can be approved.')
                 return redirect(next_url)
-
             if CustomUser.objects.filter(email=application.email).exists():
                 messages.error(request, 'A user with this email already exists.')
                 return redirect(next_url)
-
-            temp_password = generate_temporary_password()
-            username = generate_unique_username_from_email(application.email)
-            name_parts = application.full_name.split(' ', 1)
-            first_name = name_parts[0]
-            last_name = name_parts[1] if len(name_parts) > 1 else ''
-
-            new_user = CustomUser.objects.create_user(
-                username=username,
-                email=application.email,
-                password=temp_password,
-                first_name=first_name,
-                last_name=last_name,
-                phone_number=application.phone_number,
-                birthdate=application.birthdate,
-                is_staff=False,
-                must_change_password=True,
-            )
-
-            application.approved_user = new_user
-            application.mark_reviewed(
-                reviewer=request.user,
-                status=AccountApplication.STATUS_APPROVED,
-                notes=notes,
-            )
-            application.save(update_fields=['approved_user', 'updated_at'])
-
-            send_mail(
-                subject='Park Guide application approved',
-                message=(
-                    f'Hello {application.full_name},\n\n'
-                    'Your Park Guide application has been approved.\n\n'
-                    f'Temporary account details:\n'
-                    f'Email: {application.email}\n'
-                    f'Password: {temp_password}\n\n'
-                    'Please sign in and change your password on your first login.\n\n'
-                    'Regards,\nPark Guide Team'
-                ),
-                from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', None),
-                recipient_list=[application.email],
-                fail_silently=True,
-            )
-
+            application.mark_reviewed(reviewer=request.user, status=AccountApplication.STATUS_APPROVED, notes=notes,)
+            payment_record = create_payment_record_for_application(application=application, approved_by=request.user,)
+            send_payment_link_email(payment_record=payment_record, request=request,)
             if not keep_cv and application.cv_storage_key:
                 try:
                     delete_application_cv(application.cv_storage_key)
@@ -1034,8 +991,7 @@ def dashboard_users(request):
                 application.cv_content_type = ''
                 application.cv_size = 0
                 application.save(update_fields=['cv_storage_key', 'cv_original_name', 'cv_content_type', 'cv_size', 'updated_at'])
-
-            messages.success(request, f'Application approved and temporary account created for {application.email}.')
+            messages.success(request, f'Application approved and payment link emailed to {application.email}. ' 'The guide account will be created after payment is successful.')
             return redirect(next_url)
 
         if action == 'deny_application':
@@ -1044,21 +1000,13 @@ def dashboard_users(request):
             notes = (request.POST.get('admin_notes') or '').strip()
             keep_cv = request.POST.get('keep_cv') == 'on'
             application = AccountApplication.objects.filter(id=application_id).first()
-
             if not application:
                 messages.error(request, 'Application not found.')
                 return redirect(next_url)
-
             if application.status != AccountApplication.STATUS_PENDING:
                 messages.error(request, 'Only pending applications can be denied.')
                 return redirect(next_url)
-
-            application.mark_reviewed(
-                reviewer=request.user,
-                status=AccountApplication.STATUS_DENIED,
-                notes=notes,
-            )
-
+            application.mark_reviewed(reviewer=request.user, status=AccountApplication.STATUS_DENIED, notes=notes,)
             send_mail(
                 subject='Park Guide application update',
                 message=(
@@ -1071,7 +1019,6 @@ def dashboard_users(request):
                 recipient_list=[application.email],
                 fail_silently=True,
             )
-
             if not keep_cv and application.cv_storage_key:
                 try:
                     delete_application_cv(application.cv_storage_key)
@@ -1082,8 +1029,58 @@ def dashboard_users(request):
                 application.cv_content_type = ''
                 application.cv_size = 0
                 application.save(update_fields=['cv_storage_key', 'cv_original_name', 'cv_content_type', 'cv_size', 'updated_at'])
-
             messages.success(request, f'Application denied for {application.email}.')
+            return redirect(next_url)
+        
+        if action == 'cancel_application_payment':
+            next_url = request.POST.get('next') or reverse('dashboard:requests')
+            application_id = request.POST.get('application_id')
+            application = AccountApplication.objects.filter(id=application_id).first()
+            if not application:
+                messages.error(request, 'Application request not found.')
+                return redirect(next_url)
+            payment_record = getattr(application, 'payment_record', None)
+            if not payment_record:
+                messages.error(request, 'No payment record is linked to this application.')
+                return redirect(next_url)
+            if payment_record.status != PaymentRecord.STATUS_PENDING:
+                messages.error(request, 'Only pending payments can be cancelled.')
+                return redirect(next_url)
+            payment_record.status = PaymentRecord.STATUS_CANCELLED
+            payment_record.metadata = {
+                **(payment_record.metadata or {}),
+                'cancelled_by': request.user.username,
+                'cancelled_by_id': request.user.id,
+                'cancelled_at': timezone.now().isoformat(),
+                'cancel_reason': 'Cancelled by admin from application request page.',
+            }
+            payment_record.save(update_fields=['status', 'metadata', 'updated_at'])
+            messages.success(request, f'Pending payment for {application.email} was cancelled. You can now delete the application request.')
+            return redirect(next_url)
+        
+        if action == 'delete_application':
+            next_url = request.POST.get('next') or reverse('dashboard:requests')
+            application_id = request.POST.get('application_id')
+            application = AccountApplication.objects.filter(id=application_id).first()
+            if not application:
+                messages.error(request, 'Application request not found.')
+                return redirect(next_url)
+            payment_record = getattr(application, 'payment_record', None)
+            if payment_record and payment_record.status == PaymentRecord.STATUS_PENDING:
+                messages.error(request, 'This application has a pending payment link. Delete is blocked until the payment is completed, expired, or cancelled.')
+                return redirect(next_url)
+            applicant_label = f'{application.full_name} ({application.email})'
+            try:
+                with transaction.atomic():
+                    if application.cv_storage_key:
+                        try:
+                            delete_application_cv(application.cv_storage_key)
+                        except Exception:
+                            pass
+                    application.delete()
+                messages.success(request, f'Application request for {applicant_label} was deleted.')
+            except Exception as exc:
+                messages.error(request, f'Could not delete application request: {exc}')
             return redirect(next_url)
     users = CustomUser.objects.all().order_by('-date_joined')
     pending_applications = AccountApplication.objects.filter(status=AccountApplication.STATUS_PENDING).order_by('-created_at')
@@ -1132,36 +1129,40 @@ def dashboard_requests(request):
     """Preview account application requests in a dedicated page."""
     search_query = request.GET.get('search', '').strip()
     status_filter = request.GET.get('status', '').strip().lower()
-
-    applications = AccountApplication.objects.select_related('reviewed_by', 'approved_user').order_by('-created_at')
-
+    applications = AccountApplication.objects.select_related('reviewed_by', 'approved_user', 'payment_record').order_by('-created_at')
     if search_query:
         applications = applications.filter(
             Q(full_name__icontains=search_query)
             | Q(email__icontains=search_query)
             | Q(phone_number__icontains=search_query)
         )
-
     if status_filter in {
         AccountApplication.STATUS_PENDING,
         AccountApplication.STATUS_APPROVED,
         AccountApplication.STATUS_DENIED,
     }:
         applications = applications.filter(status=status_filter)
+    try:
+        current_page = int(request.GET.get('page', 1))
+    except ValueError:
+        current_page = 1
 
-    page = request.GET.get('page', 1)
+    current_page = max(current_page, 1)
     per_page = 20
     total_requests = applications.count()
-    start = (int(page) - 1) * per_page
-    end = start + per_page
-    requests_paginated = applications[start:end]
     total_pages = (total_requests + per_page - 1) // per_page
 
+    if total_pages > 0:
+        current_page = min(current_page, total_pages)
+
+    start = (current_page - 1) * per_page
+    end = start + per_page
+    requests_paginated = applications[start:end]
     context = {
         'requests': requests_paginated,
         'search_query': search_query,
         'status_filter': status_filter,
-        'current_page': int(page),
+        'current_page': current_page,
         'total_pages': total_pages,
         'total_requests': total_requests,
         'stats': {
@@ -1172,6 +1173,49 @@ def dashboard_requests(request):
     }
     return render(request, 'dashboard/requests.html', context)
 
+@login_required
+@user_passes_test(is_staff_or_admin)
+def dashboard_payments(request):
+    search_query = request.GET.get('search', '').strip()
+    status_filter = request.GET.get('status', '').strip().lower()
+    payments = PaymentRecord.objects.select_related('guide', 'application', 'created_by',).order_by('-created_at')
+    if search_query:
+        payments = payments.filter(
+            Q(applicant_name__icontains=search_query) |
+            Q(applicant_email__icontains=search_query) |
+            Q(payment_reference__icontains=search_query) |
+            Q(mock_transaction_id__icontains=search_query)
+        )
+    valid_statuses = {choice[0] for choice in PaymentRecord.STATUS_CHOICES}
+    if status_filter in valid_statuses:
+        payments = payments.filter(status=status_filter)
+    try:
+        current_page = int(request.GET.get('page', 1))
+    except ValueError:
+        current_page = 1
+    current_page = max(current_page, 1)
+    per_page = 20
+    total_payments = payments.count()
+    start = (current_page - 1) * per_page
+    end = start + per_page
+    payments_paginated = payments[start:end]
+    total_pages = (total_payments + per_page - 1) // per_page
+    context = {
+        'payments': payments_paginated,
+        'search_query': search_query,
+        'status_filter': status_filter,
+        'current_page': current_page,
+        'total_pages': total_pages,
+        'total_payments': total_payments,
+        'status_choices': PaymentRecord.STATUS_CHOICES,
+        'stats': {
+            'pending': PaymentRecord.objects.filter(status=PaymentRecord.STATUS_PENDING).count(),
+            'paid': PaymentRecord.objects.filter(status=PaymentRecord.STATUS_PAID).count(),
+            'expired': PaymentRecord.objects.filter(status=PaymentRecord.STATUS_EXPIRED).count(),
+            'cancelled': PaymentRecord.objects.filter(status=PaymentRecord.STATUS_CANCELLED).count(),
+        },
+    }
+    return render(request, 'dashboard/payments.html', context)
 
 @login_required
 @user_passes_test(is_staff_or_admin)
