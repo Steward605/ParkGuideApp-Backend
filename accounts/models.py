@@ -57,6 +57,20 @@ class CustomUser(AbstractUser):
             self.user_type = self.USER_TYPE_LEARNER
         super().save(*args, **kwargs)
 
+class GuideLocation(models.Model):
+    user = models.OneToOneField('accounts.CustomUser',on_delete=models.CASCADE,related_name='guide_location')
+    latitude = models.DecimalField(max_digits=9, decimal_places=6)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6)
+    accuracy = models.FloatField(null=True, blank=True)
+    heading = models.FloatField(null=True, blank=True)
+    speed = models.FloatField(null=True, blank=True)
+    is_active = models.BooleanField(default=True, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    class Meta:
+        ordering = ('-updated_at',)
+    def __str__(self):
+        return f'{self.user.email} - {self.latitude}, {self.longitude}'
 
 class AccountApplication(models.Model):
     STATUS_PENDING = 'pending'
