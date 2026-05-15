@@ -363,6 +363,34 @@ class ProfileView(generics.RetrieveUpdateAPIView):
         refreshed = self.get_serializer(user)
         return Response(refreshed.data)
 
+class GuideLocationsView(generics.GenericAPIView):
+    serializer_class = GuideLocationSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    def get_queryset(self):
+        return (GuideLocation.objects.select_related('user').filter(is_active=True,user__is_active=True,user__is_staff=False,user__is_superuser=False,).order_by('-updated_at'))
+    def get(self, request, *args, **kwargs):
+        serializer = self.get_serializer(self.get_queryset(), many=True)
+        return Response({'locations': serializer.data}, status=status.HTTP_200_OK)
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        location, _ = GuideLocation.objects.update_or_create(
+            user=request.user,
+            defaults={
+                **serializer.validated_data,
+                'is_active': True,
+            },
+        )
+        return Response(self.get_serializer(location).data, status=status.HTTP_200_OK)
+    def delete(self, request, *args, **kwargs):
+        deleted_count, _ = GuideLocation.objects.filter(user=request.user).delete()
+        return Response(
+            {
+                'detail': 'Guide location removed from live map.',
+                'deleted': deleted_count > 0,
+            },
+            status=status.HTTP_200_OK,
+        )
 
 class AccountApplicationCreateView(generics.CreateAPIView):
     serializer_class = AccountApplicationSerializer
