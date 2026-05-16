@@ -78,4 +78,5 @@ jobs:
           slot-name: 'Production'
           package: .
           clean: true
+          startup-command: 'python -m pip install --upgrade pip && python -m pip install -r requirements.txt && gunicorn park_guide.wsgi:application --bind 0.0.0.0:$PORT'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_91CADE5BE94248159CB6B522E0E0048B }}
