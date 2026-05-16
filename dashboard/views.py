@@ -66,7 +66,6 @@ def get_title_text(title_obj, lang='en', default='Untitled'):
     return default
 
 
-<<<<<<< HEAD
 def get_ar_quiz_attempt_items(progress_records):
     attempts = []
     for progress in progress_records:
@@ -88,7 +87,8 @@ def get_ar_quiz_average(progress_records):
 def get_ar_badge_count(progress_records):
     completed_count = sum(1 for progress in progress_records if progress.is_completed)
     return 1 if completed_count >= 3 else 0
-=======
+
+
 def get_activity_sort_timestamp(activity):
     timestamp = activity.get('timestamp')
     if timestamp is None:
@@ -96,7 +96,6 @@ def get_activity_sort_timestamp(activity):
     if timezone.is_naive(timestamp):
         return timezone.make_aware(timestamp, timezone.get_current_timezone())
     return timestamp
->>>>>>> 3d4e724 (Fixed some bugs wif badges)
 
 
 @require_http_methods(["GET"])
