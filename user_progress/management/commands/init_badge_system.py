@@ -86,7 +86,7 @@ class Command(BaseCommand):
                 }
             )
             status = '✓ Created' if created else '→ Already exists'
-            self.stdout.write(f'  {status}: {badge["name"]} (requires {badge_config["required_badges_count"]} course badges)')
+            self.stdout.write(f'  {status}: {badge.name} (requires {badge_config["required_badges_count"]} course badges)')
 
         self.stdout.write(self.style.SUCCESS('\n✓ Badge system initialized successfully!'))
         self.stdout.write(f'  • {len(list(courses))} course badges')
