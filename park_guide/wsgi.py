@@ -13,9 +13,13 @@ from pathlib import Path
 
 # Allow running from a self-contained deployment package when App Service skips Oryx install.
 BASE_DIR = Path(__file__).resolve().parent.parent
-VENDORED_SITE_PACKAGES = BASE_DIR / '.python_packages' / 'lib' / 'site-packages'
-if VENDORED_SITE_PACKAGES.exists():
-    sys.path.insert(0, str(VENDORED_SITE_PACKAGES))
+VENDORED_SITE_PACKAGES_CANDIDATES = [
+    BASE_DIR / 'python_packages' / 'lib' / 'site-packages',
+    BASE_DIR / '.python_packages' / 'lib' / 'site-packages',
+]
+for vendored_path in VENDORED_SITE_PACKAGES_CANDIDATES:
+    if vendored_path.exists():
+        sys.path.insert(0, str(vendored_path))
 
 from django.core.wsgi import get_wsgi_application
 
