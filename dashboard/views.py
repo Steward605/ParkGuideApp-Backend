@@ -21,6 +21,7 @@ from django.shortcuts import get_object_or_404
 from django.http import HttpResponseRedirect
 from django.utils.timesince import timesince
 from io import StringIO, BytesIO
+import logging
 import tempfile
 import os
 import json
@@ -56,6 +57,8 @@ from ranger_eye.models import RangerEyeAlert, RangerEyeSensorNode
 from .models import BackupSetting, BackupHistory, BackupAuditLog
 from payments.models import PaymentRecord
 from payments.services import create_payment_record_for_application, send_payment_link_email
+
+logger = logging.getLogger(__name__)
 
 def get_title_text(title_obj, lang='en', default='Untitled'):
     """Safely extract title text from either dict or string format"""
@@ -734,7 +737,32 @@ def index_redirect(request):
 @user_passes_test(is_staff_or_admin)
 def dashboard_home(request):
     """Dashboard overview/home page"""
-    context = get_dashboard_stats(request)
+    try:
+        context = get_dashboard_stats(request)
+    except Exception:
+        logger.exception('Failed to build dashboard home stats')
+        messages.error(request, 'Some dashboard metrics are temporarily unavailable. Showing fallback view.')
+        context = {
+            'stats': {},
+            'course_stats': {},
+            'badge_stats': {},
+            'notification_stats': {},
+            'monitoring_summary': {},
+            'learning_insights': {
+                'selected_course_id': 'all',
+                'course_options': [{'id': 'all', 'label': 'All Courses'}],
+                'datasets': {
+                    'all': {
+                        'label': 'All Courses',
+                        'learner_status': {'labels': ['Completed', 'In Progress', 'Not Started'], 'values': [0, 0, 0]},
+                        'module_coverage': {'labels': ['Modules With Completions', 'Modules Awaiting Completion'], 'values': [0, 0]},
+                        'summary': {'courses': 0, 'modules': 0, 'avg_progress': 0},
+                    }
+                },
+            },
+            'backup_summary': {},
+            'recent_activity': [],
+        }
     return render(request, 'dashboard/index.html', context)
 
 
@@ -839,7 +867,36 @@ def dashboard_monitoring(request):
         messages.error(request, 'Unable to process the requested monitoring action.')
         return redirect('dashboard:monitoring')
 
-    monitoring_summary = get_monitoring_dashboard_summary()
+    try:
+        monitoring_summary = get_monitoring_dashboard_summary()
+    except Exception:
+        logger.exception('Failed to build monitoring dashboard summary')
+        messages.error(request, 'Monitoring data is temporarily unavailable. Showing fallback view.')
+        monitoring_summary = {
+            'total_alerts': 0,
+            'pending_alerts': 0,
+            'high_alerts': 0,
+            'stored_evidence': 0,
+            'sensor_nodes': [],
+            'sensor_alerts': [],
+            'sensor_node_count': 0,
+            'online_sensor_nodes': 0,
+            'total_sessions': 0,
+            'active_sessions': 0,
+            'esp32_phone_status': SimpleNamespace(
+                is_online=False,
+                state_label='Unavailable',
+                message='Monitoring summary could not be loaded.',
+                badge_class='text-muted',
+                icon='bi-wifi-off',
+                camera_source='Unavailable',
+                reporting_guide='Unavailable',
+                last_seen=None,
+                last_seen_display='Unavailable',
+                session_id=None,
+            ),
+            'recent_alerts': [],
+        }
     context = {
         'stats': monitoring_summary,
         'alerts': monitoring_summary['recent_alerts'],
@@ -1187,7 +1244,12 @@ def dashboard_requests(request):
 def dashboard_payments(request):
     search_query = request.GET.get('search', '').strip()
     status_filter = request.GET.get('status', '').strip().lower()
-    payments = PaymentRecord.objects.select_related('guide', 'application', 'created_by',).order_by('-created_at')
+    try:
+        payments = PaymentRecord.objects.select_related('guide', 'application', 'created_by',).order_by('-created_at')
+    except Exception:
+        logger.exception('Failed to query payments list')
+        messages.error(request, 'Payments data is temporarily unavailable. Please try again shortly.')
+        payments = PaymentRecord.objects.none()
     if search_query:
         payments = payments.filter(
             Q(applicant_name__icontains=search_query) |

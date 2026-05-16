@@ -18,6 +18,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          clean: true
 
       - name: Set up Python version
         uses: actions/setup-python@v5
@@ -74,4 +76,6 @@ jobs:
         with:
           app-name: 'SFC-ParkguideBackend'
           slot-name: 'Production'
+          package: .
+          clean: true
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_91CADE5BE94248159CB6B522E0E0048B }}
