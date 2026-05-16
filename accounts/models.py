@@ -173,27 +173,6 @@ class PasskeyCredential(models.Model):
         return f'{self.user.email} - {name}'
 
 
-class GuideLocation(models.Model):
-    user = models.OneToOneField(
-        'accounts.CustomUser',
-        on_delete=models.CASCADE,
-        related_name='guide_location',
-    )
-    latitude = models.FloatField()
-    longitude = models.FloatField()
-    accuracy = models.FloatField(null=True, blank=True)
-    heading = models.FloatField(null=True, blank=True)
-    speed = models.FloatField(null=True, blank=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        ordering = ('-updated_at',)
-
-    def __str__(self):
-        return f'{self.user.email} @ {self.latitude}, {self.longitude}'
-
-
 class TwoFactorAuth(models.Model):
     user = models.OneToOneField(
         'accounts.CustomUser',
