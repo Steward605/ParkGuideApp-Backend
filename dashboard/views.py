@@ -3609,5 +3609,5 @@ def get_recent_activity():
         })
     
     # Sort by timestamp
-    activities.sort(key=get_activity_sort_timestamp, reverse=True)
+    activities.sort(key=lambda x: x.get('timestamp') or timezone.datetime.min.replace(tzinfo=timezone.get_current_timezone()), reverse=True)
     return activities[:10]
