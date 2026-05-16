@@ -66,6 +66,7 @@ def get_title_text(title_obj, lang='en', default='Untitled'):
     return default
 
 
+<<<<<<< HEAD
 def get_ar_quiz_attempt_items(progress_records):
     attempts = []
     for progress in progress_records:
@@ -87,6 +88,15 @@ def get_ar_quiz_average(progress_records):
 def get_ar_badge_count(progress_records):
     completed_count = sum(1 for progress in progress_records if progress.is_completed)
     return 1 if completed_count >= 3 else 0
+=======
+def get_activity_sort_timestamp(activity):
+    timestamp = activity.get('timestamp')
+    if timestamp is None:
+        return timezone.make_aware(datetime.min, timezone.get_current_timezone())
+    if timezone.is_naive(timestamp):
+        return timezone.make_aware(timestamp, timezone.get_current_timezone())
+    return timestamp
+>>>>>>> 3d4e724 (Fixed some bugs wif badges)
 
 
 @require_http_methods(["GET"])
@@ -672,7 +682,7 @@ def get_dashboard_stats(request):
         })
     
     # Sort by timestamp
-    recent_activity.sort(key=lambda x: x['timestamp'], reverse=True)
+    recent_activity.sort(key=get_activity_sort_timestamp, reverse=True)
     recent_activity = recent_activity[:15]  # Keep top 15
     
     monitoring_summary = get_monitoring_dashboard_summary()
@@ -3658,5 +3668,5 @@ def get_recent_activity():
         })
     
     # Sort by timestamp
-    activities.sort(key=lambda x: x['timestamp'], reverse=True)
+    activities.sort(key=get_activity_sort_timestamp, reverse=True)
     return activities[:10]

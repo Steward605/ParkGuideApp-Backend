@@ -4,7 +4,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from accounts.models import CustomUser
-from courses.models import Course, Module, ModuleProgress
+from courses.models import Chapter, ChapterProgress, Course, CourseEnrollment, Module, ModuleProgress
 from notifications.models import UserNotification
 
 from .management.commands.seed_demo_badges import Command as SeedBadgeCommand
@@ -106,6 +106,40 @@ class BadgeServiceTests(TestCase):
         self.assertEqual(user_badge.status, UserBadge.STATUS_REJECTED)
         self.assertFalse(user_badge.is_awarded)
 
+    def test_normal_sync_does_not_resubmit_rejected_badge(self):
+        ModuleProgress.objects.create(user=self.user1, module=self.module1, completed=True)
+        ModuleProgress.objects.create(user=self.user1, module=self.module2, completed=True)
+        sync_user_badges(self.user1, admin_user=self.admin)
+        auto_reject_pending_badges(self.badge, admin_user=self.admin)
+
+        sync_user_badges(self.user1, admin_user=self.admin)
+
+        user_badge = UserBadge.objects.get(user=self.user1, badge=self.badge)
+        self.assertEqual(user_badge.status, UserBadge.STATUS_REJECTED)
+        self.assertFalse(user_badge.is_awarded)
+
+    def test_completed_enrollment_makes_course_badge_pending(self):
+        course_badge = Badge.objects.create(
+            name='Enrollment Completion',
+            course=self.course,
+            required_completed_modules=3,
+            is_active=True,
+        )
+        CourseEnrollment.objects.create(
+            user=self.user1,
+            course=self.course,
+            status='completed',
+            total_chapters=3,
+            completed_chapters=3,
+            progress_percentage=100,
+        )
+
+        sync_user_badges(self.user1, admin_user=self.admin)
+
+        user_badge = UserBadge.objects.get(user=self.user1, badge=course_badge)
+        self.assertEqual(user_badge.status, UserBadge.STATUS_PENDING)
+        self.assertFalse(user_badge.is_awarded)
+
     def test_auto_approve_pending_badges_notifies_user(self):
         ModuleProgress.objects.create(user=self.user1, module=self.module1, completed=True)
         ModuleProgress.objects.create(user=self.user1, module=self.module2, completed=True)
@@ -189,16 +223,86 @@ class BadgeApiTests(APITestCase):
         self.assertEqual(response.data[0]['name'], 'API Badge')
         self.assertEqual(response.data[0]['status'], UserBadge.STATUS_IN_PROGRESS)
         self.assertTrue(response.data[0]['in_progress'])
+        self.assertEqual(response.data[0]['progress_current'], 0)
+        self.assertEqual(response.data[0]['progress_required'], 1)
+        self.assertEqual(response.data[0]['progress_kind'], 'modules')
+        self.assertIsNotNone(response.data[0]['user_badge_id'])
+
+    def test_badges_endpoint_compact_omits_expensive_translation_lists(self):
+        response = self.client.get(f'{reverse("badge-list")}?compact=1')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertNotIn('name_translations', response.data[0])
+        self.assertNotIn('description_translations', response.data[0])
+        self.assertNotIn('skills_awarded', response.data[0])
+        self.assertNotIn('skills_awarded_translations', response.data[0])
+        self.assertNotIn('lesson_highlights', response.data[0])
+        self.assertNotIn('lesson_highlights_translations', response.data[0])
+        self.assertNotIn('course_title_translations', response.data[0])
+        self.assertIn('progress_current', response.data[0])
+
+    def test_badges_endpoint_returns_requested_localized_fields(self):
+        self.badge.name_translations = {
+            'en': 'API Badge',
+            'ms': 'Lencana API',
+            'zh': 'API 徽章',
+        }
+        self.badge.description_translations = {
+            'en': 'English description',
+            'ms': 'Penerangan Melayu',
+            'zh': '中文说明',
+        }
+        self.badge.skills_awarded = [
+            {'en': 'English Skill', 'ms': 'Kemahiran Melayu', 'zh': '中文技能'},
+        ]
+        self.badge.save()
+
+        response = self.client.get(f'{reverse("badge-list")}?compact=1&lang=ms')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data[0]['localized_name'], 'Lencana API')
+        self.assertEqual(response.data[0]['localized_description'], 'Penerangan Melayu')
+        self.assertEqual(response.data[0]['localized_skills_awarded'], ['Kemahiran Melayu'])
 
     def test_badges_endpoint_returns_pending_when_requirement_met(self):
         ModuleProgress.objects.create(user=self.user, module=self.module, completed=True)
 
-        url = reverse('badge-list')
+        url = f'{reverse("badge-list")}?sync=1'
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data[0]['status'], UserBadge.STATUS_PENDING)
         self.assertTrue(response.data[0]['pending'])
+        self.assertEqual(response.data[0]['progress_current'], 1)
+        self.assertTrue(response.data[0]['eligible'])
+
+    def test_badges_endpoint_sync_does_not_create_staff_notifications(self):
+        staff = CustomUser.objects.create_user(
+            email='staff@example.com',
+            username='staff',
+            password='password123',
+            is_staff=True,
+        )
+        chapter = Chapter.objects.create(course=self.course, title={'en': 'Chapter 1'}, order=1)
+        ChapterProgress.objects.create(
+            user=self.user,
+            chapter=chapter,
+            is_complete=True,
+            completed_lessons=1,
+            total_lessons=1,
+            progress_percentage=100,
+        )
+
+        response = self.client.get(f'{reverse("badge-list")}?sync=1')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data[0]['status'], UserBadge.STATUS_PENDING)
+        self.assertFalse(
+            UserNotification.objects.filter(
+                user=staff,
+                notification__title__icontains='Badge approval needed',
+            ).exists()
+        )
 
     def test_my_badges_endpoint_returns_awarded_badges(self):
         ModuleProgress.objects.create(user=self.user, module=self.module, completed=True)
