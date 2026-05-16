@@ -5,7 +5,7 @@ import uuid
 from django.core.files.base import ContentFile
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import AccountApplication, PasskeyCredential, TwoFactorAuth, TwoFactorAuth
+from .models import AccountApplication, GuideLocation, PasskeyCredential, TwoFactorAuth
 from .services import generate_profile_image_url, upload_application_cv
 
 
@@ -58,6 +58,17 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ['id', 'username', 'email']
 
+class GuideLocationSerializer(serializers.ModelSerializer):
+    guide_id = serializers.IntegerField(source='user.id', read_only=True)
+    guide_name = serializers.SerializerMethodField()
+    email = serializers.EmailField(source='user.email', read_only=True)
+    class Meta:
+        model = GuideLocation
+        fields = ['id','guide_id','guide_name','email','latitude','longitude','accuracy','heading','speed','is_active','updated_at',]
+        read_only_fields = ['id', 'guide_id', 'guide_name', 'email', 'is_active', 'updated_at']
+    def get_guide_name(self, obj):
+        full_name = f'{obj.user.first_name} {obj.user.last_name}'.strip()
+        return full_name or obj.user.username or obj.user.email
 
 class ProfileSerializer(serializers.ModelSerializer):
     name = serializers.CharField(required=False, allow_blank=False)
