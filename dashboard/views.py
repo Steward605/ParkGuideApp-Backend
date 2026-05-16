@@ -65,6 +65,15 @@ def get_title_text(title_obj, lang='en', default='Untitled'):
     return default
 
 
+def get_activity_sort_timestamp(activity):
+    timestamp = activity.get('timestamp')
+    if timestamp is None:
+        return timezone.make_aware(datetime.min, timezone.get_current_timezone())
+    if timezone.is_naive(timestamp):
+        return timezone.make_aware(timestamp, timezone.get_current_timezone())
+    return timestamp
+
+
 @require_http_methods(["GET"])
 def dashboard_sso_login(request):
     """Create a Django session from a valid admin JWT token for the web dashboard."""
@@ -696,7 +705,7 @@ def get_dashboard_stats(request):
         })
     
     # Sort by timestamp
-    recent_activity.sort(key=lambda x: x['timestamp'], reverse=True)
+    recent_activity.sort(key=get_activity_sort_timestamp, reverse=True)
     recent_activity = recent_activity[:15]  # Keep top 15
     
     monitoring_summary = get_monitoring_dashboard_summary()

@@ -377,6 +377,8 @@ class UserBadgeAdmin(DashboardStatsChangeListMixin, admin.ModelAdmin):
     awarded_visual.short_description = 'Outcome'
 
     def timeline(self, obj):
+        if not obj.awarded_at:
+            return format_html('<span class="admin-subtle">Not awarded yet</span>')
         return format_html(
             '<strong>{}</strong><br><span class="admin-subtle">last changed</span>',
             obj.awarded_at.strftime('%b %d, %Y'),
@@ -394,10 +396,11 @@ class UserBadgeAdmin(DashboardStatsChangeListMixin, admin.ModelAdmin):
         for user_badge in pending_badges:
             user_badge.status = UserBadge.STATUS_GRANTED
             user_badge.is_awarded = True
+            user_badge.awarded_at = timezone.now()
             user_badge.awarded_by = request.user
             user_badge.revoked_at = None
             user_badge.revoked_by = None
-            user_badge.save(update_fields=['status', 'is_awarded', 'awarded_by', 'revoked_at', 'revoked_by'])
+            user_badge.save(update_fields=['status', 'is_awarded', 'awarded_at', 'awarded_by', 'revoked_at', 'revoked_by'])
             notify_badge_granted_to_user(user_badge, admin_user=request.user)
             approved_total += 1
 
@@ -409,6 +412,7 @@ class UserBadgeAdmin(DashboardStatsChangeListMixin, admin.ModelAdmin):
         updated = pending_badges.update(
             status=UserBadge.STATUS_REJECTED,
             is_awarded=False,
+            awarded_at=None,
             revoked_by=request.user,
             revoked_at=timezone.now(),
         )
@@ -422,6 +426,7 @@ class UserBadgeAdmin(DashboardStatsChangeListMixin, admin.ModelAdmin):
         updated = queryset.update(
             status=UserBadge.STATUS_IN_PROGRESS,
             is_awarded=False,
+            awarded_at=None,
             awarded_by=None,
             revoked_by=None,
             revoked_at=None,
@@ -432,6 +437,11 @@ class UserBadgeAdmin(DashboardStatsChangeListMixin, admin.ModelAdmin):
         previous_status = None
         if change:
             previous_status = UserBadge.objects.filter(pk=obj.pk).values_list('status', flat=True).first()
+
+        if obj.status == UserBadge.STATUS_GRANTED and not obj.awarded_at:
+            obj.awarded_at = timezone.now()
+        elif obj.status != UserBadge.STATUS_GRANTED:
+            obj.awarded_at = None
 
         super().save_model(request, obj, form, change)
 
